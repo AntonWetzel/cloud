@@ -1,0 +1,54 @@
+{
+	"folders": [
+		{
+			"path": ".",
+			"name": "all"
+		},
+		{
+			"path": "./html",
+			"name": "html"
+		},
+		{
+			"path": "./other",
+			"name": "other"
+		},
+		{
+			"path": "./shaders",
+			"name": "shaders"
+		},
+		{
+			"path": "./src",
+			"name": "src"
+		}
+	],
+	"settings": {
+		"[typescript]": {
+			"editor.defaultFormatter": "dbaeumer.vscode-eslint"
+		},
+		"liveServer.settings.multiRootWorkspaceName": "all"
+	},
+	"tasks": {
+		"version": "2.0.0",
+		"tasks": [
+			{
+				"type": "shell",
+				"options": {
+					"cwd": "${workspaceFolder:all}"
+				},
+				"command": "npx",
+				"args": [
+					"tsc",
+					"--watch"
+				],
+				"problemMatcher": [
+					"$tsc-watch"
+				],
+				"group": {
+					"kind": "build",
+					"isDefault": true
+				},
+				"label": "tsc: watch - tsconfig.json"
+			}
+		]
+	}
+}
