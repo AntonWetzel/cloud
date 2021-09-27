@@ -1,7 +1,6 @@
 import * as GPU from './gpu.js'
 import * as Module from './module.js'
 import * as Object from './node.js'
-import * as Texture from './texture.js'
 import { Matrix } from './math.js'
 import { GetServerFile } from '../helper/file.js'
 

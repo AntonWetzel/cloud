@@ -1,23 +1,21 @@
-import * as GPU from './gpu.js';
 import { Matrix } from './math.js';
 import { Lines } from './lines.js';
-import * as Quad from './quad.js';
 export class Light {
     static lines;
     static async Setup() {
         Light.lines = new Lines(new Float32Array([
             /*eslint-disable*/
-            0, 0, 0, 1, 1, -1,
-            0, 0, 0, 1, -1, -1,
-            0, 0, 0, -1, -1, -1,
-            0, 0, 0, -1, 1, -1,
+            1, 1, 1, 0, 0, 0, 0, 0, 0, -1, -1, -1,
+            1, 1, -1, 0, 0, 0, 0, 0, 0, -1, -1, 1,
+            1, -1, 1, 0, 0, 0, 0, 0, 0, -1, 1, -1,
+            -1, 1, 1, 0, 0, 0, 0, 0, 0, 1, -1, -1,
             /*eslint-enable*/
         ]), new Float32Array([
             /*eslint-disable*/
-            1, 1, 0, 0, 0, 0,
-            1, 1, 0, 0, 0, 0,
-            1, 1, 0, 0, 0, 0,
-            1, 1, 0, 0, 0, 0,
+            0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0,
+            0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0,
+            0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0,
+            0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0,
             /*eslint-enable*/
         ]));
         Light.lines.Scale(10, 10, 10);
@@ -31,40 +29,6 @@ export class Light {
         this.view = Matrix.Identity();
         this.viewInv = Matrix.Identity();
         this.intensity = intensity;
-    }
-    Shadow(node, idx, encoder) {
-        const view = GPU.global.shadows.createView({
-            baseArrayLayer: idx,
-        });
-        const renderPass = encoder.beginRenderPass({
-            colorAttachments: [],
-            depthStencilAttachment: {
-                depthLoadValue: 1.0,
-                depthStoreOp: 'store',
-                stencilLoadValue: 0,
-                stencilStoreOp: 'store',
-                view: view,
-            },
-        });
-        node.RenderShadow(this.projection, this.view, Matrix.Identity(), renderPass);
-        renderPass.endPass();
-        return view;
-    }
-    Render(node) {
-        const encoder = GPU.device.createCommandEncoder();
-        const view = this.Shadow(node, 0, encoder);
-        const renderPass = encoder.beginRenderPass({
-            colorAttachments: [
-                {
-                    loadValue: GPU.clearColor,
-                    storeOp: 'store',
-                    view: GPU.context.getCurrentTexture().createView(),
-                },
-            ],
-        });
-        Quad.Draw(view, renderPass);
-        renderPass.endPass();
-        GPU.device.queue.submit([encoder.finish()]);
     }
     Show(projection, view, renderPass, lights) {
         Light.lines.Render(projection, view, this.viewInv, renderPass, lights);
@@ -94,12 +58,10 @@ export class Light {
         return this.viewInv.Position();
     }
     Save(data, offset) {
-        this.projection.Save(data, offset + 0);
-        this.view.Save(data, offset + 16);
         const p = this.viewInv.Position();
-        data[offset + 32 + 0] = p.x;
-        data[offset + 32 + 1] = p.y;
-        data[offset + 32 + 2] = p.z;
-        data[offset + 32 + 3] = this.intensity;
+        data[offset + 0] = p.x;
+        data[offset + 1] = p.y;
+        data[offset + 2] = p.z;
+        data[offset + 3] = this.intensity;
     }
 }

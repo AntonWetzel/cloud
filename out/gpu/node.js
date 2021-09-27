@@ -13,24 +13,6 @@ export class Node {
             this.children[i].Render(projection, view, model, renderPass, spotLights);
         }
     }
-    RenderShadow(projection, view, model, renderPass) {
-        model = model.Multiply(this.model);
-        if (this.SubShadow != undefined) {
-            this.SubShadow(projection, view, model, renderPass);
-        }
-        for (let i = 0; i < this.children.length; i++) {
-            this.children[i].RenderShadow(projection, view, model, renderPass);
-        }
-    }
-    RenderMap(view, model, renderPass) {
-        model = model.Multiply(this.model);
-        if (this.SubMap != undefined) {
-            this.SubMap(view, model, renderPass);
-        }
-        for (let i = 0; i < this.children.length; i++) {
-            this.children[i].RenderMap(view, model, renderPass);
-        }
-    }
     Translate(x, y, z) {
         this.model = Matrix.Translate(x, y, z).Multiply(this.model);
     }

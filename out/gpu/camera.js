@@ -18,14 +18,11 @@ export class Camera {
     }
     Render(node, lights) {
         const encoder = GPU.device.createCommandEncoder();
-        const spotSize = 16 * 2 + 4;
-        const pointSize = 4;
-        const lightData = new Float32Array(4 + (lights.length + (lights.length == 0 ? 1 : 0)) * spotSize);
+        const lightData = new Float32Array(4 + (lights.length + (lights.length == 0 ? 1 : 0)) * 4);
         new Int32Array(lightData.buffer)[0] = lights.length;
         for (let i = 0; i < lights.length; i++) {
             const light = lights[i];
-            light.Shadow(node, i, encoder);
-            light.Save(lightData, 4 + i * spotSize);
+            light.Save(lightData, 4 + i * 4);
         }
         const lightBuffer = GPU.CreateBuffer(lightData, GPUBufferUsage.STORAGE);
         const renderPass = encoder.beginRenderPass({
@@ -56,23 +53,18 @@ export class Camera {
     }
     Translate(x, y, z) {
         this.view = Matrix.Translate(-x, -y, -z).Multiply(this.view);
-        //this.viewInv = this.viewInv.Multiply(Matrix.Translate(x, y, z))
     }
     RotateX(rad) {
         this.view = Matrix.RotateX(-rad).Multiply(this.view);
-        //this.viewInv = this.viewInv.Multiply(Matrix.RotateX(rad))
     }
     RotateY(rad) {
         this.view = Matrix.RotateY(-rad).Multiply(this.view);
-        //this.viewInv = this.viewInv.Multiply(Matrix.RotateY(rad))
     }
     RotateGlobalY(rad) {
         const axis = this.view.MultiplyVector({ x: 0, y: 1, z: 0 });
         this.view = Matrix.Rotate(-rad, axis).Multiply(this.view);
-        //this.viewInv = this.viewInv.Multiply(Matrix.Rotate(rad, axis))
     }
     RotateZ(rad) {
         this.view = Matrix.RotateZ(-rad).Multiply(this.view);
-        //this.viewInv = this.viewInv.Multiply(Matrix.RotateZ(rad))
     }
 }

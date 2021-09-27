@@ -3,7 +3,6 @@ import { Lines } from './gpu/lines.js';
 import { CreateSphere } from './loader/sphere.js';
 import { Camera } from './gpu/camera.js';
 import { Empty } from './gpu/empty.js';
-import { CreateCube } from './loader/cube.js';
 import { Light } from './gpu/light.js';
 document.body.onload = async () => {
     const display = document.getElementById('display');
@@ -12,22 +11,12 @@ document.body.onload = async () => {
     const scene = new Empty();
     const cam = new Camera(Math.PI / 4);
     cam.Translate(0, 5, 30);
-    const sphere = (await CreateSphere(40, 40, 1, 1, 1)).node;
-    sphere.Translate(0, 0, 5);
-    scene.children.push(sphere);
-    const wall = (await CreateCube(1, 1, 1)).node;
-    wall.Scale(20, 20, 1);
-    wall.Translate(0, 0, -30);
-    scene.children.push(wall);
-    const cube = (await CreateCube(1, 1, 1)).node;
-    cube.Translate(0, 2, -5);
-    scene.children.push(cube);
     const light = new Light(50);
-    //light.Rotate(-Math.PI / 10)
-    light.Translate(3, 0, 10);
+    light.Translate(0, 0, 10);
     const light2 = new Light(50);
-    //light2.Rotate(Math.PI / 10)
-    //light2.Translate(-3, 0, 10)
+    const cloud = await CreateSphere(100_000, 0.5, 1.0, 1.0, 0.01);
+    cloud.node.Scale(5, 5, 5);
+    scene.children.push(cloud.node);
     const grid = Lines.Grid(10);
     scene.children.push(grid);
     display.onwheel = (ev) => {
@@ -44,16 +33,12 @@ document.body.onload = async () => {
         GPU.Resize(display.clientWidth, display.clientHeight);
         cam.UpdateSize();
     };
-    let mode = 0;
     let lights = 1;
     const key = {};
     document.body.onkeydown = (ev) => {
         key[ev.code] = true;
         switch (ev.code) {
             case 'KeyL':
-                mode = (mode + 1) % 3;
-                break;
-            case 'KeyX':
                 lights = (lights + 1) % 4;
                 break;
             case 'KeyH':
@@ -61,8 +46,7 @@ document.body.onload = async () => {
                     'Middle mouse button + move: rotate first light\n' +
                     'Mouse wheel: change field of view (zoom)\n' +
                     'Key QWER: move camera\n' +
-                    'Key L: switch between camera and light maps\n' +
-                    'Key X: switch visible cameras');
+                    'Key L: switch active lights');
                 break;
         }
     };
@@ -80,43 +64,40 @@ document.body.onload = async () => {
             light.RotateGlobalY(ev.movementX / 200);
         }
     };
-    cube.RotateXLocal(Math.PI / 4);
-    function Draw() {
-        //cube.Rotate(0.01)
-        //sphere.Rotate(-0.01)
-        sphere.RotateY(0.01);
-        cube.RotateYLocal(0.1);
-        //cube.RotateLocal(0.01)
+    let last = undefined;
+    requestAnimationFrame((time) => {
+        last = time;
+    });
+    function Draw(time) {
+        const delta = time - last;
+        const dist = delta / 50;
         if (key['KeyW'] != undefined) {
-            cam.Translate(0, 0, -0.1);
+            cam.Translate(0, 0, -dist);
         }
         if (key['KeyD'] != undefined) {
-            cam.Translate(0.1, 0, 0);
+            cam.Translate(dist, 0, 0);
         }
         if (key['KeyS'] != undefined) {
-            cam.Translate(0, 0, 0.1);
+            cam.Translate(0, 0, dist);
         }
         if (key['KeyA'] != undefined) {
-            cam.Translate(-0.1, 0, 0);
+            cam.Translate(-dist, 0, 0);
+        }
+        if (key['KeyF'] != undefined) {
+            cam.Translate(0, -dist, 0);
+        }
+        if (key['KeyR'] != undefined) {
+            cam.Translate(0, dist, 0);
         }
         const l = [];
-        switch (mode) {
-            case 0:
-                if (lights % 2 != 0) {
-                    l.push(light);
-                }
-                if ((lights >> 1) % 2 != 0) {
-                    l.push(light2);
-                }
-                cam.Render(scene, l);
-                break;
-            case 1:
-                light.Render(scene);
-                break;
-            case 2:
-                light2.Render(scene);
-                break;
+        if (lights % 2 != 0) {
+            l.push(light);
         }
+        if ((lights >> 1) % 2 != 0) {
+            l.push(light2);
+        }
+        cam.Render(scene, l);
+        last = time;
         requestAnimationFrame(Draw);
     }
     requestAnimationFrame(Draw);

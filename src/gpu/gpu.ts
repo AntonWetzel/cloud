@@ -1,11 +1,11 @@
 import { Matrix } from './math.js'
 import { Node } from './node.js'
-import { Textured } from './textured.js'
 import { Lines } from './lines.js'
 import { Colored } from './colored.js'
 import { Camera } from './camera.js'
 import * as Quad from './quad.js'
 import { Light } from './light.js'
+import { Cloud } from './cloud.js'
 
 export let adapter: GPUAdapter
 export let device: GPUDevice
@@ -19,9 +19,6 @@ export let context: GPUCanvasContext
 
 export let global: {
 	ambient: number
-	shadows: GPUTexture
-	pointShadows: GPUTexture
-	sampler: GPUSampler
 	aspect: number
 }
 
@@ -43,11 +40,6 @@ export async function Setup(
 	global = {
 		ambient: ambient,
 		aspect: undefined as any,
-		shadows: undefined as any,
-		pointShadows: undefined as any,
-		sampler: device.createSampler({
-			compare: 'less-equal',
-		}),
 	}
 
 	sampler = device.createSampler({
@@ -58,11 +50,11 @@ export async function Setup(
 	Resize(width, height)
 
 	await Quad.Setup()
-	await Textured.Setup()
 	await Lines.Setup()
 	await Colored.Setup()
 	await Quad.Setup()
 	await Light.Setup()
+	await Cloud.Setup()
 
 	return canvas
 }
@@ -76,26 +68,6 @@ export function Resize(width: number, height: number): void {
 	canvas.width = width
 	canvas.height = height
 
-	global.shadows = device.createTexture({
-		size: {
-			width: canvas.width,
-			height: canvas.height,
-			depthOrArrayLayers: 10,
-		},
-		format: 'depth32float',
-		usage:
-			GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
-	})
-	global.pointShadows = device.createTexture({
-		size: {
-			width: 512,
-			height: 512,
-			depthOrArrayLayers: 10,
-		},
-		format: 'depth32float',
-		usage:
-			GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
-	})
 	depth = device.createTexture({
 		size: {
 			width: canvas.width,

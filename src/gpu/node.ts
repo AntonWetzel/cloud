@@ -30,54 +30,12 @@ export abstract class Node {
 		}
 	}
 
-	RenderShadow(
-		projection: Matrix,
-		view: Matrix,
-		model: Matrix,
-		renderPass: GPURenderPassEncoder,
-	): void {
-		model = model.Multiply(this.model)
-		if (this.SubShadow != undefined) {
-			this.SubShadow(projection, view, model, renderPass)
-		}
-		for (let i = 0; i < this.children.length; i++) {
-			this.children[i].RenderShadow(projection, view, model, renderPass)
-		}
-	}
-
-	RenderMap(
-		view: Matrix,
-		model: Matrix,
-		renderPass: GPURenderPassEncoder,
-	): void {
-		model = model.Multiply(this.model)
-		if (this.SubMap != undefined) {
-			this.SubMap(view, model, renderPass)
-		}
-		for (let i = 0; i < this.children.length; i++) {
-			this.children[i].RenderMap(view, model, renderPass)
-		}
-	}
-
 	protected abstract SubRender(
 		projection: Matrix,
 		view: Matrix,
 		model: Matrix,
 		renderPass: GPURenderPassEncoder,
 		lights: GPUBuffer,
-	): void
-
-	protected abstract SubShadow?(
-		projection: Matrix,
-		view: Matrix,
-		model: Matrix,
-		renderPass: GPURenderPassEncoder,
-	): void
-
-	protected abstract SubMap?(
-		view: Matrix,
-		model: Matrix,
-		renderPass: GPURenderPassEncoder,
 	): void
 
 	Translate(x: number, y: number, z: number): void {

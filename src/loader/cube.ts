@@ -1,3 +1,4 @@
+import { Cloud } from '../gpu/cloud.js'
 import { Colored } from '../gpu/colored.js'
 import { Node } from '../gpu/node.js'
 
@@ -57,6 +58,7 @@ export async function CreateCube(
 	AddFace(5, 1, 3, 7, 3)
 	AddFace(1, 0, 2, 3, 4)
 	AddFace(5, 4, 0, 1, 5)
+
 	return {
 		node: new Colored(posBuffer, colBuffer, norBuffer),
 		name: 'cube',

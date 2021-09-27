@@ -13,18 +13,18 @@ export class Light {
 		Light.lines = new Lines(
 			new Float32Array([
 				/*eslint-disable*/
-				0, 0, 0,  1,  1, -1,
-				0, 0, 0,  1, -1, -1,
-				0, 0, 0, -1, -1, -1,
-				0, 0, 0, -1,  1, -1,
+				 1,  1,  1,   0,0,0,  0,0,0,   -1, -1, -1,
+				 1,  1, -1,   0,0,0,  0,0,0,   -1, -1,  1,
+				 1, -1,  1,   0,0,0,  0,0,0,   -1,  1, -1,
+				-1,  1,  1,   0,0,0,  0,0,0,    1, -1, -1,
 				/*eslint-enable*/
 			]),
 			new Float32Array([
 				/*eslint-disable*/
-				1, 1, 0, 0, 0, 0,
-				1, 1, 0, 0, 0, 0,
-				1, 1, 0, 0, 0, 0,
-				1, 1, 0, 0, 0, 0,
+				0,0,0,  1,1,0,   1,1,0,  0,0,0,
+				0,0,0,  1,1,0,   1,1,0,  0,0,0,
+				0,0,0,  1,1,0,   1,1,0,  0,0,0,
+				0,0,0,  1,1,0,   1,1,0,  0,0,0,
 				/*eslint-enable*/
 			]),
 		)
@@ -41,51 +41,6 @@ export class Light {
 		this.view = Matrix.Identity()
 		this.viewInv = Matrix.Identity()
 		this.intensity = intensity
-	}
-
-	Shadow(
-		node: Node,
-		idx: number,
-		encoder: GPUCommandEncoder,
-	): GPUTextureView {
-		const view = GPU.global.shadows.createView({
-			baseArrayLayer: idx,
-		})
-		const renderPass = encoder.beginRenderPass({
-			colorAttachments: [],
-			depthStencilAttachment: {
-				depthLoadValue: 1.0,
-				depthStoreOp: 'store',
-				stencilLoadValue: 0,
-				stencilStoreOp: 'store',
-				view: view,
-			},
-		})
-		node.RenderShadow(
-			this.projection,
-			this.view,
-			Matrix.Identity(),
-			renderPass,
-		)
-		renderPass.endPass()
-		return view
-	}
-
-	Render(node: Node): void {
-		const encoder = GPU.device.createCommandEncoder()
-		const view = this.Shadow(node, 0, encoder)
-		const renderPass = encoder.beginRenderPass({
-			colorAttachments: [
-				{
-					loadValue: GPU.clearColor,
-					storeOp: 'store',
-					view: GPU.context.getCurrentTexture().createView(),
-				},
-			],
-		})
-		Quad.Draw(view, renderPass)
-		renderPass.endPass()
-		GPU.device.queue.submit([encoder.finish()])
 	}
 
 	Show(
@@ -126,12 +81,10 @@ export class Light {
 	}
 
 	Save(data: Float32Array, offset: number): void {
-		this.projection.Save(data, offset + 0)
-		this.view.Save(data, offset + 16)
 		const p = this.viewInv.Position()
-		data[offset + 32 + 0] = p.x
-		data[offset + 32 + 1] = p.y
-		data[offset + 32 + 2] = p.z
-		data[offset + 32 + 3] = this.intensity
+		data[offset + 0] = p.x
+		data[offset + 1] = p.y
+		data[offset + 2] = p.z
+		data[offset + 3] = this.intensity
 	}
 }

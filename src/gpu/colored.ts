@@ -187,16 +187,6 @@ export class Colored extends Node {
 					binding: 1,
 					resource: { buffer: lights },
 				},
-				{
-					binding: 2,
-					resource: GPU.global.sampler,
-				},
-				{
-					binding: 3,
-					resource: GPU.global.shadows.createView({
-						dimension: '2d-array',
-					}),
-				},
 			],
 		})
 		renderPass.setBindGroup(0, group)

@@ -1,8 +1,8 @@
-import { Textured } from './textured.js';
 import { Lines } from './lines.js';
 import { Colored } from './colored.js';
 import * as Quad from './quad.js';
 import { Light } from './light.js';
+import { Cloud } from './cloud.js';
 export let adapter;
 export let device;
 export const clearColor = { r: 0.0, g: 0.01, b: 0.05, a: 1.0 };
@@ -21,11 +21,6 @@ export async function Setup(width, height, ambient) {
     global = {
         ambient: ambient,
         aspect: undefined,
-        shadows: undefined,
-        pointShadows: undefined,
-        sampler: device.createSampler({
-            compare: 'less-equal',
-        }),
     };
     sampler = device.createSampler({
         magFilter: 'linear',
@@ -33,11 +28,11 @@ export async function Setup(width, height, ambient) {
     });
     Resize(width, height);
     await Quad.Setup();
-    await Textured.Setup();
     await Lines.Setup();
     await Colored.Setup();
     await Quad.Setup();
     await Light.Setup();
+    await Cloud.Setup();
     return canvas;
 }
 export function Resize(width, height) {
@@ -48,24 +43,6 @@ export function Resize(width, height) {
     });
     canvas.width = width;
     canvas.height = height;
-    global.shadows = device.createTexture({
-        size: {
-            width: canvas.width,
-            height: canvas.height,
-            depthOrArrayLayers: 10,
-        },
-        format: 'depth32float',
-        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
-    });
-    global.pointShadows = device.createTexture({
-        size: {
-            width: 512,
-            height: 512,
-            depthOrArrayLayers: 10,
-        },
-        format: 'depth32float',
-        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
-    });
     depth = device.createTexture({
         size: {
             width: canvas.width,
