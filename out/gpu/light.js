@@ -3,7 +3,7 @@ import { Lines } from './lines.js';
 export class Light {
     static lines;
     static async Setup() {
-        Light.lines = new Lines(new Float32Array([
+        Light.lines = Lines.FromArray(new Float32Array([
             /*eslint-disable*/
             1, 1, 1, 0, 0, 0, 0, 0, 0, -1, -1, -1,
             1, 1, -1, 0, 0, 0, 0, 0, 0, -1, -1, 1,

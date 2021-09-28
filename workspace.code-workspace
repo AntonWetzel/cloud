@@ -9,10 +9,6 @@
 			"name": "html"
 		},
 		{
-			"path": "./other",
-			"name": "other"
-		},
-		{
 			"path": "./shaders",
 			"name": "shaders"
 		},

@@ -5,7 +5,7 @@ import { GetServerFile } from '../helper/file.js';
 export class Lines extends Object.Node {
     static pipeline;
     static async Setup() {
-        const src = await GetServerFile('../shaders/lines.wgsl');
+        const src = await GetServerFile('../shaders/render/lines.wgsl');
         const module = Module.New(src);
         Lines.pipeline = GPU.device.createRenderPipeline({
             vertex: {
@@ -96,16 +96,19 @@ export class Lines extends Object.Node {
         addLine(amount * 4 + 0, { x: -amount, y: 0, z: 0 }, { x: amount, y: 0, z: 0 }, { x: 1, y: 1, z: 1 }, { x: 1, y: 0, z: 0 });
         addLine(amount * 4 + 1, { x: 0, y: -amount, z: 0 }, { x: 0, y: amount, z: 0 }, { x: 1, y: 1, z: 1 }, { x: 0, y: 1, z: 0 });
         addLine(amount * 4 + 2, { x: 0, y: 0, z: -amount }, { x: 0, y: 0, z: amount }, { x: 1, y: 1, z: 1 }, { x: 0, y: 0, z: 1 });
-        return new Lines(positions, colors);
+        return Lines.FromArray(positions, colors);
     }
     data;
-    constructor(positions, colors) {
+    constructor(length, positions, colors) {
         super();
         this.data = {
-            length: positions.length / 3,
-            positions: GPU.CreateBuffer(positions, GPUBufferUsage.VERTEX),
-            colors: GPU.CreateBuffer(colors, GPUBufferUsage.VERTEX),
+            length: length,
+            positions: positions,
+            colors: colors,
         };
+    }
+    static FromArray(positions, colors) {
+        return new Lines(positions.length / 3, GPU.CreateBuffer(positions, GPUBufferUsage.VERTEX), GPU.CreateBuffer(colors, GPUBufferUsage.VERTEX));
     }
     SubRender(projection, view, model, renderPass) {
         const array = new Float32Array(16 * 3);

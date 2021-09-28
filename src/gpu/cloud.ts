@@ -6,10 +6,11 @@ import { Matrix } from './math.js'
 
 export class Cloud extends Node {
 	private static pipeline: GPURenderPipeline
+	private static kNearest: GPUComputePipeline
 	private static quadBuffer: GPUBuffer
 
 	static async Setup(): Promise<void> {
-		const src = await GetServerFile('../shaders/cloud.wgsl')
+		const src = await GetServerFile('../shaders/render/cloud.wgsl')
 		const module = Module.New(src)
 		Cloud.pipeline = GPU.device.createRenderPipeline({
 			vertex: {
@@ -76,6 +77,15 @@ export class Cloud extends Node {
 			new Float32Array([-1.0, -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, 1.0]),
 			GPUBufferUsage.VERTEX,
 		)
+
+		Cloud.kNearest = GPU.device.createComputePipeline({
+			compute: {
+				module: Module.New(
+					await GetServerFile('../shaders/compute/kNearest.wgsl'),
+				),
+				entryPoint: 'main',
+			},
+		})
 	}
 
 	radius: number
@@ -96,7 +106,10 @@ export class Cloud extends Node {
 
 	SetPoints(points: Float32Array): void {
 		this.buffer.length = points.length / 3
-		this.buffer.positions = GPU.CreateBuffer(points, GPUBufferUsage.VERTEX)
+		this.buffer.positions = GPU.CreateBuffer(
+			points,
+			GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE,
+		)
 	}
 	SetColor(colors: Float32Array): void {
 		this.buffer.colors = GPU.CreateBuffer(colors, GPUBufferUsage.VERTEX)
@@ -136,5 +149,60 @@ export class Cloud extends Node {
 		renderPass.setVertexBuffer(1, this.buffer.positions)
 		renderPass.setVertexBuffer(2, this.buffer.colors)
 		renderPass.draw(4, this.buffer.length)
+	}
+
+	kNearest(
+		k: number,
+		r: number,
+		g: number,
+		b: number,
+	): { positions: GPUBuffer; colors: GPUBuffer } {
+		const size = this.buffer.length * 4 * 3 * 2 * k // bytePerFloat * floatPerPoint * PointsPerLine * k
+		const lines = GPU.CreateEmptyBuffer(
+			size,
+			GPUBufferUsage.STORAGE | GPUBufferUsage.VERTEX,
+		)
+		const color = GPU.CreateEmptyBuffer(
+			size,
+			GPUBufferUsage.STORAGE | GPUBufferUsage.VERTEX,
+		)
+		const param = new Float32Array(8)
+		new Uint32Array(param.buffer).set([this.buffer.length, k], 0)
+		param[4] = r
+		param[5] = g
+		param[6] = b
+		const buffer = GPU.CreateBuffer(param, GPUBufferUsage.STORAGE)
+		const group = GPU.device.createBindGroup({
+			layout: Cloud.kNearest.getBindGroupLayout(0),
+			entries: [
+				{
+					binding: 0,
+					resource: { buffer: buffer },
+				},
+				{
+					binding: 1,
+					resource: { buffer: this.buffer.positions },
+				},
+				{
+					binding: 2,
+					resource: { buffer: lines },
+				},
+				{
+					binding: 3,
+					resource: { buffer: color },
+				},
+			],
+		})
+		const encoder = GPU.device.createCommandEncoder()
+		const compute = encoder.beginComputePass({})
+		compute.setPipeline(Cloud.kNearest)
+		compute.setBindGroup(0, group)
+		compute.dispatch(Math.ceil(this.buffer.length / 256))
+		compute.endPass()
+		GPU.device.queue.submit([encoder.finish()])
+		return {
+			positions: lines,
+			colors: color,
+		}
 	}
 }

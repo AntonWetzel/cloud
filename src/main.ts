@@ -14,7 +14,7 @@ document.body.onload = async () => {
 	const canvas = await GPU.Setup(
 		display.clientWidth,
 		display.clientHeight,
-		0.1,
+		1.0,
 	)
 	display.append(canvas)
 
@@ -27,12 +27,12 @@ document.body.onload = async () => {
 
 	const light2 = new Light(50)
 
-	const cloud = await CreateSphere(100_000, 0.5, 1.0, 1.0, 0.01)
-	cloud.node.Scale(5, 5, 5)
-	scene.children.push(cloud.node)
+	const cloud = (await CreateSphere(100_000, 0.5, 1.0, 1.0, 0.01)).node
+	cloud.Scale(25, 25, 25)
+	scene.children.push(cloud)
 
 	const grid = Lines.Grid(10)
-	scene.children.push(grid)
+	//scene.children.push(grid)
 
 	display.onwheel = (ev) => {
 		let fov = cam.fieldOfView * (1 + ev.deltaY / 1000)
@@ -49,7 +49,7 @@ document.body.onload = async () => {
 		GPU.Resize(display.clientWidth, display.clientHeight)
 		cam.UpdateSize()
 	}
-	let lights = 1
+	let lights = 0
 
 	const key: { [key: string]: true | undefined } = {}
 
@@ -68,6 +68,17 @@ document.body.onload = async () => {
 						'Key L: switch active lights',
 				)
 				break
+			case 'KeyX': {
+				const k = 2
+				const lines = cloud.kNearest(k, 0.5, 1.0, 1.0)
+				const x = new Lines(
+					cloud.buffer.length * 2 * k,
+					lines.positions,
+					lines.colors,
+				)
+				cloud.children.push(x)
+				break
+			}
 		}
 	}
 	document.body.onkeyup = (ev) => {

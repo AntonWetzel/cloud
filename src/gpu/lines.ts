@@ -8,7 +8,7 @@ export class Lines extends Object.Node {
 	private static pipeline: GPURenderPipeline
 
 	static async Setup(): Promise<void> {
-		const src = await GetServerFile('../shaders/lines.wgsl')
+		const src = await GetServerFile('../shaders/render/lines.wgsl')
 		const module = Module.New(src)
 
 		Lines.pipeline = GPU.device.createRenderPipeline({
@@ -134,7 +134,7 @@ export class Lines extends Object.Node {
 			{ x: 1, y: 1, z: 1 },
 			{ x: 0, y: 0, z: 1 },
 		)
-		return new Lines(positions, colors)
+		return Lines.FromArray(positions, colors)
 	}
 
 	private data: {
@@ -143,13 +143,21 @@ export class Lines extends Object.Node {
 		length: number
 	}
 
-	constructor(positions: Float32Array, colors: Float32Array) {
+	constructor(length: number, positions: GPUBuffer, colors: GPUBuffer) {
 		super()
 		this.data = {
-			length: positions.length / 3,
-			positions: GPU.CreateBuffer(positions, GPUBufferUsage.VERTEX),
-			colors: GPU.CreateBuffer(colors, GPUBufferUsage.VERTEX),
+			length: length,
+			positions: positions,
+			colors: colors,
 		}
+	}
+
+	static FromArray(positions: Float32Array, colors: Float32Array): Lines {
+		return new Lines(
+			positions.length / 3,
+			GPU.CreateBuffer(positions, GPUBufferUsage.VERTEX),
+			GPU.CreateBuffer(colors, GPUBufferUsage.VERTEX),
+		)
 	}
 
 	SubRender(

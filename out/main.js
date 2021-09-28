@@ -6,7 +6,7 @@ import { Empty } from './gpu/empty.js';
 import { Light } from './gpu/light.js';
 document.body.onload = async () => {
     const display = document.getElementById('display');
-    const canvas = await GPU.Setup(display.clientWidth, display.clientHeight, 0.1);
+    const canvas = await GPU.Setup(display.clientWidth, display.clientHeight, 1.0);
     display.append(canvas);
     const scene = new Empty();
     const cam = new Camera(Math.PI / 4);
@@ -14,11 +14,11 @@ document.body.onload = async () => {
     const light = new Light(50);
     light.Translate(0, 0, 10);
     const light2 = new Light(50);
-    const cloud = await CreateSphere(100_000, 0.5, 1.0, 1.0, 0.01);
-    cloud.node.Scale(5, 5, 5);
-    scene.children.push(cloud.node);
+    const cloud = (await CreateSphere(100_000, 0.5, 1.0, 1.0, 0.01)).node;
+    cloud.Scale(25, 25, 25);
+    scene.children.push(cloud);
     const grid = Lines.Grid(10);
-    scene.children.push(grid);
+    //scene.children.push(grid)
     display.onwheel = (ev) => {
         let fov = cam.fieldOfView * (1 + ev.deltaY / 1000);
         if (fov < Math.PI / 10) {
@@ -33,7 +33,7 @@ document.body.onload = async () => {
         GPU.Resize(display.clientWidth, display.clientHeight);
         cam.UpdateSize();
     };
-    let lights = 1;
+    let lights = 0;
     const key = {};
     document.body.onkeydown = (ev) => {
         key[ev.code] = true;
@@ -48,6 +48,13 @@ document.body.onload = async () => {
                     'Key QWER: move camera\n' +
                     'Key L: switch active lights');
                 break;
+            case 'KeyX': {
+                const k = 2;
+                const lines = cloud.kNearest(k, 0.5, 1.0, 1.0);
+                const x = new Lines(cloud.buffer.length * 2 * k, lines.positions, lines.colors);
+                cloud.children.push(x);
+                break;
+            }
         }
     };
     document.body.onkeyup = (ev) => {

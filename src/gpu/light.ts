@@ -4,13 +4,12 @@ import { Matrix, Vector } from './math.js'
 import { Node } from './node.js'
 import { Lines } from './lines.js'
 import { GetServerFile } from '../helper/file.js'
-import * as Quad from './quad.js'
 
 export class Light {
 	static lines: Lines
 
 	static async Setup(): Promise<void> {
-		Light.lines = new Lines(
+		Light.lines = Lines.FromArray(
 			new Float32Array([
 				/*eslint-disable*/
 				 1,  1,  1,   0,0,0,  0,0,0,   -1, -1, -1,

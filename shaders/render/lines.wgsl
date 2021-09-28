@@ -24,5 +24,6 @@ fn vertexMain(
 
 [[stage(fragment)]]
 fn fragmentMain(data: Transfer) -> [[location(0)]] vec4<f32> {
+	//return vec4<f32>(1.0, 1.0, 1.0, 1.0);
 	return vec4<f32>(data.color, 1.0);
 }

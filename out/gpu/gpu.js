@@ -1,6 +1,5 @@
 import { Lines } from './lines.js';
 import { Colored } from './colored.js';
-import * as Quad from './quad.js';
 import { Light } from './light.js';
 import { Cloud } from './cloud.js';
 export let adapter;
@@ -27,10 +26,8 @@ export async function Setup(width, height, ambient) {
         minFilter: 'linear',
     });
     Resize(width, height);
-    await Quad.Setup();
     await Lines.Setup();
     await Colored.Setup();
-    await Quad.Setup();
     await Light.Setup();
     await Cloud.Setup();
     return canvas;
@@ -61,5 +58,13 @@ export function CreateBuffer(data, usage) {
     });
     new Uint8Array(buffer.getMappedRange()).set(new Uint8Array(data.buffer));
     buffer.unmap();
+    return buffer;
+}
+export function CreateEmptyBuffer(length, usage) {
+    const buffer = device.createBuffer({
+        size: length,
+        usage: GPUBufferUsage.COPY_DST | usage,
+        mappedAtCreation: false,
+    });
     return buffer;
 }

@@ -9,7 +9,7 @@ export async function CreateSphere(
 	g: number,
 	b: number,
 	radius: number,
-): Promise<{ node: Node; name: string }> {
+): Promise<{ node: Cloud; name: string }> {
 	const vertices = new Float32Array(points * 3)
 	const colors = new Float32Array(vertices.length)
 

@@ -3,7 +3,6 @@ import { Node } from './node.js'
 import { Lines } from './lines.js'
 import { Colored } from './colored.js'
 import { Camera } from './camera.js'
-import * as Quad from './quad.js'
 import { Light } from './light.js'
 import { Cloud } from './cloud.js'
 
@@ -49,10 +48,8 @@ export async function Setup(
 
 	Resize(width, height)
 
-	await Quad.Setup()
 	await Lines.Setup()
 	await Colored.Setup()
-	await Quad.Setup()
 	await Light.Setup()
 	await Cloud.Setup()
 
@@ -81,7 +78,7 @@ export function Resize(width: number, height: number): void {
 
 export function CreateBuffer(
 	data: Float32Array | Uint32Array,
-	usage: number,
+	usage: GPUFlagsConstant,
 ): GPUBuffer {
 	const buffer = device.createBuffer({
 		size: Math.floor((data.byteLength + 3) / 4) * 4, //round to next size with %4 == 0,
@@ -90,5 +87,17 @@ export function CreateBuffer(
 	})
 	new Uint8Array(buffer.getMappedRange()).set(new Uint8Array(data.buffer))
 	buffer.unmap()
+	return buffer
+}
+
+export function CreateEmptyBuffer(
+	length: number,
+	usage: GPUFlagsConstant,
+): GPUBuffer {
+	const buffer = device.createBuffer({
+		size: length,
+		usage: GPUBufferUsage.COPY_DST | usage,
+		mappedAtCreation: false,
+	})
 	return buffer
 }
