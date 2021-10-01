@@ -1,8 +1,8 @@
 import * as GPU from './gpu/gpu.js';
 import { Lines } from './gpu/lines.js';
-import { CreateSphere } from './loader/sphere.js';
 import { Camera } from './gpu/camera.js';
 import { Empty } from './gpu/empty.js';
+import { CreateCube } from './loader/cube.js';
 import { Light } from './gpu/light.js';
 document.body.onload = async () => {
     const display = document.getElementById('display');
@@ -14,8 +14,9 @@ document.body.onload = async () => {
     const light = new Light(50);
     light.Translate(0, 0, 10);
     const light2 = new Light(50);
-    const cloud = (await CreateSphere(100_000, 0.5, 1.0, 1.0, 0.01)).node;
-    cloud.Scale(25, 25, 25);
+    const cloud = (await CreateCube(100_000, 0.02)).node;
+    //const cloud = (await CreateSphere(100_000, 0.02)).node
+    cloud.Scale(5, 5, 5);
     scene.children.push(cloud);
     const grid = Lines.Grid(10);
     //scene.children.push(grid)
@@ -49,10 +50,15 @@ document.body.onload = async () => {
                     'Key L: switch active lights');
                 break;
             case 'KeyX': {
-                const k = 2;
-                const lines = cloud.kNearest(k, 0.5, 1.0, 1.0);
+                const k = 20;
+                const lines = cloud.kNearest(k);
                 const x = new Lines(cloud.buffer.length * 2 * k, lines.positions, lines.colors);
                 cloud.children.push(x);
+                break;
+            }
+            case 'KeyC': {
+                const lines = cloud.importance(1000);
+                cloud.SetColor(lines.colors);
                 break;
             }
         }

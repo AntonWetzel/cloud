@@ -4,39 +4,48 @@
 
 [[block]] struct Parameter {
 	length: u32;
-	[[size(12)]] k: u32;
-	[[size(16)]] color: vec3<f32>;
+	k: u32;
 };
 
-let MAX_K = 32;
-let MAX_DISTANCE = 340282346638528859811704183484516925440.0;
+let MAX_K = 32u;
+let MAX_DISTANCE = 340282346638528859811704183484516925440.0; //max value for f32 (i think)
 
 [[group(0), binding(0)]] var<storage, read> parameter: Parameter;
 [[group(0), binding(1)]] var<storage, read> cloud: Buffer;
-[[group(0), binding(2)]] var<storage, write> lines: Buffer;
-[[group(0), binding(3)]] var<storage, write> colors: Buffer;
+[[group(0), binding(2)]] var<storage, read> cloudColors: Buffer;
+[[group(0), binding(3)]] var<storage, write> lines: Buffer;
+[[group(0), binding(4)]] var<storage, write> colors: Buffer;
 
 [[stage(compute), workgroup_size(256)]]
-fn main([[builtin(global_invocation_id)]] id : vec3<u32>) {
-	if (id.x >= parameter.length) {
+fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
+	if (global.x >= parameter.length) {
 		return;
 	}
+	let id = global.x * 3u;
+
+
+	var point = vec3<f32>(
+		cloud.data[id + 0u],
+		cloud.data[id + 1u],
+		cloud.data[id + 2u]
+	);
 
 	var distances: array<f32, MAX_K>;
 	var maxDist = MAX_DISTANCE;
 	var points: array<vec3<f32>, MAX_K>;
-	for (var i = 0; i < MAX_K; i = i + 1) {
-		distances[i] = MAX_DISTANCE;
+	for (var i = 0u; i < parameter.k; i = i + 1u) {
+		let other = vec3<f32>(
+			cloud.data[i * 3u + 0u],
+			cloud.data[i * 3u + 1u],
+			cloud.data[i * 3u + 2u]
+		);
+		distances[i] = distance(other, point);
+		points[i] = other;
 	}
 
-	var point = vec3<f32>(
-		cloud.data[id.x * 3u + 0u],
-		cloud.data[id.x * 3u + 1u],
-		cloud.data[id.x * 3u + 2u]
-	);
 
-	for (var i = 0u; i < parameter.length; i = i + 1u) {
-		if (i == id.x) {
+	for (var i = parameter.k; i < parameter.length; i = i + 1u) {
+		if (i == global.x) {
 			continue;
 		}
 		let other = vec3<f32>(
@@ -66,18 +75,19 @@ fn main([[builtin(global_invocation_id)]] id : vec3<u32>) {
 		}
 	}
 	for (var c = 0u; c < parameter.k; c = c + 1u) {
-		lines.data[id.x * 6u * parameter.k + c * 6u + 0u] = point.x;
-		lines.data[id.x * 6u * parameter.k + c * 6u + 1u] = point.y;
-		lines.data[id.x * 6u * parameter.k + c * 6u + 2u] = point.z;
-		lines.data[id.x * 6u * parameter.k + c * 6u + 3u] = points[c].x;
-		lines.data[id.x * 6u * parameter.k + c * 6u + 4u] = points[c].y;
-		lines.data[id.x * 6u * parameter.k + c * 6u + 5u] = points[c].z;
+		let offset = (id * parameter.k + c * 3u) * 2u;
+		lines.data[offset + 0u] = point.x;
+		lines.data[offset + 1u] = point.y;
+		lines.data[offset + 2u] = point.z;
+		lines.data[offset + 3u] = (point.x + points[c].x) / 2.0;
+		lines.data[offset + 4u] = (point.y + points[c].y) / 2.0;
+		lines.data[offset + 5u] = (point.z + points[c].z) / 2.0;
 
-		colors.data[id.x * 6u * parameter.k + c * 6u + 0u] = parameter.color.x;
-		colors.data[id.x * 6u * parameter.k + c * 6u + 1u] = parameter.color.y;
-		colors.data[id.x * 6u * parameter.k + c * 6u + 2u] = parameter.color.z;
-		colors.data[id.x * 6u * parameter.k + c * 6u + 3u] = parameter.color.x;
-		colors.data[id.x * 6u * parameter.k + c * 6u + 4u] = parameter.color.y;
-		colors.data[id.x * 6u * parameter.k + c * 6u + 5u] = parameter.color.z;
+		colors.data[offset + 0u] = cloudColors.data[id + 0u];
+		colors.data[offset + 1u] = cloudColors.data[id + 1u];
+		colors.data[offset + 2u] = cloudColors.data[id + 2u];
+		colors.data[offset + 3u] = cloudColors.data[id + 0u];
+		colors.data[offset + 4u] = cloudColors.data[id + 1u];
+		colors.data[offset + 5u] = cloudColors.data[id + 2u];
 	}
 }

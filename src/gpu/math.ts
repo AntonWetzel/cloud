@@ -148,12 +148,7 @@ export class Matrix {
 		}
 	}
 
-	static Perspective(
-		fovy: number,
-		aspect: number,
-		near: number,
-		far: number,
-	): Matrix {
+	static Perspective(fovy: number, aspect: number, near: number, far: number): Matrix {
 		const c2 = (far + near) / (near - far)
 		const c1 = (2 * far * near) / (near - far)
 

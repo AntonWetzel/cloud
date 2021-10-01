@@ -5,9 +5,6 @@ import { Cloud } from '../gpu/cloud.js'
 
 export async function CreateSphere(
 	points: number,
-	r: number,
-	g: number,
-	b: number,
 	radius: number,
 ): Promise<{ node: Cloud; name: string }> {
 	const vertices = new Float32Array(points * 3)
@@ -21,9 +18,9 @@ export async function CreateSphere(
 		vertices[i * 3 + 1] = Math.cos(long)
 		vertices[i * 3 + 2] = Math.cos(lat) * Math.sin(long)
 
-		colors[i * 3 + 0] = r
-		colors[i * 3 + 1] = g
-		colors[i * 3 + 2] = b
+		colors[i * 3 + 0] = 0.2 + 0.8 * Math.random()
+		colors[i * 3 + 1] = 0.2 + 0.8 * Math.random()
+		colors[i * 3 + 2] = 0.2 + 0.8 * Math.random()
 	}
 
 	return {

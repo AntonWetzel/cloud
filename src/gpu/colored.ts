@@ -8,9 +8,7 @@ export class Colored extends Node {
 	private static pipeline: GPURenderPipeline
 
 	static async Setup(): Promise<void> {
-		const module = Module.New(
-			await GetServerFile('../shaders/render/colored.wgsl'),
-		)
+		const module = Module.New(await GetServerFile('../shaders/render/colored.wgsl'))
 
 		Colored.pipeline = GPU.device.createRenderPipeline({
 			vertex: {
@@ -84,18 +82,9 @@ export class Colored extends Node {
 		super()
 		this.buffer = {
 			length: vertices.length / 3,
-			vertices: GPU.CreateBuffer(
-				new Float32Array(vertices),
-				GPUBufferUsage.VERTEX,
-			),
-			colors: GPU.CreateBuffer(
-				new Float32Array(color),
-				GPUBufferUsage.VERTEX,
-			),
-			normals: GPU.CreateBuffer(
-				new Float32Array(normals),
-				GPUBufferUsage.VERTEX,
-			),
+			vertices: GPU.CreateBuffer(new Float32Array(vertices), GPUBufferUsage.VERTEX),
+			colors: GPU.CreateBuffer(new Float32Array(color), GPUBufferUsage.VERTEX),
+			normals: GPU.CreateBuffer(new Float32Array(normals), GPUBufferUsage.VERTEX),
 		}
 	}
 

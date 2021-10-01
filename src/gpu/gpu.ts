@@ -76,10 +76,7 @@ export function Resize(width: number, height: number): void {
 	global.aspect = canvas.width / canvas.height
 }
 
-export function CreateBuffer(
-	data: Float32Array | Uint32Array,
-	usage: GPUFlagsConstant,
-): GPUBuffer {
+export function CreateBuffer(data: Float32Array | Uint32Array, usage: GPUFlagsConstant): GPUBuffer {
 	const buffer = device.createBuffer({
 		size: Math.floor((data.byteLength + 3) / 4) * 4, //round to next size with %4 == 0,
 		usage: GPUBufferUsage.COPY_DST | usage,
@@ -90,10 +87,7 @@ export function CreateBuffer(
 	return buffer
 }
 
-export function CreateEmptyBuffer(
-	length: number,
-	usage: GPUFlagsConstant,
-): GPUBuffer {
+export function CreateEmptyBuffer(length: number, usage: GPUFlagsConstant): GPUBuffer {
 	const buffer = device.createBuffer({
 		size: length,
 		usage: GPUBufferUsage.COPY_DST | usage,

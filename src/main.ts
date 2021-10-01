@@ -11,11 +11,7 @@ import { Cloud } from './gpu/cloud.js'
 
 document.body.onload = async () => {
 	const display = document.getElementById('display') as HTMLDivElement
-	const canvas = await GPU.Setup(
-		display.clientWidth,
-		display.clientHeight,
-		1.0,
-	)
+	const canvas = await GPU.Setup(display.clientWidth, display.clientHeight, 1.0)
 	display.append(canvas)
 
 	const scene = new Empty()
@@ -27,8 +23,9 @@ document.body.onload = async () => {
 
 	const light2 = new Light(50)
 
-	const cloud = (await CreateSphere(100_000, 0.5, 1.0, 1.0, 0.01)).node
-	cloud.Scale(25, 25, 25)
+	const cloud = (await CreateCube(100_000, 0.02)).node
+	//const cloud = (await CreateSphere(100_000, 0.02)).node
+	cloud.Scale(5, 5, 5)
 	scene.children.push(cloud)
 
 	const grid = Lines.Grid(10)
@@ -69,14 +66,15 @@ document.body.onload = async () => {
 				)
 				break
 			case 'KeyX': {
-				const k = 2
-				const lines = cloud.kNearest(k, 0.5, 1.0, 1.0)
-				const x = new Lines(
-					cloud.buffer.length * 2 * k,
-					lines.positions,
-					lines.colors,
-				)
+				const k = 20
+				const lines = cloud.kNearest(k)
+				const x = new Lines(cloud.buffer.length * 2 * k, lines.positions, lines.colors)
 				cloud.children.push(x)
+				break
+			}
+			case 'KeyC': {
+				const lines = cloud.importance(1000)
+				cloud.SetColor(lines.colors)
 				break
 			}
 		}

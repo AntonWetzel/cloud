@@ -9,12 +9,7 @@ export class Camera {
 	private fov: number
 
 	constructor(fieldOfView: number) {
-		this.projection = Matrix.Perspective(
-			fieldOfView,
-			GPU.global.aspect,
-			1,
-			1000,
-		)
+		this.projection = Matrix.Perspective(fieldOfView, GPU.global.aspect, 1, 1000)
 		this.view = Matrix.Identity()
 		this.fov = fieldOfView
 	}
@@ -31,9 +26,7 @@ export class Camera {
 	Render(node: Node, lights: Light[]): void {
 		const encoder = GPU.device.createCommandEncoder()
 
-		const lightData = new Float32Array(
-			4 + (lights.length + (lights.length == 0 ? 1 : 0)) * 4,
-		)
+		const lightData = new Float32Array(4 + (lights.length + (lights.length == 0 ? 1 : 0)) * 4)
 		new Int32Array(lightData.buffer)[0] = lights.length
 
 		for (let i = 0; i < lights.length; i++) {
@@ -57,13 +50,7 @@ export class Camera {
 				view: GPU.depth.createView(),
 			},
 		})
-		node.Render(
-			this.projection,
-			this.view,
-			Matrix.Identity(),
-			renderPass,
-			lightBuffer,
-		)
+		node.Render(this.projection, this.view, Matrix.Identity(), renderPass, lightBuffer)
 		for (let i = 0; i < lights.length; i++) {
 			lights[i].Show(this.projection, this.view, renderPass, lightBuffer)
 		}
@@ -72,12 +59,7 @@ export class Camera {
 	}
 
 	UpdateSize(): void {
-		this.projection = Matrix.Perspective(
-			this.fov,
-			GPU.global.aspect,
-			1,
-			1000,
-		)
+		this.projection = Matrix.Perspective(this.fov, GPU.global.aspect, 1, 1000)
 	}
 
 	Translate(x: number, y: number, z: number): void {

@@ -20,13 +20,7 @@ export abstract class Node {
 		model = model.Multiply(this.model)
 		this.SubRender(projection, view, model, renderPass, spotLights)
 		for (let i = 0; i < this.children.length; i++) {
-			this.children[i].Render(
-				projection,
-				view,
-				model,
-				renderPass,
-				spotLights,
-			)
+			this.children[i].Render(projection, view, model, renderPass, spotLights)
 		}
 	}
 

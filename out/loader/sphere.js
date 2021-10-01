@@ -1,5 +1,5 @@
 import { Cloud } from '../gpu/cloud.js';
-export async function CreateSphere(points, r, g, b, radius) {
+export async function CreateSphere(points, radius) {
     const vertices = new Float32Array(points * 3);
     const colors = new Float32Array(vertices.length);
     for (let i = 0; i < points; i++) {
@@ -8,9 +8,9 @@ export async function CreateSphere(points, r, g, b, radius) {
         vertices[i * 3 + 0] = Math.sin(lat) * Math.sin(long);
         vertices[i * 3 + 1] = Math.cos(long);
         vertices[i * 3 + 2] = Math.cos(lat) * Math.sin(long);
-        colors[i * 3 + 0] = r;
-        colors[i * 3 + 1] = g;
-        colors[i * 3 + 2] = b;
+        colors[i * 3 + 0] = 0.2 + 0.8 * Math.random();
+        colors[i * 3 + 1] = 0.2 + 0.8 * Math.random();
+        colors[i * 3 + 2] = 0.2 + 0.8 * Math.random();
     }
     return {
         node: new Cloud(vertices, colors, radius),
