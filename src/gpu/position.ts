@@ -1,36 +1,15 @@
 import * as GPU from './gpu.js'
 import { Matrix } from './math.js'
 
-export abstract class Node {
-	protected model: Matrix
-	children: Node[]
+export class Position {
+	model: Matrix
 
 	constructor() {
 		this.model = Matrix.Identity()
-		this.children = []
 	}
-
-	Render(
-		projection: Matrix,
-		view: Matrix,
-		model: Matrix,
-		renderPass: GPURenderPassEncoder,
-		spotLights: GPUBuffer,
-	): void {
-		model = model.Multiply(this.model)
-		this.SubRender(projection, view, model, renderPass, spotLights)
-		for (let i = 0; i < this.children.length; i++) {
-			this.children[i].Render(projection, view, model, renderPass, spotLights)
-		}
+	Save(location: Float32Array, offset: number): void {
+		this.model.Save(location, offset)
 	}
-
-	protected abstract SubRender(
-		projection: Matrix,
-		view: Matrix,
-		model: Matrix,
-		renderPass: GPURenderPassEncoder,
-		lights: GPUBuffer,
-	): void
 
 	Translate(x: number, y: number, z: number): void {
 		this.model = Matrix.Translate(x, y, z).Multiply(this.model)

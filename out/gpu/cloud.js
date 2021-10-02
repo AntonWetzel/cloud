@@ -1,8 +1,7 @@
 import * as GPU from './gpu.js';
 import * as Module from './module.js';
 import { GetServerFile } from '../helper/file.js';
-import { Node } from './node.js';
-export class Cloud extends Node {
+export class Cloud {
     static pipeline;
     static kNearest;
     static importance;
@@ -91,60 +90,34 @@ export class Cloud extends Node {
             },
         });
     }
-    radius;
-    buffer;
-    constructor(points, colors, radius) {
-        super();
-        this.radius = radius;
-        this.buffer = {};
-        this.SetPoints(points);
-        this.SetColor(colors);
-    }
-    SetPoints(points) {
-        this.buffer.length = points.length / 4;
-        this.buffer.positions = GPU.CreateBuffer(points, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE);
-    }
-    SetColor(colors) {
-        if (colors instanceof Float32Array) {
-            this.buffer.colors = GPU.CreateBuffer(colors, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE);
-        }
-        else {
-            this.buffer.colors = colors;
-        }
-    }
-    SubRender(projection, view, model, renderPass, lights) {
-        const array = new Float32Array(16 * 3 + 3);
-        projection.Save(array, 0);
-        view.Save(array, 16);
-        model.Save(array, 32);
-        array[48] = GPU.global.ambient;
-        array[49] = this.radius;
-        array[50] = GPU.global.aspect;
+    static Render(position, radius, length, positions, colors) {
+        const array = new Float32Array(16 + 3);
+        position.Save(array, 0);
+        array[16] = radius;
+        array[17] = GPU.global.aspect;
         const buffer = GPU.CreateBuffer(array, GPUBufferUsage.UNIFORM);
-        renderPass.setPipeline(Cloud.pipeline);
+        GPU.renderPass.setPipeline(Cloud.pipeline);
         const group = GPU.device.createBindGroup({
             layout: Cloud.pipeline.getBindGroupLayout(0),
             entries: [
                 {
                     binding: 0,
-                    resource: { buffer: buffer },
+                    resource: { buffer: GPU.cameraBuffer },
                 },
                 {
                     binding: 1,
-                    resource: { buffer: lights },
+                    resource: { buffer: buffer },
                 },
             ],
         });
-        renderPass.setBindGroup(0, group);
-        renderPass.setVertexBuffer(0, Cloud.quadBuffer);
-        renderPass.setVertexBuffer(1, this.buffer.positions);
-        renderPass.setVertexBuffer(2, this.buffer.colors);
-        renderPass.draw(4, this.buffer.length);
+        GPU.renderPass.setBindGroup(0, group);
+        GPU.renderPass.setVertexBuffer(0, Cloud.quadBuffer);
+        GPU.renderPass.setVertexBuffer(1, positions);
+        GPU.renderPass.setVertexBuffer(2, colors);
+        GPU.renderPass.draw(4, length);
     }
     kNearest(k) {
-        const size = this.buffer.length * 4 * 4 * 2 * k; // bytePerFloat * floatPerPoint * PointsPerLine * k
-        const lines = GPU.CreateEmptyBuffer(size, GPUBufferUsage.STORAGE | GPUBufferUsage.VERTEX);
-        const color = GPU.CreateEmptyBuffer(size, GPUBufferUsage.STORAGE | GPUBufferUsage.VERTEX);
+        const nearest = GPU.CreateEmptyBuffer(this.buffer.length * 4 + k, GPUBufferUsage.STORAGE | GPUBufferUsage.VERTEX);
         const param = new Float32Array(4);
         new Uint32Array(param.buffer).set([this.buffer.length, k], 0);
         const buffer = GPU.CreateBuffer(param, GPUBufferUsage.STORAGE);
@@ -160,16 +133,8 @@ export class Cloud extends Node {
                     resource: { buffer: this.buffer.positions },
                 },
                 {
-                    binding: 2,
-                    resource: { buffer: this.buffer.colors },
-                },
-                {
                     binding: 3,
-                    resource: { buffer: lines },
-                },
-                {
-                    binding: 4,
-                    resource: { buffer: color },
+                    resource: { buffer: nearest },
                 },
             ],
         });
@@ -180,10 +145,7 @@ export class Cloud extends Node {
         compute.dispatch(Math.ceil(this.buffer.length / 256));
         compute.endPass();
         GPU.device.queue.submit([encoder.finish()]);
-        return {
-            positions: lines,
-            colors: color,
-        };
+        return nearest;
     }
     importance(threshhold) {
         const param = new Float32Array(4);

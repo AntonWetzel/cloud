@@ -1,6 +1,4 @@
 import { Lines } from './lines.js';
-import { Colored } from './colored.js';
-import { Light } from './light.js';
 import { Cloud } from './cloud.js';
 export let adapter;
 export let device;
@@ -11,14 +9,13 @@ export let canvas;
 export let context;
 export let global;
 export let depth;
-export async function Setup(width, height, ambient) {
+export async function Setup(width, height) {
     adapter = (await window.navigator.gpu.requestAdapter());
     device = (await adapter.requestDevice());
     canvas = document.createElement('canvas');
     context = canvas.getContext('webgpu');
     format = context.getPreferredFormat(adapter);
     global = {
-        ambient: ambient,
         aspect: undefined,
     };
     sampler = device.createSampler({
@@ -27,8 +24,6 @@ export async function Setup(width, height, ambient) {
     });
     Resize(width, height);
     await Lines.Setup();
-    await Colored.Setup();
-    await Light.Setup();
     await Cloud.Setup();
     return canvas;
 }
@@ -49,6 +44,33 @@ export function Resize(width, height) {
         usage: GPUTextureUsage.RENDER_ATTACHMENT,
     });
     global.aspect = canvas.width / canvas.height;
+}
+export let cameraBuffer;
+export let renderPass;
+let encoder;
+export function StartRender(camera) {
+    encoder = device.createCommandEncoder();
+    renderPass = encoder.beginRenderPass({
+        colorAttachments: [
+            {
+                loadValue: clearColor,
+                storeOp: 'store',
+                view: context.getCurrentTexture().createView(),
+            },
+        ],
+        depthStencilAttachment: {
+            depthLoadValue: 1.0,
+            depthStoreOp: 'store',
+            stencilLoadValue: 0,
+            stencilStoreOp: 'store',
+            view: depth.createView(),
+        },
+    });
+    cameraBuffer = camera.Buffer();
+}
+export function FinishRender() {
+    renderPass.endPass();
+    device.queue.submit([encoder.finish()]);
 }
 export function CreateBuffer(data, usage) {
     const buffer = device.createBuffer({

@@ -1,9 +1,7 @@
 import { Matrix } from './math.js'
-import { Node } from './node.js'
+import { Position } from './position.js'
 import { Lines } from './lines.js'
-import { Colored } from './colored.js'
 import { Camera } from './camera.js'
-import { Light } from './light.js'
 import { Cloud } from './cloud.js'
 
 export let adapter: GPUAdapter
@@ -17,17 +15,12 @@ export let canvas: HTMLCanvasElement
 export let context: GPUCanvasContext
 
 export let global: {
-	ambient: number
 	aspect: number
 }
 
 export let depth: GPUTexture
 
-export async function Setup(
-	width: number,
-	height: number,
-	ambient: number,
-): Promise<HTMLCanvasElement> {
+export async function Setup(width: number, height: number): Promise<HTMLCanvasElement> {
 	adapter = (await window.navigator.gpu.requestAdapter()) as GPUAdapter
 	device = (await adapter.requestDevice()) as GPUDevice
 
@@ -37,7 +30,6 @@ export async function Setup(
 	format = context.getPreferredFormat(adapter)
 
 	global = {
-		ambient: ambient,
 		aspect: undefined as any,
 	}
 
@@ -49,8 +41,6 @@ export async function Setup(
 	Resize(width, height)
 
 	await Lines.Setup()
-	await Colored.Setup()
-	await Light.Setup()
 	await Cloud.Setup()
 
 	return canvas
@@ -74,6 +64,36 @@ export function Resize(width: number, height: number): void {
 		usage: GPUTextureUsage.RENDER_ATTACHMENT,
 	})
 	global.aspect = canvas.width / canvas.height
+}
+
+export let cameraBuffer: GPUBuffer
+export let renderPass: GPURenderPassEncoder
+let encoder: GPUCommandEncoder
+
+export function StartRender(camera: Camera): void {
+	encoder = device.createCommandEncoder()
+	renderPass = encoder.beginRenderPass({
+		colorAttachments: [
+			{
+				loadValue: clearColor,
+				storeOp: 'store',
+				view: context.getCurrentTexture().createView(),
+			},
+		],
+		depthStencilAttachment: {
+			depthLoadValue: 1.0,
+			depthStoreOp: 'store',
+			stencilLoadValue: 0,
+			stencilStoreOp: 'store',
+			view: depth.createView(),
+		},
+	})
+	cameraBuffer = camera.Buffer()
+}
+
+export function FinishRender(): void {
+	renderPass.endPass()
+	device.queue.submit([encoder.finish()])
 }
 
 export function CreateBuffer(data: Float32Array | Uint32Array, usage: GPUFlagsConstant): GPUBuffer {

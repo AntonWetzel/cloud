@@ -16,37 +16,11 @@ export class Camera {
     get fieldOfView() {
         return this.fov;
     }
-    Render(node, lights) {
-        const encoder = GPU.device.createCommandEncoder();
-        const lightData = new Float32Array(4 + (lights.length + (lights.length == 0 ? 1 : 0)) * 4);
-        new Int32Array(lightData.buffer)[0] = lights.length;
-        for (let i = 0; i < lights.length; i++) {
-            const light = lights[i];
-            light.Save(lightData, 4 + i * 4);
-        }
-        const lightBuffer = GPU.CreateBuffer(lightData, GPUBufferUsage.STORAGE);
-        const renderPass = encoder.beginRenderPass({
-            colorAttachments: [
-                {
-                    loadValue: GPU.clearColor,
-                    storeOp: 'store',
-                    view: GPU.context.getCurrentTexture().createView(),
-                },
-            ],
-            depthStencilAttachment: {
-                depthLoadValue: 1.0,
-                depthStoreOp: 'store',
-                stencilLoadValue: 0,
-                stencilStoreOp: 'store',
-                view: GPU.depth.createView(),
-            },
-        });
-        node.Render(this.projection, this.view, Matrix.Identity(), renderPass, lightBuffer);
-        for (let i = 0; i < lights.length; i++) {
-            lights[i].Show(this.projection, this.view, renderPass, lightBuffer);
-        }
-        renderPass.endPass();
-        GPU.device.queue.submit([encoder.finish()]);
+    Buffer() {
+        const array = new Float32Array(16 * 2);
+        this.projection.Save(array, 0);
+        this.view.Save(array, 16);
+        return GPU.CreateBuffer(array, GPUBufferUsage.UNIFORM);
     }
     UpdateSize() {
         this.projection = Matrix.Perspective(this.fov, GPU.global.aspect, 1, 1000);

@@ -76,7 +76,7 @@ export class Colored extends Node {
             normals: GPU.CreateBuffer(new Float32Array(normals), GPUBufferUsage.VERTEX),
         };
     }
-    SubRender(projection, view, model, renderPass, lights) {
+    SubRender(projection, view, model, renderPass) {
         const array = new Float32Array(16 * 3 + 4);
         projection.Save(array, 0);
         view.Save(array, 16);
@@ -90,10 +90,6 @@ export class Colored extends Node {
                 {
                     binding: 0,
                     resource: { buffer: buffer },
-                },
-                {
-                    binding: 1,
-                    resource: { buffer: lights },
                 },
             ],
         });

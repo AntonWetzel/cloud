@@ -1,34 +1,32 @@
 import * as GPU from './gpu/gpu.js'
 import { Lines } from './gpu/lines.js'
-import { Node } from './gpu/node.js'
+import { Position } from './gpu/position.js'
 import { Matrix } from './gpu/math.js'
 import { CreateSphere } from './loader/sphere.js'
 import { Camera } from './gpu/camera.js'
-import { Empty } from './gpu/empty.js'
 import { CreateCube } from './loader/cube.js'
-import { Light } from './gpu/light.js'
 import { Cloud } from './gpu/cloud.js'
+import { CreateColors } from './loader/color.js'
+import { CreateGrid } from './loader/grid.js'
 
 document.body.onload = async () => {
 	const display = document.getElementById('display') as HTMLDivElement
-	const canvas = await GPU.Setup(display.clientWidth, display.clientHeight, 1.0)
+	const canvas = await GPU.Setup(display.clientWidth, display.clientHeight)
 	display.append(canvas)
 
-	const scene = new Empty()
 	const cam = new Camera(Math.PI / 4)
 	cam.Translate(0, 5, 30)
 
-	const light = new Light(50)
-	light.Translate(0, 0, 10)
+	const increase = new Position()
+	increase.Scale(5, 5, 5)
+	const normal = new Position()
 
-	const light2 = new Light(50)
-
-	const cloud = (await CreateCube(100_000, 0.02)).node
+	const length = 100_000
+	const cloud = CreateCube(length)
+	const colors = CreateColors(length)
 	//const cloud = (await CreateSphere(100_000, 0.02)).node
-	cloud.Scale(5, 5, 5)
-	scene.children.push(cloud)
 
-	const grid = Lines.Grid(10)
+	const grid = CreateGrid(10)
 	//scene.children.push(grid)
 
 	display.onwheel = (ev) => {
@@ -66,10 +64,10 @@ document.body.onload = async () => {
 				)
 				break
 			case 'KeyX': {
-				const k = 20
-				const lines = cloud.kNearest(k)
-				const x = new Lines(cloud.buffer.length * 2 * k, lines.positions, lines.colors)
-				cloud.children.push(x)
+				//const k = 20
+				//const lines = cloud.kNearest(k)
+				//const x = new Lines(cloud.buffer.length * 2 * k, lines.positions, lines.colors)
+				//cloud.children.push(x)
 				break
 			}
 			case 'KeyC': {
@@ -92,9 +90,6 @@ document.body.onload = async () => {
 		if ((ev.buttons & 1) != 0) {
 			cam.RotateX(-ev.movementY / 200)
 			cam.RotateGlobalY(-ev.movementX / 200)
-		} else if ((ev.buttons & 4) != 0) {
-			light.RotateX(ev.movementY / 200)
-			light.RotateGlobalY(ev.movementX / 200)
 		}
 	}
 
@@ -124,16 +119,10 @@ document.body.onload = async () => {
 		if (key['KeyR'] != undefined) {
 			cam.Translate(0, dist, 0)
 		}
-		const l: Light[] = []
-
-		if (lights % 2 != 0) {
-			l.push(light)
-		}
-		if ((lights >> 1) % 2 != 0) {
-			l.push(light2)
-		}
-		cam.Render(scene, l)
-
+		GPU.StartRender(cam)
+		Cloud.Render(increase, 0.02, length, cloud, colors)
+		Lines.Render(normal, grid.length, grid.positions, grid.colors)
+		GPU.FinishRender()
 		last = time
 		requestAnimationFrame(Draw)
 	}

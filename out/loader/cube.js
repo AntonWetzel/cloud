@@ -1,7 +1,6 @@
-import { Cloud } from '../gpu/cloud.js';
-export async function CreateCube(points, radius) {
+import * as GPU from '../gpu/gpu.js';
+export function CreateCube(points) {
     const vertices = new Float32Array(points * 4);
-    const colors = new Float32Array(vertices.length);
     for (let i = 0; i < points; i++) {
         switch (Math.floor(Math.random() * 6)) {
             case 0:
@@ -38,12 +37,6 @@ export async function CreateCube(points, radius) {
         vertices[i * 4 + 0] += 0.001 * Math.random();
         vertices[i * 4 + 1] += 0.001 * Math.random();
         vertices[i * 4 + 2] += 0.001 * Math.random();
-        colors[i * 4 + 0] = 0.2 + 0.8 * Math.random();
-        colors[i * 4 + 1] = 0.2 + 0.8 * Math.random();
-        colors[i * 4 + 2] = 0.2 + 0.8 * Math.random();
     }
-    return {
-        node: new Cloud(vertices, colors, radius),
-        name: 'cube',
-    };
+    return GPU.CreateBuffer(vertices, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE);
 }

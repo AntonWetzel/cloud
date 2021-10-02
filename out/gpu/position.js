@@ -1,17 +1,11 @@
 import { Matrix } from './math.js';
-export class Node {
+export class Position {
     model;
-    children;
     constructor() {
         this.model = Matrix.Identity();
-        this.children = [];
     }
-    Render(projection, view, model, renderPass) {
-        model = model.Multiply(this.model);
-        this.SubRender(projection, view, model, renderPass);
-        for (let i = 0; i < this.children.length; i++) {
-            this.children[i].Render(projection, view, model, renderPass);
-        }
+    Save(location, offset) {
+        this.model.Save(location, offset);
     }
     Translate(x, y, z) {
         this.model = Matrix.Translate(x, y, z).Multiply(this.model);
