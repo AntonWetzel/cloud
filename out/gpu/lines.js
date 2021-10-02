@@ -20,7 +20,7 @@ export class Lines extends Object.Node {
                                 format: 'float32x3',
                             },
                         ],
-                        arrayStride: 3 * 4,
+                        arrayStride: 4 * 4,
                         stepMode: 'vertex',
                     },
                     {
@@ -31,7 +31,7 @@ export class Lines extends Object.Node {
                                 format: 'float32x3',
                             },
                         ],
-                        arrayStride: 3 * 4,
+                        arrayStride: 4 * 4,
                         stepMode: 'vertex',
                     },
                 ],
@@ -56,25 +56,25 @@ export class Lines extends Object.Node {
         });
     }
     static Grid(amount) {
-        const positions = new Float32Array((amount * 4 + 3) * 6);
-        const colors = new Float32Array((amount * 4 + 3) * 6);
+        const positions = new Float32Array((amount * 4 + 3) * 8);
+        const colors = new Float32Array((amount * 4 + 3) * 8);
         const addLine = (idx, start, end, color, endColor = undefined) => {
             if (endColor == undefined) {
                 endColor = color;
             }
-            idx *= 6;
+            idx *= 8;
             positions[idx + 0] = start.x;
             positions[idx + 1] = start.y;
             positions[idx + 2] = start.z;
-            positions[idx + 3] = end.x;
-            positions[idx + 4] = end.y;
-            positions[idx + 5] = end.z;
             colors[idx + 0] = color.x;
             colors[idx + 1] = color.y;
             colors[idx + 2] = color.z;
-            colors[idx + 3] = endColor.x;
-            colors[idx + 4] = endColor.y;
-            colors[idx + 5] = endColor.z;
+            positions[idx + 4] = end.x;
+            positions[idx + 5] = end.y;
+            positions[idx + 6] = end.z;
+            colors[idx + 4] = endColor.x;
+            colors[idx + 5] = endColor.y;
+            colors[idx + 6] = endColor.z;
         };
         for (let i = -amount; i <= amount; i++) {
             if (i == 0) {
@@ -108,7 +108,7 @@ export class Lines extends Object.Node {
         };
     }
     static FromArray(positions, colors) {
-        return new Lines(positions.length / 3, GPU.CreateBuffer(positions, GPUBufferUsage.VERTEX), GPU.CreateBuffer(colors, GPUBufferUsage.VERTEX));
+        return new Lines(positions.length / 4, GPU.CreateBuffer(positions, GPUBufferUsage.VERTEX), GPU.CreateBuffer(colors, GPUBufferUsage.VERTEX));
     }
     SubRender(projection, view, model, renderPass) {
         const array = new Float32Array(16 * 3);

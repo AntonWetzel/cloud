@@ -73,8 +73,11 @@ document.body.onload = async () => {
 				break
 			}
 			case 'KeyC': {
-				const lines = cloud.importance(1000)
-				cloud.SetColor(lines.colors)
+				cloud.importance(1000)
+				break
+			}
+			case 'KeyV': {
+				cloud.smooth(0.2)
 				break
 			}
 		}

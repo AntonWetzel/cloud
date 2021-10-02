@@ -6,6 +6,7 @@ export class Cloud extends Node {
     static pipeline;
     static kNearest;
     static importance;
+    static smooth;
     static quadBuffer;
     static async Setup() {
         const src = await GetServerFile('../shaders/render/cloud.wgsl');
@@ -34,7 +35,7 @@ export class Cloud extends Node {
                                 format: 'float32x3',
                             },
                         ],
-                        arrayStride: 3 * 4,
+                        arrayStride: 4 * 4,
                         stepMode: 'instance',
                     },
                     {
@@ -45,7 +46,7 @@ export class Cloud extends Node {
                                 format: 'float32x3',
                             },
                         ],
-                        arrayStride: 3 * 4,
+                        arrayStride: 4 * 4,
                         stepMode: 'instance',
                     },
                 ],
@@ -83,6 +84,12 @@ export class Cloud extends Node {
                 entryPoint: 'main',
             },
         });
+        Cloud.smooth = GPU.device.createComputePipeline({
+            compute: {
+                module: Module.New(await GetServerFile('../shaders/compute/smooth.wgsl')),
+                entryPoint: 'main',
+            },
+        });
     }
     radius;
     buffer;
@@ -94,7 +101,7 @@ export class Cloud extends Node {
         this.SetColor(colors);
     }
     SetPoints(points) {
-        this.buffer.length = points.length / 3;
+        this.buffer.length = points.length / 4;
         this.buffer.positions = GPU.CreateBuffer(points, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE);
     }
     SetColor(colors) {
@@ -135,7 +142,7 @@ export class Cloud extends Node {
         renderPass.draw(4, this.buffer.length);
     }
     kNearest(k) {
-        const size = this.buffer.length * 4 * 3 * 2 * k; // bytePerFloat * floatPerPoint * PointsPerLine * k
+        const size = this.buffer.length * 4 * 4 * 2 * k; // bytePerFloat * floatPerPoint * PointsPerLine * k
         const lines = GPU.CreateEmptyBuffer(size, GPUBufferUsage.STORAGE | GPUBufferUsage.VERTEX);
         const color = GPU.CreateEmptyBuffer(size, GPUBufferUsage.STORAGE | GPUBufferUsage.VERTEX);
         const param = new Float32Array(4);
@@ -179,8 +186,6 @@ export class Cloud extends Node {
         };
     }
     importance(threshhold) {
-        const size = this.buffer.length * 4 * 3;
-        const color = GPU.CreateEmptyBuffer(size, GPUBufferUsage.STORAGE | GPUBufferUsage.VERTEX);
         const param = new Float32Array(4);
         new Uint32Array(param.buffer).set([this.buffer.length], 0);
         param[1] = threshhold;
@@ -198,7 +203,7 @@ export class Cloud extends Node {
                 },
                 {
                     binding: 2,
-                    resource: { buffer: color },
+                    resource: { buffer: this.buffer.colors },
                 },
             ],
         });
@@ -209,8 +214,31 @@ export class Cloud extends Node {
         compute.dispatch(Math.ceil(this.buffer.length / 256));
         compute.endPass();
         GPU.device.queue.submit([encoder.finish()]);
-        return {
-            colors: color,
-        };
+    }
+    smooth(amount) {
+        const param = new Float32Array(4);
+        new Uint32Array(param.buffer).set([this.buffer.length], 0);
+        param[1] = amount;
+        const buffer = GPU.CreateBuffer(param, GPUBufferUsage.STORAGE);
+        const group = GPU.device.createBindGroup({
+            layout: Cloud.smooth.getBindGroupLayout(0),
+            entries: [
+                {
+                    binding: 0,
+                    resource: { buffer: buffer },
+                },
+                {
+                    binding: 1,
+                    resource: { buffer: this.buffer.positions },
+                },
+            ],
+        });
+        const encoder = GPU.device.createCommandEncoder();
+        const compute = encoder.beginComputePass({});
+        compute.setPipeline(Cloud.smooth);
+        compute.setBindGroup(0, group);
+        compute.dispatch(Math.ceil(this.buffer.length / 256));
+        compute.endPass();
+        GPU.device.queue.submit([encoder.finish()]);
     }
 }

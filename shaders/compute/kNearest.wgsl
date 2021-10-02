@@ -1,5 +1,5 @@
 [[block]] struct Buffer {
-	data: array<f32>;
+	data: array<vec3<f32>>;
 };
 
 [[block]] struct Parameter {
@@ -21,38 +21,24 @@ fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
 	if (global.x >= parameter.length) {
 		return;
 	}
-	let id = global.x * 3u;
+	let id = global.x;
 
-
-	var point = vec3<f32>(
-		cloud.data[id + 0u],
-		cloud.data[id + 1u],
-		cloud.data[id + 2u]
-	);
-
+	var point = cloud.data[id];
 	var distances: array<f32, MAX_K>;
 	var maxDist = MAX_DISTANCE;
 	var points: array<vec3<f32>, MAX_K>;
 	for (var i = 0u; i < parameter.k; i = i + 1u) {
-		let other = vec3<f32>(
-			cloud.data[i * 3u + 0u],
-			cloud.data[i * 3u + 1u],
-			cloud.data[i * 3u + 2u]
-		);
+		let other = cloud.data[i];
 		distances[i] = distance(other, point);
 		points[i] = other;
 	}
 
 
 	for (var i = parameter.k; i < parameter.length; i = i + 1u) {
-		if (i == global.x) {
+		if (i == id) {
 			continue;
 		}
-		let other = vec3<f32>(
-			cloud.data[i * 3u + 0u],
-			cloud.data[i * 3u + 1u],
-			cloud.data[i * 3u + 2u]
-		);
+		let other = cloud.data[i];
 		let dist = distance(other, point);
 		if (dist < maxDist) {
 			var max = 0u;
@@ -75,19 +61,11 @@ fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
 		}
 	}
 	for (var c = 0u; c < parameter.k; c = c + 1u) {
-		let offset = (id * parameter.k + c * 3u) * 2u;
-		lines.data[offset + 0u] = point.x;
-		lines.data[offset + 1u] = point.y;
-		lines.data[offset + 2u] = point.z;
-		lines.data[offset + 3u] = (point.x + points[c].x) / 2.0;
-		lines.data[offset + 4u] = (point.y + points[c].y) / 2.0;
-		lines.data[offset + 5u] = (point.z + points[c].z) / 2.0;
+		let offset = (id * parameter.k + c) * 2u;
+		lines.data[offset] = point;
+		lines.data[offset + 1u] = (point + points[c]) / 2.0;
 
-		colors.data[offset + 0u] = cloudColors.data[id + 0u];
-		colors.data[offset + 1u] = cloudColors.data[id + 1u];
-		colors.data[offset + 2u] = cloudColors.data[id + 2u];
-		colors.data[offset + 3u] = cloudColors.data[id + 0u];
-		colors.data[offset + 4u] = cloudColors.data[id + 1u];
-		colors.data[offset + 5u] = cloudColors.data[id + 2u];
+		colors.data[offset + 0u] = cloudColors.data[id];
+		colors.data[offset + 1u] = cloudColors.data[id];
 	}
 }
