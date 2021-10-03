@@ -1,11 +1,12 @@
 import * as GPU from './gpu/gpu.js'
-import { Lines } from './gpu/lines.js'
+import * as Lines from './gpu/lines.js'
 import { Position } from './gpu/position.js'
 import { Matrix } from './gpu/math.js'
 import { CreateSphere } from './loader/sphere.js'
 import { Camera } from './gpu/camera.js'
 import { CreateCube } from './loader/cube.js'
-import { Cloud } from './gpu/cloud.js'
+import * as Cloud from './gpu/cloud.js'
+import * as KNearest from './gpu/kNearest.js'
 import { CreateColors } from './loader/color.js'
 import { CreateGrid } from './loader/grid.js'
 
@@ -47,8 +48,8 @@ document.body.onload = async () => {
 	let lights = 0
 
 	const key: { [key: string]: true | undefined } = {}
-
-	document.body.onkeydown = (ev) => {
+	let nearest: undefined | { buffer: GPUBuffer; k: number } = undefined
+	document.body.onkeydown = async (ev) => {
 		key[ev.code] = true
 		switch (ev.code) {
 			case 'KeyL':
@@ -63,23 +64,18 @@ document.body.onload = async () => {
 						'Key L: switch active lights',
 				)
 				break
-			case 'KeyX': {
-				//const k = 20
-				//const lines = cloud.kNearest(k)
-				//const x = new Lines(cloud.buffer.length * 2 * k, lines.positions, lines.colors)
-				//cloud.children.push(x)
+			case 'KeyX':
+				nearest = await KNearest.Compute(10, cloud, length)
 				break
-			}
-			case 'KeyC': {
-				cloud.importance(1000)
+			case 'KeyC':
+				//cloud.importance(1000)
 				break
-			}
-			case 'KeyV': {
-				cloud.smooth(0.2)
+			case 'KeyV':
+				//cloud.smooth(0.2)
 				break
-			}
 		}
 	}
+
 	document.body.onkeyup = (ev) => {
 		key[ev.code] = undefined
 	}
@@ -98,7 +94,7 @@ document.body.onload = async () => {
 		last = time
 	})
 
-	function Draw(time: number) {
+	async function Draw(time: number) {
 		const delta = time - last
 		const dist = delta / 50
 		if (key['KeyW'] != undefined) {
@@ -120,8 +116,11 @@ document.body.onload = async () => {
 			cam.Translate(0, dist, 0)
 		}
 		GPU.StartRender(cam)
-		Cloud.Render(increase, 0.02, length, cloud, colors)
-		Lines.Render(normal, grid.length, grid.positions, grid.colors)
+		await Cloud.Render(increase, 0.02, length, cloud, colors)
+		await Lines.Render(normal, grid.length, grid.positions, grid.colors)
+		if (nearest != undefined) {
+			await KNearest.Render(increase, cloud, colors, nearest.buffer, nearest.k, length)
+		}
 		GPU.FinishRender()
 		last = time
 		requestAnimationFrame(Draw)

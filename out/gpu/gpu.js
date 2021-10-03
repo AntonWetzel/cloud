@@ -1,5 +1,3 @@
-import { Lines } from './lines.js';
-import { Cloud } from './cloud.js';
 export let adapter;
 export let device;
 export const clearColor = { r: 0.0, g: 0.01, b: 0.05, a: 1.0 };
@@ -23,8 +21,6 @@ export async function Setup(width, height) {
         minFilter: 'linear',
     });
     Resize(width, height);
-    await Lines.Setup();
-    await Cloud.Setup();
     return canvas;
 }
 export function Resize(width, height) {

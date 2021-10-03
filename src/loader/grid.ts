@@ -1,6 +1,3 @@
-import { Position } from '../gpu/position.js'
-import { GetUserFile } from '../helper/file.js'
-import { Cloud } from '../gpu/cloud.js'
 import * as GPU from '../gpu/gpu.js'
 
 export function CreateGrid(amount: number): {

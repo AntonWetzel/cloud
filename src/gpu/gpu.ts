@@ -1,8 +1,4 @@
-import { Matrix } from './math.js'
-import { Position } from './position.js'
-import { Lines } from './lines.js'
 import { Camera } from './camera.js'
-import { Cloud } from './cloud.js'
 
 export let adapter: GPUAdapter
 export let device: GPUDevice
@@ -39,9 +35,6 @@ export async function Setup(width: number, height: number): Promise<HTMLCanvasEl
 	})
 
 	Resize(width, height)
-
-	await Lines.Setup()
-	await Cloud.Setup()
 
 	return canvas
 }

@@ -1,17 +1,23 @@
 import * as GPU from './gpu.js'
 import * as Module from './module.js'
-import { Matrix } from './math.js'
 import { GetServerFile } from '../helper/file.js'
 import { Position } from './position.js'
+import { Matrix } from './math.js'
+import { Camera } from './camera.js'
 
-export abstract class Lines {
-	private static pipeline: GPURenderPipeline
+let pipeline: GPURenderPipeline | undefined = undefined
 
-	static async Setup(): Promise<void> {
+export async function Render(
+	position: Position,
+	length: number,
+	positions: GPUBuffer,
+	colors: GPUBuffer,
+): Promise<void> {
+	if (pipeline == undefined) {
 		const src = await GetServerFile('../shaders/render/lines.wgsl')
 		const module = Module.New(src)
 
-		Lines.pipeline = GPU.device.createRenderPipeline({
+		pipeline = GPU.device.createRenderPipeline({
 			vertex: {
 				module: module,
 				entryPoint: 'vertexMain',
@@ -60,39 +66,25 @@ export abstract class Lines {
 		})
 	}
 
-	static Render(
-		position: Position,
-		length: number,
-		positions: GPUBuffer,
-		colors: GPUBuffer,
-	): void {
-		const array = new Float32Array(16)
-		position.Save(array, 0) 
-		const buffer = GPU.CreateBuffer(array, GPUBufferUsage.UNIFORM)
-		GPU.renderPass.setPipeline(Lines.pipeline)
-		const group = GPU.device.createBindGroup({
-			layout: Lines.pipeline.getBindGroupLayout(0),
-			entries: [
-				{
-					binding: 0,
-					resource: { buffer: GPU.cameraBuffer },
-				},
-				{
-					binding: 1,
-					resource: { buffer: buffer },
-				},
-			],
-		})
-		GPU.renderPass.setBindGroup(0, group)
-		GPU.renderPass.setVertexBuffer(0, positions)
-		GPU.renderPass.setVertexBuffer(1, colors)
-		GPU.renderPass.draw(length)
-	}
-
-	SubShadow = undefined
-	SubMap = undefined
-
-	GetPipeline(): GPURenderPipeline {
-		return Lines.pipeline
-	}
+	const array = new Float32Array(16)
+	position.Save(array, 0)
+	const buffer = GPU.CreateBuffer(array, GPUBufferUsage.UNIFORM)
+	GPU.renderPass.setPipeline(pipeline)
+	const group = GPU.device.createBindGroup({
+		layout: pipeline.getBindGroupLayout(0),
+		entries: [
+			{
+				binding: 0,
+				resource: { buffer: GPU.cameraBuffer },
+			},
+			{
+				binding: 1,
+				resource: { buffer: buffer },
+			},
+		],
+	})
+	GPU.renderPass.setBindGroup(0, group)
+	GPU.renderPass.setVertexBuffer(0, positions)
+	GPU.renderPass.setVertexBuffer(1, colors)
+	GPU.renderPass.draw(length)
 }

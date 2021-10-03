@@ -15,7 +15,7 @@ export class Camera {
 
 	set fieldOfView(val: number) {
 		this.fov = val
-		this.projection = Matrix.Perspective(val, GPU.global.aspect, 1, 1000)
+		this.projection = Matrix.Perspective(val, GPU.global.aspect, 0.1, 100)
 	}
 
 	get fieldOfView(): number {

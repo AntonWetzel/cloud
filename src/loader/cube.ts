@@ -1,5 +1,3 @@
-import { Cloud } from '../gpu/cloud.js'
-import { Position } from '../gpu/position.js'
 import * as GPU from '../gpu/gpu.js'
 
 export function CreateCube(points: number): GPUBuffer {
