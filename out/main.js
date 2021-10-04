@@ -1,6 +1,7 @@
 import * as GPU from './gpu/gpu.js';
 import * as Lines from './gpu/lines.js';
 import { Position } from './gpu/position.js';
+import { CreateSphere } from './loader/sphere.js';
 import { Camera } from './gpu/camera.js';
 import { CreateCube } from './loader/cube.js';
 import * as Cloud from './gpu/cloud.js';
@@ -16,57 +17,94 @@ document.body.onload = async () => {
     const increase = new Position();
     increase.Scale(5, 5, 5);
     const normal = new Position();
-    const length = 100_000;
-    const cloud = CreateCube(length);
-    const colors = CreateColors(length);
-    //const cloud = (await CreateSphere(100_000, 0.02)).node
+    let length = 100_000;
+    let form = 'sphere';
+    let cloud = CreateSphere(length);
+    let colors = CreateColors(length);
     const grid = CreateGrid(10);
-    //scene.children.push(grid)
     display.onwheel = (ev) => {
-        let fov = cam.fieldOfView * (1 + ev.deltaY / 1000);
-        if (fov < Math.PI / 10) {
-            fov = Math.PI / 10;
+        const scale = 1 + ev.deltaY / 1000;
+        if (ev.ctrlKey == false) {
+            increase.Scale(scale, scale, scale);
         }
-        if (fov > (Math.PI * 9) / 10) {
-            fov = (Math.PI * 9) / 10;
+        else {
+            let fov = cam.fieldOfView * scale;
+            if (fov < Math.PI / 10) {
+                fov = Math.PI / 10;
+            }
+            if (fov > (Math.PI * 9) / 10) {
+                fov = (Math.PI * 9) / 10;
+            }
+            cam.fieldOfView = fov;
         }
-        cam.fieldOfView = fov;
+        ev.preventDefault();
+        ev.stopImmediatePropagation();
     };
     document.body.onresize = () => {
         GPU.Resize(display.clientWidth, display.clientHeight);
         cam.UpdateSize();
     };
     let lights = 0;
+    let k = 10;
     const key = {};
     let nearest = undefined;
     document.body.onkeydown = async (ev) => {
-        key[ev.code] = true;
-        switch (ev.code) {
-            case 'KeyL':
+        key[ev.key] = true;
+        switch (ev.key) {
+            case 'l':
                 lights = (lights + 1) % 4;
                 break;
-            case 'KeyH':
-                makeHint('Left mouse button + move: rotate camera\n' +
-                    'Middle mouse button + move: rotate first light\n' +
-                    'Mouse wheel: change field of view (zoom)\n' +
-                    'Key QWER: move camera\n' +
-                    'Key L: switch active lights');
+            case 'h':
+                makeHint('Left mouse button: rotate camera', 'Mouse wheel: change cloud size', 'Mouse wheel + Control: change field of view', 'QWER: move camera', 'Y: change cloud form', 'Y + Control: change cloud size', 'X: compute k nearest points', 'X + Control: change k');
                 break;
-            case 'KeyX':
-                nearest = await KNearest.Compute(10, cloud, length);
+            case 'y':
+                if (ev.ctrlKey) {
+                    const number = getUserNumber('input new cloud size');
+                    if (number != undefined) {
+                        length = number;
+                    }
+                    form = form == 'sphere' ? 'cube' : 'sphere';
+                }
+                cloud.destroy();
+                colors.destroy();
+                if (form == 'sphere') {
+                    cloud = CreateCube(length);
+                    form = 'cube';
+                }
+                else {
+                    cloud = CreateSphere(length);
+                    form = 'sphere';
+                }
+                colors = CreateColors(length);
+                if (nearest != undefined) {
+                    nearest.buffer.destroy();
+                    nearest = undefined;
+                }
                 break;
-            case 'KeyC':
-                //cloud.importance(1000)
-                break;
-            case 'KeyV':
-                //cloud.smooth(0.2)
+            case 'x':
+                if (ev.ctrlKey == false) {
+                    if (nearest != undefined) {
+                        nearest.buffer.destroy();
+                    }
+                    nearest = await KNearest.Compute(k, cloud, length);
+                }
+                else {
+                    const number = getUserNumber('input new k for nearest points');
+                    if (number != undefined) {
+                        if (k > 32) {
+                            console.log('max k is 32');
+                            k = 32;
+                        }
+                        k = number;
+                    }
+                }
                 break;
         }
     };
     document.body.onkeyup = (ev) => {
-        key[ev.code] = undefined;
+        delete key[ev.key];
     };
-    makeHint("press 'Key H' for help");
+    makeHint("press 'H' for help");
     display.onmousemove = (ev) => {
         if ((ev.buttons & 1) != 0) {
             cam.RotateX(-ev.movementY / 200);
@@ -80,22 +118,22 @@ document.body.onload = async () => {
     async function Draw(time) {
         const delta = time - last;
         const dist = delta / 50;
-        if (key['KeyW'] != undefined) {
+        if (key['w'] != undefined) {
             cam.Translate(0, 0, -dist);
         }
-        if (key['KeyD'] != undefined) {
+        if (key['d'] != undefined) {
             cam.Translate(dist, 0, 0);
         }
-        if (key['KeyS'] != undefined) {
+        if (key['s'] != undefined) {
             cam.Translate(0, 0, dist);
         }
-        if (key['KeyA'] != undefined) {
+        if (key['a'] != undefined) {
             cam.Translate(-dist, 0, 0);
         }
-        if (key['KeyF'] != undefined) {
+        if (key['f'] != undefined) {
             cam.Translate(0, -dist, 0);
         }
-        if (key['KeyR'] != undefined) {
+        if (key['r'] != undefined) {
             cam.Translate(0, dist, 0);
         }
         GPU.StartRender(cam);
@@ -110,12 +148,27 @@ document.body.onload = async () => {
     }
     requestAnimationFrame(Draw);
 };
-function makeHint(text) {
+function makeHint(...text) {
     const hint = document.createElement('div');
-    hint.textContent = text;
+    let combined = '';
+    for (let i = 0; i < text.length; i++) {
+        combined += text[i] + '\n';
+    }
+    hint.textContent = combined;
     hint.className = 'hint';
     setTimeout(() => {
         hint.remove();
     }, 5000);
     document.body.append(hint);
+}
+function getUserNumber(text) {
+    const str = prompt(text);
+    if (str == null) {
+        return undefined;
+    }
+    const number = parseInt(str);
+    if (isNaN(number)) {
+        return undefined;
+    }
+    return number;
 }
