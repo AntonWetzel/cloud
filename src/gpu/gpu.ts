@@ -16,7 +16,10 @@ export let global: {
 
 export let depth: GPUTexture
 
-export async function Setup(width: number, height: number): Promise<HTMLCanvasElement> {
+export async function Setup(width: number, height: number): Promise<HTMLCanvasElement | undefined> {
+	if (window.navigator.gpu == undefined) {
+		return undefined
+	}
 	adapter = (await window.navigator.gpu.requestAdapter()) as GPUAdapter
 	device = (await adapter.requestDevice()) as GPUDevice
 

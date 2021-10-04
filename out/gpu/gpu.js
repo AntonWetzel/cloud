@@ -8,6 +8,9 @@ export let context;
 export let global;
 export let depth;
 export async function Setup(width, height) {
+    if (window.navigator.gpu == undefined) {
+        return undefined;
+    }
     adapter = (await window.navigator.gpu.requestAdapter());
     device = (await adapter.requestDevice());
     canvas = document.createElement('canvas');

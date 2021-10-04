@@ -12,6 +12,22 @@ import { CreateGrid } from './loader/grid.js'
 document.body.onload = async () => {
 	const display = document.getElementById('display') as HTMLDivElement
 	const canvas = await GPU.Setup(display.clientWidth, display.clientHeight)
+	if (canvas == undefined) {
+		display.remove()
+		const error = document.createElement('div')
+		error.className = 'error'
+		const topLine = document.createElement('div')
+		topLine.className = 'large'
+		topLine.innerHTML = 'WebGPU not available'
+		error.append(topLine)
+		const botLine = document.createElement('div')
+		botLine.className = 'normal'
+		botLine.innerHTML =
+			'Use Chrome Canary and enable WebGPU at chrome://flags/#enable-unsafe-webgpu'
+		error.append(botLine)
+		document.body.append(error)
+		return
+	}
 	display.append(canvas)
 
 	const cam = new Camera(Math.PI / 4)
