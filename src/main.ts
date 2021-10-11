@@ -38,7 +38,7 @@ document.body.onload = async () => {
 	increase.Scale(5, 5, 5)
 	const normal = new Position()
 
-	let k = 64
+	let k = 32
 	let length = 10_000
 	let form: 'cube' | 'sphere' = 'sphere'
 	let cloud = CreateSphere(length)
@@ -84,6 +84,7 @@ document.body.onload = async () => {
 					'Y + Control: change cloud size',
 					'X: compute k nearest points',
 					'X + Control: change k',
+					'C: approximate triangulation (based on k)',
 				)
 				break
 			case 'y':

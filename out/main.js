@@ -34,7 +34,7 @@ document.body.onload = async () => {
     const increase = new Position();
     increase.Scale(5, 5, 5);
     const normal = new Position();
-    let k = 64;
+    let k = 32;
     let length = 10_000;
     let form = 'sphere';
     let cloud = CreateSphere(length);
@@ -68,7 +68,7 @@ document.body.onload = async () => {
         key[ev.key] = true;
         switch (ev.key) {
             case 'h':
-                makeHint('Left mouse button: rotate camera', 'Mouse wheel: change cloud size', 'Mouse wheel + Control: change field of view', 'QWER: move camera', 'Y: change cloud form', 'Y + Control: change cloud size', 'X: compute k nearest points', 'X + Control: change k');
+                makeHint('Left mouse button: rotate camera', 'Mouse wheel: change cloud size', 'Mouse wheel + Control: change field of view', 'QWER: move camera', 'Y: change cloud form', 'Y + Control: change cloud size', 'X: compute k nearest points', 'X + Control: change k', 'C: approximate triangulation (based on k)');
                 break;
             case 'y':
                 if (ev.ctrlKey) {
