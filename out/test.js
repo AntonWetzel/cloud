@@ -4,18 +4,18 @@ export function Center(a, b, c) {
     const z = Length(Sub(b, c));
     if (x < y) {
         if (y < z) {
-            return CenterSub(a, b, c);
+            return CenterFromOrdered(a, b, c);
         }
         else {
-            return CenterSub(b, a, c);
+            return CenterFromOrdered(b, a, c);
         }
     }
     else {
-        if (x < y) {
-            return CenterSub(a, b, c);
+        if (x < z) {
+            return CenterFromOrdered(a, b, c);
         }
         else {
-            return CenterSub(c, a, b);
+            return CenterFromOrdered(c, a, b);
         }
     }
 }
@@ -38,7 +38,7 @@ export function Center(a, b, c) {
                  '-.   |   .-'
                     '-.a.-'
 */
-function CenterSub(a, b, c) {
+function CenterFromOrdered(a, b, c) {
     const x = Mult(Add(a, c), 0.5);
     const y = Mult(Add(a, b), 0.5);
     const ab = Normalize(Sub(b, a));
@@ -53,7 +53,7 @@ function CenterSub(a, b, c) {
     const length = (Length(Sub(x, y)) * Math.sin(beta)) / Math.sin(Math.PI - (alpha + beta));
     const z = Add(x, Mult(xz, length));
     //check if it is the center, currently not perfect, no clue if it is a error or precision
-    //console.log(Length(Sub(a, z)), Length(Sub(b, z)), Length(Sub(c, z)))
+    console.log(Length(Sub(a, z)), Length(Sub(b, z)), Length(Sub(c, z)));
     return z;
 }
 function Normalize(x) {

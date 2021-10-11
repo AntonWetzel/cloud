@@ -8,11 +8,7 @@ import { Camera } from './camera.js'
 let computePipeline: undefined | GPUComputePipeline = undefined
 let renderPipeline: undefined | GPURenderPipeline = undefined
 
-export async function Compute(
-	k: number,
-	positions: GPUBuffer,
-	length: number,
-): Promise<{ buffer: GPUBuffer; k: number }> {
+export async function Compute(k: number, positions: GPUBuffer, length: number): Promise<GPUBuffer> {
 	if (computePipeline == undefined) {
 		computePipeline = GPU.device.createComputePipeline({
 			compute: {
@@ -21,7 +17,10 @@ export async function Compute(
 			},
 		})
 	}
-	const nearest = GPU.CreateEmptyBuffer(length * 4 * k, GPUBufferUsage.STORAGE)
+	const nearest = GPU.CreateEmptyBuffer(
+		length * 4 * k,
+		GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
+	)
 	const param = new Uint32Array([length, k])
 	const buffer = GPU.CreateBuffer(param, GPUBufferUsage.STORAGE)
 	const group = GPU.device.createBindGroup({
@@ -48,10 +47,7 @@ export async function Compute(
 	compute.dispatch(Math.ceil(length / 256))
 	compute.endPass()
 	GPU.device.queue.submit([encoder.finish()])
-	return {
-		buffer: nearest,
-		k: k,
-	}
+	return nearest
 }
 
 export async function Render(

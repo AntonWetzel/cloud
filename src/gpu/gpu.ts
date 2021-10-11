@@ -95,7 +95,7 @@ export function FinishRender(): void {
 export function CreateBuffer(data: Float32Array | Uint32Array, usage: GPUFlagsConstant): GPUBuffer {
 	const buffer = device.createBuffer({
 		size: Math.floor((data.byteLength + 3) / 4) * 4, //round to next size with %4 == 0,
-		usage: GPUBufferUsage.COPY_DST | usage,
+		usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC | usage,
 		mappedAtCreation: true,
 	})
 	new Uint8Array(buffer.getMappedRange()).set(new Uint8Array(data.buffer))
@@ -106,8 +106,25 @@ export function CreateBuffer(data: Float32Array | Uint32Array, usage: GPUFlagsCo
 export function CreateEmptyBuffer(length: number, usage: GPUFlagsConstant): GPUBuffer {
 	const buffer = device.createBuffer({
 		size: length,
-		usage: GPUBufferUsage.COPY_DST | usage,
+		usage: usage,
 		mappedAtCreation: false,
 	})
 	return buffer
+}
+export async function ReadBuffer(buffer: GPUBuffer, size: number): Promise<ArrayBuffer> {
+	const temp = CreateEmptyBuffer(size, GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST)
+	// Encode commands for copying buffer to buffer.
+	const copyEncoder = device.createCommandEncoder()
+	copyEncoder.copyBufferToBuffer(
+		buffer /* source buffer */,
+		0 /* source offset */,
+		temp /* destination buffer */,
+		0 /* destination offset */,
+		size /* size */,
+	)
+	const copyCommands = copyEncoder.finish()
+	device.queue.submit([copyCommands])
+	await temp.mapAsync(GPUMapMode.READ)
+	const copyArrayBuffer = temp.getMappedRange()
+	return copyArrayBuffer
 }

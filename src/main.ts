@@ -6,36 +6,11 @@ import { Camera } from './gpu/camera.js'
 import { CreateCube } from './loader/cube.js'
 import * as Cloud from './gpu/cloud.js'
 import * as KNearest from './gpu/kNearest.js'
+import * as Center from './gpu/center.js'
 import { CreateColors } from './loader/color.js'
 import { CreateGrid } from './loader/grid.js'
-import { Center } from './test.js'
 
 document.body.onload = async () => {
-	const points = new Float32Array([
-		/*eslint-disable*/
-		Math.random() * 2- 1, Math.random() * 2- 1, Math.random() * 2- 1, 0,
-		Math.random() * 2- 1, Math.random() * 2- 1, Math.random() * 2- 1, 0,
-		Math.random() * 2- 1, Math.random() * 2- 1, Math.random() * 2- 1, 0,
-		0, 0, 0, 0,
-		/*eslint-enable*/
-	])
-	const pointsColors = new Float32Array([
-		/*eslint-disable*/
-		1, 0, 0, 0,
-		0, 1, 0, 0,
-		0, 0, 1, 0,
-		1, 1, 1, 0,
-		/*eslint-enable*/
-	])
-	const c = Center(
-		{ x: points[0], y: points[1], z: points[2] },
-		{ x: points[4], y: points[5], z: points[6] },
-		{ x: points[8], y: points[9], z: points[10] },
-	)
-	points[12] = c.x
-	points[13] = c.y
-	points[14] = c.z
-
 	const display = document.getElementById('display') as HTMLDivElement
 	const canvas = await GPU.Setup(display.clientWidth, display.clientHeight)
 	if (canvas == undefined) {
@@ -63,13 +38,11 @@ document.body.onload = async () => {
 	increase.Scale(5, 5, 5)
 	const normal = new Position()
 
-	//let length = 100_000
-	let length = 4
-	let cloud = GPU.CreateBuffer(points, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE)
-	let colors = GPU.CreateBuffer(pointsColors, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE)
+	let k = 64
+	let length = 10_000
 	let form: 'cube' | 'sphere' = 'sphere'
-	//let cloud = CreateSphere(length)
-	//let colors = CreateColors(length)
+	let cloud = CreateSphere(length)
+	let colors = CreateColors(length)
 
 	const grid = CreateGrid(10)
 
@@ -95,17 +68,12 @@ document.body.onload = async () => {
 		GPU.Resize(display.clientWidth, display.clientHeight)
 		cam.UpdateSize()
 	}
-	let lights = 0
-	let k = 10
 
 	const key: { [key: string]: true | undefined } = {}
-	let nearest: undefined | { buffer: GPUBuffer; k: number } = undefined
+	let nearest: undefined | GPUBuffer = undefined
 	document.body.onkeydown = async (ev) => {
 		key[ev.key] = true
 		switch (ev.key) {
-			case 'l':
-				lights = (lights + 1) % 4
-				break
 			case 'h':
 				makeHint(
 					'Left mouse button: rotate camera',
@@ -137,14 +105,14 @@ document.body.onload = async () => {
 				}
 				colors = CreateColors(length)
 				if (nearest != undefined) {
-					nearest.buffer.destroy()
+					nearest.destroy()
 					nearest = undefined
 				}
 				break
 			case 'x':
 				if (ev.ctrlKey == false) {
 					if (nearest != undefined) {
-						nearest.buffer.destroy()
+						nearest.destroy()
 					}
 					nearest = await KNearest.Compute(k, cloud, length)
 				} else {
@@ -157,6 +125,12 @@ document.body.onload = async () => {
 						k = number
 					}
 				}
+				break
+			case 'c':
+				if (nearest == undefined) {
+					nearest = await KNearest.Compute(k, cloud, length)
+				}
+				await Center.Compute(cloud, nearest, k, length)
 				break
 		}
 	}
@@ -200,10 +174,10 @@ document.body.onload = async () => {
 			cam.Translate(0, dist, 0)
 		}
 		GPU.StartRender(cam)
-		await Cloud.Render(increase, 1, length, cloud, colors)
+		await Cloud.Render(increase, 0.005, length, cloud, colors)
 		await Lines.Render(normal, grid.length, grid.positions, grid.colors)
 		if (nearest != undefined) {
-			await KNearest.Render(increase, cloud, colors, nearest.buffer, nearest.k, length)
+			await KNearest.Render(increase, cloud, colors, nearest, k, length)
 		}
 		GPU.FinishRender()
 		last = time

@@ -12,7 +12,7 @@ export async function Compute(k, positions, length) {
             },
         });
     }
-    const nearest = GPU.CreateEmptyBuffer(length * 4 * k, GPUBufferUsage.STORAGE);
+    const nearest = GPU.CreateEmptyBuffer(length * 4 * k, GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC);
     const param = new Uint32Array([length, k]);
     const buffer = GPU.CreateBuffer(param, GPUBufferUsage.STORAGE);
     const group = GPU.device.createBindGroup({
@@ -39,10 +39,7 @@ export async function Compute(k, positions, length) {
     compute.dispatch(Math.ceil(length / 256));
     compute.endPass();
     GPU.device.queue.submit([encoder.finish()]);
-    return {
-        buffer: nearest,
-        k: k,
-    };
+    return nearest;
 }
 export async function Render(position, positions, colors, nearest, k, length) {
     if (renderPipeline == undefined) {
