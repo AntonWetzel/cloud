@@ -11,7 +11,7 @@
 	k: u32;
 };
 
-let MAX_K = 32u;
+let MAX_K = 64u;
 let MAX_DISTANCE = 340282346638528859811704183484516925440.0; //max value for f32 (i think)
 
 [[group(0), binding(0)]] var<storage, read> parameter: Parameter;

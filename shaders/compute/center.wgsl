@@ -75,7 +75,7 @@ fn center(a: vec3<f32>, b: vec3<f32>, c: vec3<f32>) -> vec3<f32> {
 	} 
 	return center_from_ordered(c, a, b);
 }
-let MAX_K = 32u;
+let MAX_K = 64u;
 
 [[stage(compute), workgroup_size(256)]]
 fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {

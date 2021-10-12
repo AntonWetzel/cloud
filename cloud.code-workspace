@@ -1,10 +1,6 @@
 {
 	"folders": [
 		{
-			"path": ".",
-			"name": "all"
-		},
-		{
 			"path": "./html",
 			"name": "html"
 		},
@@ -15,6 +11,10 @@
 		{
 			"path": "./src",
 			"name": "src"
+		},
+		{
+			"path": ".",
+			"name": "all"
 		}
 	],
 	"settings": {

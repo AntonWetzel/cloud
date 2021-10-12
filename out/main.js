@@ -7,6 +7,7 @@ import { CreateCube } from './loader/cube.js';
 import * as Cloud from './gpu/cloud.js';
 import * as KNearest from './gpu/kNearest.js';
 import * as Center from './gpu/center.js';
+import * as Filter from './gpu/filter.js';
 import { CreateColors } from './loader/color.js';
 import { CreateGrid } from './loader/grid.js';
 document.body.onload = async () => {
@@ -104,9 +105,9 @@ document.body.onload = async () => {
                 else {
                     const number = getUserNumber('input new k for nearest points');
                     if (number != undefined) {
-                        if (k > 32) {
+                        if (k > 64) {
                             console.log('max k is 32');
-                            k = 32;
+                            k = 64;
                         }
                         k = number;
                     }
@@ -117,6 +118,13 @@ document.body.onload = async () => {
                     nearest = await KNearest.Compute(k, cloud, length);
                 }
                 await Center.Compute(cloud, nearest, k, length);
+                break;
+            case 'v':
+                if (nearest == undefined) {
+                    nearest = await KNearest.Compute(k, cloud, length);
+                }
+                await Center.Compute(cloud, nearest, k, length);
+                await Filter.Compute(nearest, k, length);
                 break;
         }
     };
