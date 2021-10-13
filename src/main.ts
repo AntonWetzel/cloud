@@ -86,6 +86,7 @@ document.body.onload = async () => {
 					'X: compute k nearest points',
 					'X + Control: change k',
 					'C: approximate triangulation (based on k)',
+					'V: remove connections without counterpart',
 				)
 				break
 			case 'y':
@@ -137,8 +138,8 @@ document.body.onload = async () => {
 			case 'v':
 				if (nearest == undefined) {
 					nearest = await KNearest.Compute(k, cloud, length)
+					await Center.Compute(cloud, nearest, k, length)
 				}
-				await Center.Compute(cloud, nearest, k, length)
 				await Filter.Compute(nearest, k, length)
 				break
 		}

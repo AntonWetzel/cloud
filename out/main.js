@@ -69,7 +69,7 @@ document.body.onload = async () => {
         key[ev.key] = true;
         switch (ev.key) {
             case 'h':
-                makeHint('Left mouse button: rotate camera', 'Mouse wheel: change cloud size', 'Mouse wheel + Control: change field of view', 'QWER: move camera', 'Y: change cloud form', 'Y + Control: change cloud size', 'X: compute k nearest points', 'X + Control: change k', 'C: approximate triangulation (based on k)');
+                makeHint('Left mouse button: rotate camera', 'Mouse wheel: change cloud size', 'Mouse wheel + Control: change field of view', 'QWER: move camera', 'Y: change cloud form', 'Y + Control: change cloud size', 'X: compute k nearest points', 'X + Control: change k', 'C: approximate triangulation (based on k)', 'V: remove connections without counterpart');
                 break;
             case 'y':
                 if (ev.ctrlKey) {
@@ -122,8 +122,8 @@ document.body.onload = async () => {
             case 'v':
                 if (nearest == undefined) {
                     nearest = await KNearest.Compute(k, cloud, length);
+                    await Center.Compute(cloud, nearest, k, length);
                 }
-                await Center.Compute(cloud, nearest, k, length);
                 await Filter.Compute(nearest, k, length);
                 break;
         }
