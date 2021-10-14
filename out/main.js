@@ -24,7 +24,11 @@ document.body.onload = async () => {
         const botLine = document.createElement('div');
         botLine.className = 'normal';
         botLine.innerHTML =
-            'Use Chrome Canary and enable WebGPU at chrome://flags/#enable-unsafe-webgpu';
+            '1. Download and install <a href="https://www.google.com/chrome/canary/">Chrome Canary</a><br>' +
+                '2. Open <tt>"chrome://flags/#enable-unsafe-webgpu"</tt><br>' +
+                '3. Enable <tt>"Unsafe WebGPU"</tt><br>' +
+                '4. Relaunch the browser<br>' +
+                '5. Reload the website';
         error.append(botLine);
         document.body.append(error);
         return;
@@ -164,7 +168,7 @@ document.body.onload = async () => {
             cam.Translate(0, dist, 0);
         }
         GPU.StartRender(cam);
-        await Cloud.Render(increase, 0.005, length, cloud, colors);
+        await Cloud.Render(increase, 0.015, length, cloud, colors);
         await Lines.Render(normal, grid.length, grid.positions, grid.colors);
         if (nearest != undefined) {
             await KNearest.Render(increase, cloud, colors, nearest, k, length);
