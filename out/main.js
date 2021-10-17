@@ -8,6 +8,7 @@ import * as Cloud from './gpu/cloud.js';
 import * as KNearest from './gpu/kNearest.js';
 import * as Center from './gpu/center.js';
 import * as Filter from './gpu/filter.js';
+import * as Test from './gpu/test.js';
 import { CreateColors } from './loader/color.js';
 import { CreateGrid } from './loader/grid.js';
 document.body.onload = async () => {
@@ -129,6 +130,10 @@ document.body.onload = async () => {
                     await Center.Compute(cloud, nearest, k, length);
                 }
                 await Filter.Compute(nearest, k, length);
+                break;
+            case 't':
+                nearest = await Test.Compute(cloud, length);
+                k = 16;
                 break;
         }
     };

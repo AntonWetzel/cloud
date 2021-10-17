@@ -1,3 +1,35 @@
+export function Triangulation(count) {
+    const a = {
+        x: 0,
+        y: 0,
+        z: 0,
+    };
+    function GetPoint() {
+        return {
+            x: Math.random() * 2 - 1,
+            y: Math.random() * 2 - 1,
+            z: 0,
+        };
+    }
+    const first = GetPoint();
+    const second = GetPoint();
+    const spheres = [Sphere(a, first, second)];
+    console.log(spheres);
+    return;
+}
+function Sphere(a, b, c) {
+    const cen = Center(a, b, c);
+    const rad = Length(Sub(a, cen));
+    return {
+        cen: cen,
+        rad: rad,
+        b: b,
+        c: c,
+    };
+}
+function Inside(s, a) {
+    return Length(Sub(s.cen, a)) <= s.rad;
+}
 export function Center(a, b, c) {
     const x = Length(Sub(a, b));
     const y = Length(Sub(a, c));
