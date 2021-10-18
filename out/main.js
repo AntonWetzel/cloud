@@ -1,16 +1,17 @@
 import * as GPU from './gpu/gpu.js';
 import * as Lines from './gpu/lines.js';
 import { Position } from './gpu/position.js';
-import { CreateSphere } from './loader/sphere.js';
 import { Camera } from './gpu/camera.js';
 import { CreateCube } from './loader/cube.js';
 import * as Cloud from './gpu/cloud.js';
 import * as KNearest from './gpu/kNearest.js';
-import * as Center from './gpu/center.js';
+import * as Center from './gpu/triangulate.js';
 import * as Filter from './gpu/filter.js';
-import * as Test from './gpu/test.js';
 import { CreateColors } from './loader/color.js';
 import { CreateGrid } from './loader/grid.js';
+import { CreateSphere } from './loader/sphere.js';
+import { CreateBunny } from './loader/bunny.js';
+import { CreatePost } from './loader/post.js';
 document.body.onload = async () => {
     const display = document.getElementById('display');
     const canvas = await GPU.Setup(display.clientWidth, display.clientHeight);
@@ -41,7 +42,7 @@ document.body.onload = async () => {
     increase.Scale(5, 5, 5);
     const normal = new Position();
     let k = 32;
-    let length = 10_000;
+    let length = 100_000;
     let form = 'sphere';
     let cloud = CreateSphere(length);
     let colors = CreateColors(length);
@@ -82,17 +83,28 @@ document.body.onload = async () => {
                     if (number != undefined) {
                         length = number;
                     }
-                    form = form == 'sphere' ? 'cube' : 'sphere';
                 }
                 cloud.destroy();
                 colors.destroy();
-                if (form == 'sphere') {
-                    cloud = CreateCube(length);
-                    form = 'cube';
-                }
-                else {
-                    cloud = CreateSphere(length);
-                    form = 'sphere';
+                switch (form) {
+                    case 'sphere':
+                        cloud = CreateCube(length);
+                        form = 'cube';
+                        break;
+                    case 'cube':
+                        // eslint-disable-next-line prettier/prettier
+                        [cloud, length] = CreateBunny();
+                        form = 'bunny';
+                        break;
+                    case 'bunny':
+                        // eslint-disable-next-line prettier/prettier
+                        [cloud, length] = CreatePost();
+                        form = 'post';
+                        break;
+                    case 'post':
+                        cloud = CreateSphere(length);
+                        form = 'sphere';
+                        break;
                 }
                 colors = CreateColors(length);
                 if (nearest != undefined) {
@@ -131,10 +143,6 @@ document.body.onload = async () => {
                 }
                 await Filter.Compute(nearest, k, length);
                 break;
-            case 't':
-                nearest = await Test.Compute(cloud, length);
-                k = 16;
-                break;
         }
     };
     document.body.onkeyup = (ev) => {
@@ -153,6 +161,9 @@ document.body.onload = async () => {
     });
     async function Draw(time) {
         const delta = time - last;
+        if (delta > 25) {
+            console.log(delta);
+        }
         const dist = delta / 50;
         if (key['w'] != undefined) {
             cam.Translate(0, 0, -dist);
@@ -202,9 +213,9 @@ function getUserNumber(text) {
     if (str == null) {
         return undefined;
     }
-    const number = parseInt(str);
-    if (isNaN(number)) {
+    const x = parseInt(str);
+    if (isNaN(x)) {
         return undefined;
     }
-    return number;
+    return x;
 }

@@ -52,10 +52,7 @@ fn center_from_ordered(a: vec3<f32>, b: vec3<f32>, c: vec3<f32>) -> vec3<f32> {
 	let beta = PI - acos(dot(xy, yz)); //minus because xy is in the wrong direction
 
 	//https://en.wikipedia.org/wiki/Law_of_sines
-	let length = (distance(x, y) * sin(beta)) / sin(PI - (alpha + beta));
-	let z = x + xz * length;
-
-	return z;
+	return y + yz * (distance(x, y) * sin(alpha)) / sin(PI - (alpha + beta));
 }
 
 
@@ -76,6 +73,10 @@ fn center(a: vec3<f32>, b: vec3<f32>, c: vec3<f32>) -> vec3<f32> {
 	return center_from_ordered(c, a, b);
 }
 let MAX_K = 64u;
+
+fn dist(c: vec3<f32>, x: vec3<f32>, y: vec3<f32>, z: vec3<f32>) -> f32 {
+	return (distance(c, x) + distance(c, y) + distance(c, z)) / 3.0;
+}
 
 [[stage(compute), workgroup_size(256)]]
 fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
@@ -102,7 +103,7 @@ fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
 				cloud.data[nearest.data[offset + i]],
 				cloud.data[nearest.data[offset + j]],
 			);
-			let d = distance(point, c);
+			let d = dist(c, point, cloud.data[nearest.data[offset + i]], cloud.data[nearest.data[offset + j]]);
 			var empty = true;
 			for (var x = 0u; x < parameter.k; x = x + 1u) {
 				if (x == i || x == j) {
