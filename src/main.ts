@@ -7,6 +7,8 @@ import * as Cloud from './gpu/cloud.js'
 import * as KNearest from './gpu/kNearest.js'
 import * as Center from './gpu/triangulate.js'
 import * as Filter from './gpu/filter.js'
+import * as Test from './gpu/test.js'
+import * as Edge from './gpu/edge.js'
 import { CreateColors } from './loader/color.js'
 import { CreateGrid } from './loader/grid.js'
 import { CreateSphere } from './loader/sphere.js'
@@ -91,8 +93,10 @@ document.body.onload = async () => {
 					'Y + Control: change cloud size',
 					'X: compute k nearest points',
 					'X + Control: change k',
-					'C: approximate triangulation (based on k)',
+					'C: approximate triangulation (with k nearest)',
 					'V: remove connections without counterpart',
+					'T: approximate triangulation (without k nearest)',
+					'Z: approximate local "edginess" (only valid with approximation with button "T") (scaling missing)',
 				)
 				break
 			case 'y':
@@ -106,6 +110,7 @@ document.body.onload = async () => {
 				colors.destroy()
 				switch (form) {
 					case 'sphere':
+						length = 100_000
 						cloud = CreateCube(length)
 						form = 'cube'
 						break
@@ -120,6 +125,7 @@ document.body.onload = async () => {
 						form = 'post'
 						break
 					case 'post':
+						length = 100_000
 						cloud = CreateSphere(length)
 						form = 'sphere'
 						break
@@ -159,6 +165,21 @@ document.body.onload = async () => {
 					await Center.Compute(cloud, nearest, k, length)
 				}
 				await Filter.Compute(nearest, k, length)
+				break
+			case 't':
+				if (nearest != undefined) {
+					nearest.destroy()
+				}
+				nearest = await Test.Compute(cloud, length)
+				k = Test.K
+				break
+			case 'z':
+				if (nearest == undefined) {
+					nearest = await Test.Compute(cloud, length)
+					k = Test.K
+				}
+				await Edge.Compute(cloud, nearest, colors, k, length)
+				k = Test.K
 				break
 		}
 	}

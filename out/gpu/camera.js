@@ -5,7 +5,7 @@ export class Camera {
     view;
     fov;
     constructor(fieldOfView) {
-        this.projection = Matrix.Perspective(fieldOfView, GPU.global.aspect, 1, 1000);
+        this.projection = Matrix.Perspective(fieldOfView, GPU.global.aspect, 0.1, 1000);
         this.view = Matrix.Identity();
         this.fov = fieldOfView;
     }
