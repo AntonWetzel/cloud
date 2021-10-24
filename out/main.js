@@ -13,7 +13,6 @@ import { CreateColors } from './loader/color.js';
 import { CreateGrid } from './loader/grid.js';
 import { CreateSphere } from './loader/sphere.js';
 import { CreateBunny } from './loader/bunny.js';
-import { CreatePost } from './loader/post.js';
 document.body.onload = async () => {
     const display = document.getElementById('display');
     const canvas = await GPU.Setup(display.clientWidth, display.clientHeight);
@@ -44,7 +43,8 @@ document.body.onload = async () => {
     increase.Scale(5, 5, 5);
     const normal = new Position();
     let k = 32;
-    let length = 100_000;
+    const default_length = 50_000;
+    let length = default_length;
     let form = 'sphere';
     let cloud = CreateSphere(length);
     let colors = CreateColors(length);
@@ -77,7 +77,7 @@ document.body.onload = async () => {
         key[ev.key] = true;
         switch (ev.key) {
             case 'h':
-                makeHint('Left mouse button: rotate camera', 'Mouse wheel: change cloud size', 'Mouse wheel + Control: change field of view', 'QWER: move camera', 'Y: change cloud form', 'Y + Control: change cloud size', 'X: compute k nearest points', 'X + Control: change k', 'C: approximate triangulation (with k nearest)', 'V: remove connections without counterpart', 'T: approximate triangulation (without k nearest)', 'Z: approximate local "edginess" (only valid with approximation with button "T") (scaling missing)');
+                makeHint('Left mouse button: rotate camera', 'Mouse wheel: change cloud size', 'Mouse wheel + Control: change field of view', 'QWER: move camera', 'Y: change cloud form', 'Y + Control: change cloud size', 'X: compute k nearest points', 'X + Control: change k', 'C: approximate triangulation (with k nearest)', 'V: remove connections without counterpart', 'T: approximate triangulation (without k nearest)', 'Z: approximate local "edginess" (only valid with approximation with button "T") (threshhold missing)');
                 break;
             case 'y':
                 if (ev.ctrlKey) {
@@ -90,7 +90,7 @@ document.body.onload = async () => {
                 colors.destroy();
                 switch (form) {
                     case 'sphere':
-                        length = 100_000;
+                        length = default_length;
                         cloud = CreateCube(length);
                         form = 'cube';
                         break;
@@ -100,12 +100,7 @@ document.body.onload = async () => {
                         form = 'bunny';
                         break;
                     case 'bunny':
-                        // eslint-disable-next-line prettier/prettier
-                        [cloud, length] = CreatePost();
-                        form = 'post';
-                        break;
-                    case 'post':
-                        length = 100_000;
+                        length = default_length;
                         cloud = CreateSphere(length);
                         form = 'sphere';
                         break;

@@ -7,7 +7,7 @@ import { Camera } from './camera.js'
 
 let computePipeline: undefined | GPUComputePipeline = undefined
 
-export const K = 8
+export const K = 16
 
 export async function Compute(positions: GPUBuffer, length: number): Promise<GPUBuffer> {
 	if (computePipeline == undefined) {

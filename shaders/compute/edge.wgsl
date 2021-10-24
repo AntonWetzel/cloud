@@ -34,14 +34,17 @@ fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
 	let p = cloud.data[id];
 	var sum = 0.0;
 	for (var i = 0u; i < count; i = i + 1u) {
-		let a = cloud.data[nearest.data[offset + i]];
+		let a = normalize(p - cloud.data[nearest.data[offset + i]]);
 		for (var j = 0u; j < count; j = j + 1u) {
-			let b = cloud.data[nearest.data[offset + j]];
-			let n = normalize(cross(p - a, p - b));
+			if (i == j) {
+				continue;
+			}
+			let n = cross(a, normalize(p - cloud.data[nearest.data[offset + j]]));
 			for (var k = 0u; k < count; k = k + 1u) {
-				let c = cloud.data[nearest.data[offset + k]];
-				let c_d = normalize(p - c);
-				let ang = dot(n, c_d);
+				if (i == k || j == k) {
+					continue;
+				}
+				let ang = dot(n, normalize(p - cloud.data[nearest.data[offset + k]]));
 				sum = sum + abs(ang);
 			}
 		}

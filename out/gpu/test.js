@@ -2,7 +2,7 @@ import * as GPU from './gpu.js';
 import * as Module from './module.js';
 import { GetServerFile } from '../helper/file.js';
 let computePipeline = undefined;
-export const K = 8;
+export const K = 16;
 export async function Compute(positions, length) {
     if (computePipeline == undefined) {
         computePipeline = GPU.device.createComputePipeline({

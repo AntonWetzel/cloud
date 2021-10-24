@@ -42,8 +42,8 @@ fn vertexMain(
 	
 	output.color = color;
 
-	//number the connections
-	/*switch ((id/2u)%parameter.k) {
+	//debug: color by index
+	/*switch ((id/2u)%parameter.k) { 
 	case 0u: { output.color = vec3<f32>(1.0, 0.0, 0.0); }
 	case 1u: { output.color = vec3<f32>(0.0, 1.0, 0.0); }
 	case 2u: { output.color = vec3<f32>(0.0, 0.0, 1.0); }

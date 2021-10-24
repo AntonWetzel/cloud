@@ -13,7 +13,6 @@ import { CreateColors } from './loader/color.js'
 import { CreateGrid } from './loader/grid.js'
 import { CreateSphere } from './loader/sphere.js'
 import { CreateBunny } from './loader/bunny.js'
-import { CreatePost } from './loader/post.js'
 
 document.body.onload = async () => {
 	const display = document.getElementById('display') as HTMLDivElement
@@ -48,8 +47,9 @@ document.body.onload = async () => {
 	const normal = new Position()
 
 	let k = 32
-	let length = 100_000
-	let form: 'cube' | 'sphere' | 'bunny' | 'post' = 'sphere'
+	const default_length = 50_000
+	let length = default_length
+	let form: 'cube' | 'sphere' | 'bunny' = 'sphere'
 	let cloud = CreateSphere(length)
 	let colors = CreateColors(length)
 
@@ -96,7 +96,7 @@ document.body.onload = async () => {
 					'C: approximate triangulation (with k nearest)',
 					'V: remove connections without counterpart',
 					'T: approximate triangulation (without k nearest)',
-					'Z: approximate local "edginess" (only valid with approximation with button "T") (scaling missing)',
+					'Z: approximate local "edginess" (only valid with approximation with button "T") (threshhold missing)',
 				)
 				break
 			case 'y':
@@ -110,7 +110,7 @@ document.body.onload = async () => {
 				colors.destroy()
 				switch (form) {
 					case 'sphere':
-						length = 100_000
+						length = default_length
 						cloud = CreateCube(length)
 						form = 'cube'
 						break
@@ -120,12 +120,7 @@ document.body.onload = async () => {
 						form = 'bunny'
 						break
 					case 'bunny':
-						// eslint-disable-next-line prettier/prettier
-						[cloud, length] = CreatePost()
-						form = 'post'
-						break
-					case 'post':
-						length = 100_000
+						length = default_length
 						cloud = CreateSphere(length)
 						form = 'sphere'
 						break
