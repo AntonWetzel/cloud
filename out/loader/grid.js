@@ -37,6 +37,7 @@ export function CreateGrid(amount) {
         addLine(amount * 1 + idx, { x: i, y: 0, z: amount }, { x: i, y: 0, z: -amount }, { x: 1, y: 1, z: 1 });
         addLine(amount * 3 + idx, { x: amount, y: 0, z: i }, { x: -amount, y: 0, z: i }, { x: 1, y: 1, z: 1 });
     }
+    //3 main axes
     addLine(amount * 4 + 0, { x: -amount, y: 0, z: 0 }, { x: amount, y: 0, z: 0 }, { x: 1, y: 1, z: 1 }, { x: 1, y: 0, z: 0 });
     addLine(amount * 4 + 1, { x: 0, y: -amount, z: 0 }, { x: 0, y: amount, z: 0 }, { x: 1, y: 1, z: 1 }, { x: 0, y: 1, z: 0 });
     addLine(amount * 4 + 2, { x: 0, y: 0, z: -amount }, { x: 0, y: 0, z: amount }, { x: 1, y: 1, z: 1 }, { x: 0, y: 0, z: 1 });

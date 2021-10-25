@@ -5,14 +5,14 @@ import { Camera } from './gpu/camera.js'
 import { CreateCube } from './loader/cube.js'
 import * as Cloud from './gpu/cloud.js'
 import * as KNearest from './gpu/kNearest.js'
-import * as Center from './gpu/triangulate.js'
+import * as Triangulate from './gpu/triangulate.js'
 import * as Filter from './gpu/filter.js'
-import * as Test from './gpu/test.js'
 import * as Edge from './gpu/edge.js'
 import { CreateColors } from './loader/color.js'
 import { CreateGrid } from './loader/grid.js'
 import { CreateSphere } from './loader/sphere.js'
 import { CreateBunny } from './loader/bunny.js'
+import { CreatePCD } from './loader/pcd.js'
 
 document.body.onload = async () => {
 	const display = document.getElementById('display') as HTMLDivElement
@@ -49,7 +49,7 @@ document.body.onload = async () => {
 	let k = 32
 	const default_length = 50_000
 	let length = default_length
-	let form: 'cube' | 'sphere' | 'bunny' = 'sphere'
+	let form: 'cube' | 'sphere' | 'bunny' | 'test' = 'sphere'
 	let cloud = CreateSphere(length)
 	let colors = CreateColors(length)
 
@@ -78,10 +78,10 @@ document.body.onload = async () => {
 		cam.UpdateSize()
 	}
 
-	const key: { [key: string]: true | undefined } = {}
+	const keys: { [key: string]: true | undefined } = {}
 	let nearest: undefined | GPUBuffer = undefined
 	document.body.onkeydown = async (ev) => {
-		key[ev.key] = true
+		keys[ev.key] = true
 		switch (ev.key) {
 			case 'h':
 				makeHint(
@@ -93,10 +93,8 @@ document.body.onload = async () => {
 					'Y + Control: change cloud size',
 					'X: compute k nearest points',
 					'X + Control: change k',
-					'C: approximate triangulation (with k nearest)',
-					'V: remove connections without counterpart',
-					'T: approximate triangulation (without k nearest)',
-					'Z: approximate local "edginess" (only valid with approximation with button "T") (threshhold missing)',
+					'C: compute triangulation',
+					'V: approximate local "edginess" (threshhold missing)',
 				)
 				break
 			case 'y':
@@ -119,7 +117,20 @@ document.body.onload = async () => {
 						[cloud, length] = CreateBunny()
 						form = 'bunny'
 						break
-					case 'bunny':
+					case 'bunny': {
+						const response = await fetch('../src/loader/pcd/rops_cloud.pcd')
+						const content = await (await response.blob()).arrayBuffer()
+						const result = CreatePCD(content)
+						if (result != undefined) {
+							// eslint-disable-next-line prettier/prettier
+							[cloud, length] = result
+						} else {
+							alert('form error')
+						}
+						form = 'test'
+						break
+					}
+					case 'test':
 						length = default_length
 						cloud = CreateSphere(length)
 						form = 'sphere'
@@ -149,38 +160,24 @@ document.body.onload = async () => {
 				}
 				break
 			case 'c':
-				if (nearest == undefined) {
-					nearest = await KNearest.Compute(k, cloud, length)
-				}
-				await Center.Compute(cloud, nearest, k, length)
-				break
-			case 'v':
-				if (nearest == undefined) {
-					nearest = await KNearest.Compute(k, cloud, length)
-					await Center.Compute(cloud, nearest, k, length)
-				}
-				await Filter.Compute(nearest, k, length)
-				break
-			case 't':
 				if (nearest != undefined) {
 					nearest.destroy()
 				}
-				nearest = await Test.Compute(cloud, length)
-				k = Test.K
+				nearest = await Triangulate.Compute(cloud, length)
+				k = Triangulate.K
 				break
-			case 'z':
+			case 'v':
 				if (nearest == undefined) {
-					nearest = await Test.Compute(cloud, length)
-					k = Test.K
+					alert('please calculate the connections first')
+					break
 				}
 				await Edge.Compute(cloud, nearest, colors, k, length)
-				k = Test.K
 				break
 		}
 	}
 
 	document.body.onkeyup = (ev) => {
-		delete key[ev.key]
+		delete keys[ev.key]
 	}
 	makeHint("press 'H' for help")
 
@@ -202,24 +199,19 @@ document.body.onload = async () => {
 			console.log(delta)
 		}
 		const dist = delta / 50
-		if (key['w'] != undefined) {
-			cam.Translate(0, 0, -dist)
+		const move = (key: string, x: number, y: number, z: number) => {
+			if (keys[key] != undefined) {
+				cam.Translate(x * dist, y * dist, z * dist)
+			}
 		}
-		if (key['d'] != undefined) {
-			cam.Translate(dist, 0, 0)
-		}
-		if (key['s'] != undefined) {
-			cam.Translate(0, 0, dist)
-		}
-		if (key['a'] != undefined) {
-			cam.Translate(-dist, 0, 0)
-		}
-		if (key['f'] != undefined) {
-			cam.Translate(0, -dist, 0)
-		}
-		if (key['r'] != undefined) {
-			cam.Translate(0, dist, 0)
-		}
+
+		move('w', 0, 0, -1)
+		move('d', 1, 0, 0)
+		move('s', 0, 0, 1)
+		move('a', -1, 0, 0)
+		move('f', 0, -1, 0)
+		move('r', 0, 1, 0)
+
 		GPU.StartRender(cam)
 		await Cloud.Render(increase, 0.015, length, cloud, colors)
 		await Lines.Render(normal, grid.length, grid.positions, grid.colors)
@@ -241,10 +233,10 @@ function makeHint(...text: string[]): void {
 	}
 	hint.textContent = combined
 	hint.className = 'hint'
+	document.body.append(hint)
 	setTimeout(() => {
 		hint.remove()
 	}, 5000)
-	document.body.append(hint)
 }
 
 function getUserNumber(text: string): number | undefined {

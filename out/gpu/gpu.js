@@ -73,10 +73,13 @@ export function FinishRender() {
 }
 export function CreateBuffer(data, usage) {
     const buffer = device.createBuffer({
-        size: Math.floor((data.byteLength + 3) / 4) * 4,
+        size: data.byteLength,
         usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC | usage,
         mappedAtCreation: true,
     });
+    if (data.byteLength > 200) {
+        console.log('buffer', data.byteLength);
+    }
     new Uint8Array(buffer.getMappedRange()).set(new Uint8Array(data.buffer));
     buffer.unmap();
     return buffer;

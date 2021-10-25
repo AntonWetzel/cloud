@@ -94,10 +94,13 @@ export function FinishRender(): void {
 
 export function CreateBuffer(data: Float32Array | Uint32Array, usage: GPUFlagsConstant): GPUBuffer {
 	const buffer = device.createBuffer({
-		size: Math.floor((data.byteLength + 3) / 4) * 4, //round to next size with %4 == 0,
+		size: data.byteLength,
 		usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC | usage,
 		mappedAtCreation: true,
 	})
+	if (data.byteLength > 200) {
+		console.log('buffer', data.byteLength)
+	}
 	new Uint8Array(buffer.getMappedRange()).set(new Uint8Array(data.buffer))
 	buffer.unmap()
 	return buffer

@@ -1,6 +1,4 @@
-//https://gitlab.com/taketwo/three-pcd-loader/-/blob/master/pcd-loader.js
-import * as Decompress from './decompress.js';
-import * as GPU from '../gpu/gpu.js';
+import './data/cturtle.pcd';
 /**
  * @author Filipe Caixeta / http://filipecaixeta.com.br
  * @author Sergey Alexandrov
@@ -17,21 +15,21 @@ import * as GPU from '../gpu/gpu.js';
  *   - removed support for normals field
  *
  */
-const littleEndian = true;
-export function CreatePCD(data) {
+export function Parse(data) {
     const header = parseHeader(data);
     if (header == null) {
-        return undefined;
+        console.log('header null');
     }
+    return undefined;
     const offset = header.offset;
-    let position = undefined;
+    let position = false;
     if (offset.x !== undefined && offset.y !== undefined && offset.z !== undefined) {
-        position = new Float32Array(header.points * 4);
+        position = new Float32Array(header.points * 3);
     }
-    let color = undefined;
-    let color_offset = undefined;
+    let color = false;
+    let color_offset;
     if (offset.rgb !== undefined || offset.rgba !== undefined) {
-        color = new Float32Array(header.points * 4);
+        color = new Float32Array(header.points * 3);
         color_offset = offset.rgb === undefined ? offset.rgba : offset.rgb;
     }
     if (header.data === 'ascii') {
@@ -44,13 +42,13 @@ export function CreatePCD(data) {
         let i3 = 0;
         for (let i = 0; i < lines.length; i++, i3 += 3) {
             const line = lines[i].split(' ');
-            if (position !== undefined) {
+            if (position !== false) {
                 position[i3 + 0] = parseFloat(line[offset.x]);
                 position[i3 + 1] = parseFloat(line[offset.y]);
                 position[i3 + 2] = parseFloat(line[offset.z]);
             }
-            if (color !== undefined) {
-                let c = undefined;
+            if (color !== false) {
+                var c;
                 if (offset.rgba !== undefined) {
                     c = new Uint32Array([parseInt(line[offset.rgba])]);
                 }
@@ -66,17 +64,17 @@ export function CreatePCD(data) {
     }
     else if (header.data === 'binary') {
         let row = 0;
-        const dataArrayView = new DataView(data, header.headerLen);
-        for (let p = 0; p < header.points; row += header.rowSize, p++) {
-            if (position !== undefined) {
-                position[p * 4 + 0] = dataArrayView.getFloat32(row + offset.x, littleEndian);
-                position[p * 4 + 1] = dataArrayView.getFloat32(row + offset.y, littleEndian);
-                position[p * 4 + 2] = dataArrayView.getFloat32(row + offset.z, littleEndian);
+        var dataArrayView = new DataView(data, header.headerLen);
+        for (var p = 0; p < header.points; row += header.rowSize, p++) {
+            if (position !== false) {
+                position[p * 3 + 0] = dataArrayView.getFloat32(row + offset.x, this.littleEndian);
+                position[p * 3 + 1] = dataArrayView.getFloat32(row + offset.y, this.littleEndian);
+                position[p * 3 + 2] = dataArrayView.getFloat32(row + offset.z, this.littleEndian);
             }
-            if (color !== undefined) {
-                color[p * 4 + 2] = dataArrayView.getUint8(row + color_offset + 0) / 255.0;
-                color[p * 4 + 1] = dataArrayView.getUint8(row + color_offset + 1) / 255.0;
-                color[p * 4 + 0] = dataArrayView.getUint8(row + color_offset + 2) / 255.0;
+            if (color !== false) {
+                color[p * 3 + 2] = dataArrayView.getUint8(row + color_offset + 0) / 255.0;
+                color[p * 3 + 1] = dataArrayView.getUint8(row + color_offset + 1) / 255.0;
+                color[p * 3 + 0] = dataArrayView.getUint8(row + color_offset + 2) / 255.0;
             }
         }
     }
@@ -84,29 +82,38 @@ export function CreatePCD(data) {
         const sizes = new Uint32Array(data.slice(header.headerLen, header.headerLen + 8));
         const compressedSize = sizes[0];
         const decompressedSize = sizes[1];
-        const decompressed = Decompress.LZF(new Uint8Array(data, header.headerLen + 8, compressedSize), decompressedSize);
-        const dataArrayView = new DataView(decompressed.buffer);
-        for (let p = 0; p < header.points; p++) {
-            if (position !== undefined) {
-                position[p * 4 + 0] = dataArrayView.getFloat32(offset.x + p * 4, littleEndian);
-                position[p * 4 + 1] = dataArrayView.getFloat32(offset.y + p * 4, littleEndian);
-                position[p * 4 + 2] = dataArrayView.getFloat32(offset.z + p * 4, littleEndian);
+        const decompressed = decompressLZF(new Uint8Array(data, header.headerLen + 8, compressedSize), decompressedSize);
+        dataArrayView = new DataView(decompressed.buffer);
+        for (p = 0; p < header.points; p++) {
+            if (position !== false) {
+                position[p * 3 + 0] = dataArrayView.getFloat32(offset.x + p * 4, this.littleEndian);
+                position[p * 3 + 1] = dataArrayView.getFloat32(offset.y + p * 4, this.littleEndian);
+                position[p * 3 + 2] = dataArrayView.getFloat32(offset.z + p * 4, this.littleEndian);
             }
-            if (color !== undefined) {
-                color[p * 4 + 2] = dataArrayView.getUint8(color_offset + p * 4 + 0) / 255.0;
-                color[p * 4 + 1] = dataArrayView.getUint8(color_offset + p * 4 + 1) / 255.0;
-                color[p * 4 + 0] = dataArrayView.getUint8(color_offset + p * 4 + 2) / 255.0;
+            if (color !== false) {
+                color[p * 3 + 2] = dataArrayView.getUint8(color_offset + p * 4 + 0) / 255.0;
+                color[p * 3 + 1] = dataArrayView.getUint8(color_offset + p * 4 + 1) / 255.0;
+                color[p * 3 + 0] = dataArrayView.getUint8(color_offset + p * 4 + 2) / 255.0;
             }
         }
     }
-    if (position == undefined) {
-        return undefined;
+    const geometry = new THREE.BufferGeometry();
+    if (position !== false) {
+        geometry.addAttribute('position', new THREE.BufferAttribute(position, 3));
     }
-    console.log(position.byteLength);
-    return [
-        GPU.CreateBuffer(position, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE),
-        header.points,
-    ];
+    if (color !== false) {
+        geometry.addAttribute('color', new THREE.BufferAttribute(color, 3));
+    }
+    const material = new THREE.PointsMaterial({
+        size: 0.005,
+        vertexColors: !(color === false),
+    });
+    if (color === false) {
+        material.color.setHex(Math.random() * 0xffffff);
+    }
+    const mesh = new THREE.Points(geometry, material);
+    mesh.header = header;
+    return mesh;
 }
 function parseHeader(binaryData) {
     let headerText = '';

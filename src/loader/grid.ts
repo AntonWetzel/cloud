@@ -58,6 +58,7 @@ export function CreateGrid(amount: number): {
 			{ x: 1, y: 1, z: 1 },
 		)
 	}
+	//3 main axes
 	addLine(
 		amount * 4 + 0,
 		{ x: -amount, y: 0, z: 0 },
