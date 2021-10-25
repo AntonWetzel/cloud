@@ -28,11 +28,7 @@ document.body.onload = async () => {
 		const botLine = document.createElement('div')
 		botLine.className = 'normal'
 		botLine.innerHTML =
-			'1. Download and install <a href="https://www.google.com/chrome/canary/">Chrome Canary</a><br>' +
-			'2. Open <tt>"chrome://flags/#enable-unsafe-webgpu"</tt><br>' +
-			'3. Enable <tt>"Unsafe WebGPU"</tt><br>' +
-			'4. Relaunch the browser<br>' +
-			'5. Reload the website'
+			'Only tested with <a href="https://www.google.com/chrome">Google Chrome</a>'
 		error.append(botLine)
 		document.body.append(error)
 		return
