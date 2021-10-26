@@ -42,7 +42,7 @@ document.body.onload = async () => {
 	const normal = new Position()
 
 	let k = 32
-	let length = 25_000
+	let length = 10_000
 	let lengthOld = length
 	let form: 'cube' | 'sphere' | 'bunny' | 'test' = 'sphere'
 	let cloud = CreateSphere(length)

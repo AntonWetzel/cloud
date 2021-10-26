@@ -37,7 +37,7 @@ document.body.onload = async () => {
     increase.Scale(5, 5, 5);
     const normal = new Position();
     let k = 32;
-    let length = 25_000;
+    let length = 10_000;
     let lengthOld = length;
     let form = 'sphere';
     let cloud = CreateSphere(length);
