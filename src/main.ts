@@ -42,7 +42,7 @@ document.body.onload = async () => {
 	const normal = new Position()
 
 	let k = 32
-	let length = 150_000
+	let length = 25_000
 	let lengthOld = length
 	let form: 'cube' | 'sphere' | 'bunny' | 'test' = 'sphere'
 	let cloud = CreateSphere(length)
@@ -76,23 +76,23 @@ document.body.onload = async () => {
 	const keys: { [key: string]: true | undefined } = {}
 	let nearest: undefined | GPUBuffer = undefined
 	document.body.onkeydown = async (ev) => {
-		keys[ev.key] = true
-		switch (ev.key) {
-			case 'h':
+		keys[ev.code] = true
+		switch (ev.code) {
+			case 'KeyH':
 				makeHint(
 					'Left mouse button: rotate camera',
 					'Mouse wheel: change cloud size',
 					'Mouse wheel + Control: change field of view',
 					'QWER: move camera',
-					'Y: change cloud form',
-					'Y + Control: change cloud size',
-					'X: compute k nearest points',
-					'X + Control: change k',
-					'C: compute triangulation',
-					'V: approximate local "edginess" (threshhold missing)',
+					'1: change cloud form',
+					'1 + Control: change cloud size',
+					'2: compute k nearest points',
+					'2 + Control: change k',
+					'3: compute triangulation',
+					'4: approximate local "edginess" (threshhold missing)',
 				)
 				break
-			case 'y':
+			case 'Digit1':
 				if (ev.ctrlKey) {
 					const number = getUserNumber('input new cloud size')
 					if (number != undefined) {
@@ -148,7 +148,7 @@ document.body.onload = async () => {
 					nearest = undefined
 				}
 				break
-			case 'x':
+			case 'Digit2':
 				if (ev.ctrlKey == false) {
 					if (nearest != undefined) {
 						nearest.destroy()
@@ -165,14 +165,14 @@ document.body.onload = async () => {
 					}
 				}
 				break
-			case 'c':
+			case 'Digit3':
 				if (nearest != undefined) {
 					nearest.destroy()
 				}
 				nearest = await Triangulate.Compute(cloud, length)
 				k = Triangulate.K
 				break
-			case 'v':
+			case 'Digit4':
 				if (nearest == undefined) {
 					alert('please calculate the connections first')
 					break
@@ -183,7 +183,7 @@ document.body.onload = async () => {
 	}
 
 	document.body.onkeyup = (ev) => {
-		delete keys[ev.key]
+		delete keys[ev.code]
 	}
 	makeHint("press 'H' for help")
 
@@ -211,12 +211,12 @@ document.body.onload = async () => {
 			}
 		}
 
-		move('w', 0, 0, -1)
-		move('d', 1, 0, 0)
-		move('s', 0, 0, 1)
-		move('a', -1, 0, 0)
-		move('f', 0, -1, 0)
-		move('r', 0, 1, 0)
+		move('KeyW', 0, 0, -1)
+		move('KeyD', 1, 0, 0)
+		move('KeyS', 0, 0, 1)
+		move('KeyA', -1, 0, 0)
+		move('KeyF', 0, -1, 0)
+		move('KeyR', 0, 1, 0)
 
 		GPU.StartRender(cam)
 		await Cloud.Render(increase, 0.015, length, cloud, colors)
