@@ -11,8 +11,13 @@ export async function Setup(width, height) {
     if (window.navigator.gpu == undefined) {
         return undefined;
     }
-    adapter = (await window.navigator.gpu.requestAdapter());
+    adapter = (await window.navigator.gpu.requestAdapter({
+        powerPreference: 'high-performance',
+    }));
     device = (await adapter.requestDevice());
+    device.lost.then((info) => {
+        console.log(info);
+    });
     canvas = document.createElement('canvas');
     context = canvas.getContext('webgpu');
     format = context.getPreferredFormat(adapter);
@@ -77,9 +82,6 @@ export function CreateBuffer(data, usage) {
         usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC | usage,
         mappedAtCreation: true,
     });
-    if (data.byteLength > 200) {
-        console.log('buffer', data.byteLength);
-    }
     new Uint8Array(buffer.getMappedRange()).set(new Uint8Array(data.buffer));
     buffer.unmap();
     return buffer;

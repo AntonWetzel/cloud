@@ -11,7 +11,6 @@ import * as Edge from './gpu/edge.js'
 import { CreateColors } from './loader/color.js'
 import { CreateGrid } from './loader/grid.js'
 import { CreateSphere } from './loader/sphere.js'
-import { CreateBunny } from './loader/bunny.js'
 import { CreatePCD } from './loader/pcd.js'
 
 document.body.onload = async () => {
@@ -43,8 +42,8 @@ document.body.onload = async () => {
 	const normal = new Position()
 
 	let k = 32
-	const default_length = 50_000
-	let length = default_length
+	let length = 150_000
+	let lengthOld = length
 	let form: 'cube' | 'sphere' | 'bunny' | 'test' = 'sphere'
 	let cloud = CreateSphere(length)
 	let colors = CreateColors(length)
@@ -97,22 +96,33 @@ document.body.onload = async () => {
 				if (ev.ctrlKey) {
 					const number = getUserNumber('input new cloud size')
 					if (number != undefined) {
-						length = number
+						lengthOld = number
+						form = 'test'
+					} else {
+						break
 					}
 				}
 				cloud.destroy()
 				colors.destroy()
 				switch (form) {
 					case 'sphere':
-						length = default_length
+						length = lengthOld
 						cloud = CreateCube(length)
 						form = 'cube'
 						break
-					case 'cube':
-						// eslint-disable-next-line prettier/prettier
-						[cloud, length] = CreateBunny()
+					case 'cube': {
+						const response = await fetch('../src/loader/pcd/bunny.pcd')
+						const content = await (await response.blob()).arrayBuffer()
+						const result = CreatePCD(content)
+						if (result != undefined) {
+							// eslint-disable-next-line prettier/prettier
+							[cloud, length] = result
+						} else {
+							alert('pcd error')
+						}
 						form = 'bunny'
 						break
+					}
 					case 'bunny': {
 						const response = await fetch('../src/loader/pcd/rops_cloud.pcd')
 						const content = await (await response.blob()).arrayBuffer()
@@ -121,13 +131,13 @@ document.body.onload = async () => {
 							// eslint-disable-next-line prettier/prettier
 							[cloud, length] = result
 						} else {
-							alert('form error')
+							alert('pcd error')
 						}
 						form = 'test'
 						break
 					}
 					case 'test':
-						length = default_length
+						length = lengthOld
 						cloud = CreateSphere(length)
 						form = 'sphere'
 						break

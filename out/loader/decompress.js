@@ -1,14 +1,11 @@
-//https://gitlab.com/taketwo/three-pcd-loader/-/blob/master/decompress-lzf.js
+//https://gitlab.com/taketwo/three-pcd-loader/-/blob/master/decompress-lzf.js //edited
 export function LZF(inData, outLength) {
     const inLength = inData.length;
     const outData = new Uint8Array(outLength);
     let inPtr = 0;
     let outPtr = 0;
-    let ctrl;
-    let len;
-    let ref;
     do {
-        ctrl = inData[inPtr++];
+        let ctrl = inData[inPtr++];
         if (ctrl < 1 << 5) {
             ctrl++;
             if (outPtr + ctrl > outLength)
@@ -20,8 +17,8 @@ export function LZF(inData, outLength) {
             } while (--ctrl);
         }
         else {
-            len = ctrl >> 5;
-            ref = outPtr - ((ctrl & 0x1f) << 8) - 1;
+            let len = ctrl >> 5;
+            let ref = outPtr - ((ctrl & 0x1f) << 8) - 1;
             if (inPtr >= inLength)
                 throw new Error('Invalid compressed data');
             if (len === 7) {

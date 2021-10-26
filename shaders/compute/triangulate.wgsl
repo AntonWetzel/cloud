@@ -8,12 +8,11 @@
 
 [[block]] struct Parameter {
 	length: u32;
-
+	offset: u32;
 };
 
 let MAX_K = 16u;
 let MAX_DISTANCE = 340282346638528859811704183484516925440.0; //max value for f32 (i think)
-let PI = 3.1415926538;
 
 [[group(0), binding(0)]] var<storage, read> parameter: Parameter;
 [[group(0), binding(1)]] var<storage, read_write> cloud: Buffer;
@@ -21,7 +20,7 @@ let PI = 3.1415926538;
 
 [[stage(compute), workgroup_size(256)]]
 fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
-	let id = global.x;
+	let id = global.x + parameter.offset;
 	if (id >= parameter.length) {
 		return;
 	}
@@ -38,6 +37,7 @@ fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
 			}
 		}
 	}
+
 	let offset = id * MAX_K;
 	nearest.data[offset] = near;
 	

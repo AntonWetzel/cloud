@@ -1,4 +1,4 @@
-//https://gitlab.com/taketwo/three-pcd-loader/-/blob/master/pcd-loader.js
+//https://gitlab.com/taketwo/three-pcd-loader/-/blob/master/pcd-loader.js //edited
 import * as Decompress from './decompress.js'
 import * as GPU from '../gpu/gpu.js'
 
@@ -48,7 +48,7 @@ export function CreatePCD(data: ArrayBufferLike): [GPUBuffer, number] | undefine
 
 		const lines = dataString.split('\n')
 		let i3 = 0
-		for (let i = 0; i < lines.length; i++, i3 += 3) {
+		for (let i = 0; i < lines.length; i++, i3 += 4) {
 			const line = lines[i].split(' ')
 			if (position !== undefined) {
 				position[i3 + 0] = parseFloat(line[offset.x])
@@ -108,7 +108,6 @@ export function CreatePCD(data: ArrayBufferLike): [GPUBuffer, number] | undefine
 	if (position == undefined) {
 		return undefined
 	}
-	console.log(position.byteLength)
 	return [
 		GPU.CreateBuffer(position, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE),
 		header.points,

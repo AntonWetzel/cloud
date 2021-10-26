@@ -20,8 +20,13 @@ export async function Setup(width: number, height: number): Promise<HTMLCanvasEl
 	if (window.navigator.gpu == undefined) {
 		return undefined
 	}
-	adapter = (await window.navigator.gpu.requestAdapter()) as GPUAdapter
+	adapter = (await window.navigator.gpu.requestAdapter({
+		powerPreference: 'high-performance',
+	})) as GPUAdapter
 	device = (await adapter.requestDevice()) as GPUDevice
+	device.lost.then((info) => {
+		console.log(info)
+	})
 
 	canvas = document.createElement('canvas')
 	context = canvas.getContext('webgpu') as GPUCanvasContext
@@ -98,9 +103,6 @@ export function CreateBuffer(data: Float32Array | Uint32Array, usage: GPUFlagsCo
 		usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC | usage,
 		mappedAtCreation: true,
 	})
-	if (data.byteLength > 200) {
-		console.log('buffer', data.byteLength)
-	}
 	new Uint8Array(buffer.getMappedRange()).set(new Uint8Array(data.buffer))
 	buffer.unmap()
 	return buffer
