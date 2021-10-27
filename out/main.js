@@ -71,7 +71,7 @@ document.body.onload = async () => {
         keys[ev.code] = true;
         switch (ev.code) {
             case 'KeyH':
-                makeHint('Left mouse button: rotate camera', 'Mouse wheel: change cloud size', 'Mouse wheel + Control: change field of view', 'QWER: move camera', '1: change cloud form', '1 + Control: change cloud size', '2: compute k nearest points', '2 + Control: change k', '3: compute triangulation', '4: approximate local "edginess" (threshhold missing)');
+                makeHint('Left mouse button: rotate camera', 'Mouse wheel: change cloud size', 'Mouse wheel + Control: change field of view', 'QWER: move camera', '1: change cloud form', '1 + Control: change cloud size', '2: compute k nearest points', '2 + Control: change k', '3: compute triangulation', '4: approximate local "edginess" (threshhold missing)', '0: open notes (german)');
                 break;
             case 'Digit1':
                 if (ev.ctrlKey) {
@@ -164,6 +164,9 @@ document.body.onload = async () => {
                 }
                 await Edge.Compute(cloud, nearest, colors, k, length);
                 break;
+            case 'Digit0': {
+                window.open('notes.html', '_blank');
+            }
         }
     };
     document.body.onkeyup = (ev) => {
@@ -198,10 +201,18 @@ document.body.onload = async () => {
         move('KeyF', 0, -1, 0);
         move('KeyR', 0, 1, 0);
         GPU.StartRender(cam);
-        await Cloud.Render(increase, 0.015, length, cloud, colors);
         await Lines.Render(normal, grid.length, grid.positions, grid.colors);
         if (nearest != undefined) {
-            await KNearest.Render(increase, cloud, colors, nearest, k, length);
+            if (keys['Space'] == undefined) {
+                await Cloud.Render(increase, 0.015, length, cloud, colors);
+                await KNearest.Render(increase, cloud, colors, nearest, k, length);
+            }
+            else {
+                await Triangulate.Render(increase, cloud, colors, nearest, k, length);
+            }
+        }
+        else {
+            await Cloud.Render(increase, 0.015, length, cloud, colors);
         }
         GPU.FinishRender();
         last = time;

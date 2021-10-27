@@ -89,7 +89,9 @@ document.body.onload = async () => {
 					'2: compute k nearest points',
 					'2 + Control: change k',
 					'3: compute triangulation',
+					'Space: render triangulation with polygons',
 					'4: approximate local "edginess" (threshhold missing)',
+					'0: open notes (german)',
 				)
 				break
 			case 'Digit1':
@@ -179,6 +181,9 @@ document.body.onload = async () => {
 				}
 				await Edge.Compute(cloud, nearest, colors, k, length)
 				break
+			case 'Digit0': {
+				window.open('notes.html', '_blank')
+			}
 		}
 	}
 
@@ -219,10 +224,16 @@ document.body.onload = async () => {
 		move('KeyR', 0, 1, 0)
 
 		GPU.StartRender(cam)
-		await Cloud.Render(increase, 0.015, length, cloud, colors)
 		await Lines.Render(normal, grid.length, grid.positions, grid.colors)
 		if (nearest != undefined) {
-			await KNearest.Render(increase, cloud, colors, nearest, k, length)
+			if (keys['Space'] == undefined) {
+				await Cloud.Render(increase, 0.015, length, cloud, colors)
+				await KNearest.Render(increase, cloud, colors, nearest, k, length)
+			} else {
+				await Triangulate.Render(increase, cloud, colors, nearest, k, length)
+			}
+		} else {
+			await Cloud.Render(increase, 0.015, length, cloud, colors)
 		}
 		GPU.FinishRender()
 		last = time

@@ -16,7 +16,6 @@
 	data: array<u32>;
 };
 
-
 [[group(0), binding(0)]] var<uniform> camera: Camera;
 [[group(0), binding(1)]] var<uniform> parameter: Parameter;
 [[group(0), binding(2)]] var<storage, read> positions: Buffer;
@@ -32,27 +31,29 @@ struct Transfer {
 fn vertexMain(
 	[[builtin(vertex_index)]] id: u32,
 ) -> Transfer {
-	var vertex = positions.data[id / (2u * parameter.k)];
-	var color = colors.data[id / (2u * parameter.k)];
-	if (id%2u != 0u) {
-		vertex = (vertex + positions.data[indices.data[id/2u]]) / 2.0;
+	var index_id: u32;
+	switch (id%3u) {
+		case 0u: {
+			index_id = id / (3u * parameter.k);
+			break;
+		}
+		case 1u: {
+			index_id = indices.data[id/3u];
+			break;
+		}
+		default: {
+			index_id = indices.data[id/3u + 1u];
+			let cen = id / (3u * parameter.k);
+			if (index_id == cen) { //loop around to the first vertex in the circle
+				index_id = indices.data[cen*parameter.k];
+			}
+			break;
+		}
 	}
-	var output : Transfer;
-	output.position = camera.projection * camera.view * parameter.model * vec4<f32>(vertex, 1.0);
-	
-	output.color = color;
 
-	//debug: color by index
-	/*switch ((id/2u)%parameter.k) { 
-	case 0u: { output.color = vec3<f32>(1.0, 0.0, 0.0); }
-	case 1u: { output.color = vec3<f32>(0.0, 1.0, 0.0); }
-	case 2u: { output.color = vec3<f32>(0.0, 0.0, 1.0); }
-	case 3u: { output.color = vec3<f32>(1.0, 1.0, 0.0); }
-	case 4u: { output.color = vec3<f32>(0.0, 1.0, 1.0); }
-	case 5u: { output.color = vec3<f32>(1.0, 0.0, 1.0); }
-	case 6u: { output.color = vec3<f32>(0.5, 0.5, 0.5); }
-	default: { output.color = vec3<f32>(1.0, 1.0, 1.0); }
-	}*/
+	var output : Transfer;
+	output.position = camera.projection * camera.view * parameter.model * vec4<f32>(positions.data[index_id], 1.0);
+	output.color = colors.data[index_id];
 	return output;
 }
 
