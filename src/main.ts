@@ -12,6 +12,7 @@ import { CreateColors } from './loader/color.js'
 import { CreateGrid } from './loader/grid.js'
 import { CreateSphere } from './loader/sphere.js'
 import { CreatePCD } from './loader/pcd.js'
+//import './test.js'
 
 document.body.onload = async () => {
 	const display = document.getElementById('display') as HTMLDivElement
@@ -41,8 +42,8 @@ document.body.onload = async () => {
 	increase.Scale(5, 5, 5)
 	const normal = new Position()
 
-	let k = 32
-	let length = 10_000
+	let k = 64
+	let length = 25_000
 	let lengthOld = length
 	let form: 'cube' | 'sphere' | 'bunny' | 'test' = 'sphere'
 	let cloud = CreateSphere(length)
@@ -159,11 +160,11 @@ document.body.onload = async () => {
 				} else {
 					const number = getUserNumber('input new k for nearest points')
 					if (number != undefined) {
-						if (k > 64) {
-							console.log('max k is 32')
-							k = 64
-						}
 						k = number
+						if (nearest != undefined) {
+							nearest.destroy()
+							nearest = undefined
+						}
 					}
 				}
 				break
@@ -180,6 +181,13 @@ document.body.onload = async () => {
 					break
 				}
 				await Edge.Compute(cloud, nearest, colors, k, length)
+				break
+			case 'Digit5':
+				if (nearest == undefined) {
+					alert('please calculate the connections first')
+					break
+				}
+				await Filter.Compute(nearest, k, length)
 				break
 			case 'Digit0': {
 				window.open('notes.html', '_blank')

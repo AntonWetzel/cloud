@@ -6,11 +6,13 @@ import { CreateCube } from './loader/cube.js';
 import * as Cloud from './gpu/cloud.js';
 import * as KNearest from './gpu/kNearest.js';
 import * as Triangulate from './gpu/triangulate.js';
+import * as Filter from './gpu/filter.js';
 import * as Edge from './gpu/edge.js';
 import { CreateColors } from './loader/color.js';
 import { CreateGrid } from './loader/grid.js';
 import { CreateSphere } from './loader/sphere.js';
 import { CreatePCD } from './loader/pcd.js';
+//import './test.js'
 document.body.onload = async () => {
     const display = document.getElementById('display');
     const canvas = await GPU.Setup(display.clientWidth, display.clientHeight);
@@ -36,8 +38,8 @@ document.body.onload = async () => {
     const increase = new Position();
     increase.Scale(5, 5, 5);
     const normal = new Position();
-    let k = 32;
-    let length = 10_000;
+    let k = 64;
+    let length = 25_000;
     let lengthOld = length;
     let form = 'sphere';
     let cloud = CreateSphere(length);
@@ -71,7 +73,7 @@ document.body.onload = async () => {
         keys[ev.code] = true;
         switch (ev.code) {
             case 'KeyH':
-                makeHint('Left mouse button: rotate camera', 'Mouse wheel: change cloud size', 'Mouse wheel + Control: change field of view', 'QWER: move camera', '1: change cloud form', '1 + Control: change cloud size', '2: compute k nearest points', '2 + Control: change k', '3: compute triangulation', '4: approximate local "edginess" (threshhold missing)', '0: open notes (german)');
+                makeHint('Left mouse button: rotate camera', 'Mouse wheel: change cloud size', 'Mouse wheel + Control: change field of view', 'QWER: move camera', '1: change cloud form', '1 + Control: change cloud size', '2: compute k nearest points', '2 + Control: change k', '3: compute triangulation', 'Space: render triangulation with polygons', '4: approximate local "edginess" (threshhold missing)', '0: open notes (german)');
                 break;
             case 'Digit1':
                 if (ev.ctrlKey) {
@@ -142,11 +144,11 @@ document.body.onload = async () => {
                 else {
                     const number = getUserNumber('input new k for nearest points');
                     if (number != undefined) {
-                        if (k > 64) {
-                            console.log('max k is 32');
-                            k = 64;
-                        }
                         k = number;
+                        if (nearest != undefined) {
+                            nearest.destroy();
+                            nearest = undefined;
+                        }
                     }
                 }
                 break;
@@ -163,6 +165,13 @@ document.body.onload = async () => {
                     break;
                 }
                 await Edge.Compute(cloud, nearest, colors, k, length);
+                break;
+            case 'Digit5':
+                if (nearest == undefined) {
+                    alert('please calculate the connections first');
+                    break;
+                }
+                await Filter.Compute(nearest, k, length);
                 break;
             case 'Digit0': {
                 window.open('notes.html', '_blank');

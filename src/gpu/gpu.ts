@@ -3,7 +3,7 @@ import { Camera } from './camera.js'
 export let adapter: GPUAdapter
 export let device: GPUDevice
 
-export const clearColor = { r: 0.0, g: 0.01, b: 0.05, a: 1.0 }
+export const clearColor = { r: 0.0, g: 0.1, b: 0.2, a: 1.0 }
 export let format: GPUTextureFormat
 export let sampler: GPUSampler
 

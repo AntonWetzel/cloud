@@ -15,7 +15,7 @@ let MAX_K = 16u;
 let MAX_DISTANCE = 340282346638528859811704183484516925440.0; //max value for f32 (i think)
 
 [[group(0), binding(0)]] var<storage, read> parameter: Parameter;
-[[group(0), binding(1)]] var<storage, read_write> cloud: Buffer;
+[[group(0), binding(1)]] var<storage, read> cloud: Buffer;
 [[group(0), binding(2)]] var<storage, write> nearest: Indices;
 
 [[stage(compute), workgroup_size(256)]]
