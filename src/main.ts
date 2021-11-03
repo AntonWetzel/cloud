@@ -8,6 +8,7 @@ import * as KNearest from './gpu/kNearest.js'
 import * as Triangulate from './gpu/triangulate.js'
 import * as Filter from './gpu/filter.js'
 import * as Edge from './gpu/edge.js'
+import * as EdgeOld from './gpu/edgeOld.js'
 import { CreateColors } from './loader/color.js'
 import { CreateGrid } from './loader/grid.js'
 import { CreateSphere } from './loader/sphere.js'
@@ -43,7 +44,8 @@ document.body.onload = async () => {
 	const normal = new Position()
 
 	let k = 64
-	let length = 25_000
+	let kOld = k
+	let length = 50_000
 	let lengthOld = length
 	let form: 'cube' | 'sphere' | 'bunny' | 'test' = 'sphere'
 	let cloud = CreateSphere(length)
@@ -86,12 +88,13 @@ document.body.onload = async () => {
 					'Mouse wheel + Control: change field of view',
 					'QWER: move camera',
 					'1: change cloud form',
-					'1 + Control: change cloud size',
+					'1 + Control: change cloud size for sphere and cube',
 					'2: compute k nearest points',
 					'2 + Control: change k',
 					'3: compute triangulation',
-					'Space: render triangulation with polygons',
-					'4: approximate local "edginess" (threshhold missing)',
+					'4: approximate normal (best with triangulation)',
+					'4 + Control: approximate normal (best with k-nearest)',
+					'Space: render connections with polygons',
 					'0: open notes (german)',
 				)
 				break
@@ -152,21 +155,17 @@ document.body.onload = async () => {
 				}
 				break
 			case 'Digit2':
-				if (ev.ctrlKey == false) {
-					if (nearest != undefined) {
-						nearest.destroy()
-					}
-					nearest = await KNearest.Compute(k, cloud, length)
-				} else {
+				if (ev.ctrlKey) {
 					const number = getUserNumber('input new k for nearest points')
 					if (number != undefined) {
-						k = number
-						if (nearest != undefined) {
-							nearest.destroy()
-							nearest = undefined
-						}
+						kOld = number
 					}
 				}
+				if (nearest != undefined) {
+					nearest.destroy()
+				}
+				k = kOld
+				nearest = await KNearest.Compute(k, cloud, length)
 				break
 			case 'Digit3':
 				if (nearest != undefined) {
@@ -180,7 +179,11 @@ document.body.onload = async () => {
 					alert('please calculate the connections first')
 					break
 				}
-				await Edge.Compute(cloud, nearest, colors, k, length)
+				if (ev.ctrlKey == false) {
+					await Edge.Compute(cloud, nearest, colors, k, length)
+				} else {
+					await EdgeOld.Compute(cloud, nearest, colors, k, length)
+				}
 				break
 			case 'Digit5':
 				if (nearest == undefined) {

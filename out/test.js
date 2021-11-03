@@ -55,6 +55,9 @@ function plane(points) {
     };
     return result;
 }
+function dot(a, b) {
+    return a.x * b.x + a.y * b.y + a.z * b.z;
+}
 function cross(a, b) {
     return {
         x: a.y * b.z - a.z * b.y,
@@ -70,21 +73,30 @@ function normalize(a) {
         z: a.z / l,
     };
 }
+function sub(a, b) {
+    return {
+        x: a.x - b.x,
+        y: a.y - b.y,
+        z: a.z - b.z,
+    };
+}
 const points = [
     { x: 0, y: 1, z: 0 },
-    { x: 1, y: 0, z: 0 },
-    { x: 0, y: 0, z: 1 },
-    { x: 0, y: 0, z: 2 },
+    { x: 0, y: 1, z: 0 },
+    { x: 0.0001, y: 1.1, z: 1 },
 ];
 const r = plane(points);
-const n = cross(normalize({ x: 1.0, y: 0.0, z: r.x }), normalize({ x: 0.0, y: 1.0, z: r.y }));
-const p = { x: 3, y: 3, z: -8 };
-const d = (p.z - r.z - r.x * p.x - r.y * p.y) / (r.x * n.x + r.y * n.y - n.z);
-console.log('plane', r);
+const q = { x: 0, y: 0, z: r.z };
+const n = { x: r.x, y: r.y, z: 1.0 };
+//const n = cross(normalize({ x: 1.0, y: 0.0, z: r.x }), normalize({ x: 0.0, y: 1.0, z: r.y }))
+//const p = { x: 3, y: 3, z: -8 }
+//const d = (p.z - r.z - r.x * p.x - r.y * p.y) / (r.x * n.x + r.y * n.y - n.z)
+//console.log('plane', r)
 console.log('n', n);
-console.log('dist', d);
+console.log('q', q);
+//console.log('dist', d)
 for (let i = 0; i < points.length; i++) {
     const p = points[i];
-    console.log('point', i, ':', r.x * p.x + r.y * p.y + r.z, '|', p.z);
+    console.log('point', i, ':', dot(n, sub(p, q)));
 }
 export {};
