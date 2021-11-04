@@ -52,7 +52,6 @@
 				"args": [
 					"parcel",
 					"build",
-					"--no-minify",
 					"--public-url",
 					"./",
 					"./src/*.html"
