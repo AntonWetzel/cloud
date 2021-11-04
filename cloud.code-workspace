@@ -51,6 +51,9 @@
 				"args": [
 					"parcel",
 					"build",
+					"--no-minify",
+					"--public-url",
+					"/cloud/",
 					"./src/*.html"
 				],
 				"problemMatcher": []
