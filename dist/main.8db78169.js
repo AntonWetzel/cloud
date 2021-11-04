@@ -2132,4 +2132,4 @@ function getUserNumber(text) {
   return x;
 }
 },{"./gpu/gpu":"H5gw","./gpu/lines":"TmaS","./gpu/position":"wYMo","./gpu/camera":"Nat1","./loader/cube":"dsRi","./gpu/cloud":"VW9R","./gpu/kNearest":"jToc","./gpu/triangulate":"i6k6","./gpu/filter":"FjtV","./gpu/edge":"cFeU","./gpu/edgeOld":"pGyK","./loader/color":"l7rz","./loader/grid":"sU9e","./loader/sphere":"DUqp","./loader/pcd":"KHL4"}]},{},["ZCfc"], null)
-//# sourceMappingURL=/cloud/main.8db78169.js.map
+//# sourceMappingURL=main.8db78169.js.map

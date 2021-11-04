@@ -39,7 +39,8 @@
 					"-p",
 					"5500",
 					"./src/*.html"
-				]
+				],
+				"dependsOn": "clear"
 			},
 			{
 				"label": "build final",
@@ -53,10 +54,23 @@
 					"build",
 					"--no-minify",
 					"--public-url",
-					"/cloud/",
+					"./",
 					"./src/*.html"
 				],
-				"problemMatcher": []
+				"problemMatcher": [],
+				"dependsOn": "clear"
+			},
+			{
+				"label": "clear",
+				"type": "shell",
+				"command": "rd",
+				"options": {
+					"cwd": "${workspaceFolder:all}"
+				},
+				"args": [
+					"-r",
+					"dist"
+				]
 			}
 		]
 	}
