@@ -5,16 +5,12 @@
 			"name": "all"
 		},
 		{
-			"path": "./html",
-			"name": "html"
-		},
-		{
-			"path": "./shaders",
-			"name": "shaders"
-		},
-		{
 			"path": "./src",
 			"name": "src"
+		},
+		{
+			"path": "./static",
+			"name": "static"
 		},
 	],
 	"settings": {
@@ -28,23 +24,36 @@
 		"version": "2.0.0",
 		"tasks": [
 			{
-				"type": "shell",
 				"options": {
 					"cwd": "${workspaceFolder:all}"
 				},
-				"command": "npx",
-				"args": [
-					"tsc",
-					"--watch"
-				],
-				"problemMatcher": [
-					"$tsc-watch"
-				],
+				"label": "build",
 				"group": {
 					"kind": "build",
 					"isDefault": true
 				},
-				"label": "tsc: watch - tsconfig.json"
+				"type": "shell",
+				"command": "npx",
+				"args": [
+					"parcel",
+					"-p",
+					"5500",
+					"./src/*.html"
+				]
+			},
+			{
+				"label": "build final",
+				"options": {
+					"cwd": "${workspaceFolder:all}"
+				},
+				"type": "shell",
+				"command": "npx",
+				"args": [
+					"parcel",
+					"build",
+					"./src/*.html"
+				],
+				"problemMatcher": []
 			}
 		]
 	}
