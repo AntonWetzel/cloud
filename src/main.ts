@@ -206,12 +206,10 @@ document.body.onload = async () => {
 		}
 	}
 
-	let last: number
-	requestAnimationFrame((time: number) => {
-		last = time
-	})
-
-	async function Draw(time: number) {
+	let last = await new Promise(requestAnimationFrame)
+	const run = true
+	while(run) {
+		const time = await new Promise(requestAnimationFrame)
 		const delta = time - last
 		if (delta > 25) {
 			console.log(delta)
@@ -244,9 +242,7 @@ document.body.onload = async () => {
 		}
 		GPU.FinishRender()
 		last = time
-		requestAnimationFrame(Draw)
 	}
-	requestAnimationFrame(Draw)
 }
 
 function makeHint(...text: string[]): void {

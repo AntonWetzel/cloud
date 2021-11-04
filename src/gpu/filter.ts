@@ -7,7 +7,7 @@ export async function Compute(nearest: GPUBuffer, k: number, length: number): Pr
 	if (computePipeline == undefined) {
 		computePipeline = GPU.device.createComputePipeline({
 			compute: {
-				module: Module.New(await (await fetch('compute/filter.wgsl')).text()),
+				module:     Module.New(await (await fetch('compute/filter.wgsl')).text()),
 				entryPoint: 'main',
 			},
 		})
@@ -15,14 +15,14 @@ export async function Compute(nearest: GPUBuffer, k: number, length: number): Pr
 	const param = new Uint32Array([length, k])
 	const buffer = GPU.CreateBuffer(param, GPUBufferUsage.STORAGE)
 	const group = GPU.device.createBindGroup({
-		layout: computePipeline.getBindGroupLayout(0),
+		layout:  computePipeline.getBindGroupLayout(0),
 		entries: [
 			{
-				binding: 0,
+				binding:  0,
 				resource: { buffer: buffer },
 			},
 			{
-				binding: 1,
+				binding:  1,
 				resource: { buffer: nearest },
 			},
 		],

@@ -81,8 +81,8 @@ export function CreateGrid(amount: number): {
 		{ x: 0, y: 0, z: 1 },
 	)
 	return {
-		length: (amount * 4 + 3) * 2,
+		length:    (amount * 4 + 3) * 2,
 		positions: GPU.CreateBuffer(positions, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE),
-		colors: GPU.CreateBuffer(colors, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE),
+		colors:   	GPU.CreateBuffer(colors, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE),
 	}
 }

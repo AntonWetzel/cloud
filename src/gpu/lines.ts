@@ -16,46 +16,46 @@ export async function Render(
 
 		pipeline = GPU.device.createRenderPipeline({
 			vertex: {
-				module: module,
+				module:     module,
 				entryPoint: 'vertexMain',
-				buffers: [
+				buffers:    [
 					{
 						attributes: [
 							{
 								shaderLocation: 0,
-								offset: 0 * 4,
-								format: 'float32x3',
+								offset:         0 * 4,
+								format:         'float32x3',
 							},
 						],
 						arrayStride: 4 * 4,
-						stepMode: 'vertex',
+						stepMode:    'vertex',
 					},
 					{
 						attributes: [
 							{
 								shaderLocation: 1,
-								offset: 0 * 4,
-								format: 'float32x3',
+								offset:         0 * 4,
+								format:         'float32x3',
 							},
 						],
 						arrayStride: 4 * 4,
-						stepMode: 'vertex',
+						stepMode:    'vertex',
 					},
 				],
 			},
 			fragment: {
-				module: module,
+				module:     module,
 				entryPoint: 'fragmentMain',
-				targets: [
+				targets:    [
 					{
 						format: GPU.format,
 					},
 				],
 			},
 			depthStencil: {
-				format: 'depth32float',
+				format:            'depth32float',
 				depthWriteEnabled: true,
-				depthCompare: 'less',
+				depthCompare:      'less',
 			},
 			primitive: {
 				topology: 'line-list',
@@ -68,14 +68,14 @@ export async function Render(
 	const buffer = GPU.CreateBuffer(array, GPUBufferUsage.UNIFORM)
 	GPU.renderPass.setPipeline(pipeline)
 	const group = GPU.device.createBindGroup({
-		layout: pipeline.getBindGroupLayout(0),
+		layout:  pipeline.getBindGroupLayout(0),
 		entries: [
 			{
-				binding: 0,
+				binding:  0,
 				resource: { buffer: GPU.cameraBuffer },
 			},
 			{
-				binding: 1,
+				binding:  1,
 				resource: { buffer: buffer },
 			},
 		],

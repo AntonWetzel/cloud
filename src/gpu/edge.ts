@@ -13,7 +13,7 @@ export async function Compute(
 	if (computePipeline == undefined) {
 		computePipeline = GPU.device.createComputePipeline({
 			compute: {
-				module: Module.New(await (await fetch('compute/edge.wgsl')).text()),
+				module:     Module.New(await (await fetch('compute/edge.wgsl')).text()),
 				entryPoint: 'main',
 			},
 		})
@@ -21,22 +21,22 @@ export async function Compute(
 	const param = new Uint32Array([length, k])
 	const buffer = GPU.CreateBuffer(param, GPUBufferUsage.STORAGE)
 	const group = GPU.device.createBindGroup({
-		layout: computePipeline.getBindGroupLayout(0),
+		layout:  computePipeline.getBindGroupLayout(0),
 		entries: [
 			{
-				binding: 0,
+				binding:  0,
 				resource: { buffer: buffer },
 			},
 			{
-				binding: 1,
+				binding:  1,
 				resource: { buffer: cloud },
 			},
 			{
-				binding: 2,
+				binding:  2,
 				resource: { buffer: nearest },
 			},
 			{
-				binding: 3,
+				binding:  3,
 				resource: { buffer: colors },
 			},
 		],

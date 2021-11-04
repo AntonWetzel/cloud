@@ -8,12 +8,10 @@ export class Matrix {
 	static Identity(): Matrix {
 		return new Matrix(
 			new Float32Array([
-				/*eslint-disable*/
 				1, 0, 0, 0,
 				0, 1, 0, 0,
 				0, 0, 1, 0,
 				0, 0, 0, 1,
-				/*eslint-enable*/
 			]),
 		)
 	}
@@ -154,12 +152,10 @@ export class Matrix {
 
 		const s = 1 / Math.tan(fovy / 2)
 		const m = new Float32Array([
-			/*eslint-disable*/
 			s / aspect, 0, 0, 0,
 			0, s, 0, 0,
 			0, 0, c2, c1,
 			0, 0, -1, 0,
-			/*eslint-enable*/
 		])
 		return new Matrix(m)
 	}

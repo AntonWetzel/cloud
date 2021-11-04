@@ -33,7 +33,7 @@ export function CreatePCD(data: ArrayBufferLike): [GPUBuffer, number] | undefine
 	}
 
 	let color: Float32Array | undefined = undefined
-	let color_offset: number = undefined as any
+	let color_offset: number = undefined
 	if (offset.rgb !== undefined || offset.rgba !== undefined) {
 		color = new Float32Array(header.points * 4)
 		color_offset = offset.rgb === undefined ? offset.rgba : offset.rgb
@@ -56,7 +56,7 @@ export function CreatePCD(data: ArrayBufferLike): [GPUBuffer, number] | undefine
 				position[i3 + 2] = parseFloat(line[offset.z])
 			}
 			if (color !== undefined) {
-				let c: Uint32Array | Float32Array = undefined as any
+				let c: Uint32Array | Float32Array = undefined
 				if (offset.rgba !== undefined) {
 					c = new Uint32Array([parseInt(line[offset.rgba])])
 				} else if (offset.rgb !== undefined) {

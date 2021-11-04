@@ -9,7 +9,7 @@ export async function GetUserFile(endings: string[]): Promise<File> {
 				input.accept += ','
 			}
 		}
-		input.onchange = async () => {
+		input.onchange = () => {
 			const files = input.files
 			if (files == null || files.length == 0) {
 				return

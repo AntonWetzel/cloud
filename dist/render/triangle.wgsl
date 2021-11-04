@@ -44,7 +44,7 @@ fn vertexMain(
 		default: {
 			index_id = indices.data[id/3u + 1u];
 			let cen = id / (3u * parameter.k);
-			if (index_id == cen) { //loop around to the first vertex in the circle
+			if (index_id == cen || (id + 1u)%(parameter.k * 3u) == 0u) { //loop around to the first vertex in the circle
 				index_id = indices.data[cen*parameter.k];
 			}
 			break;

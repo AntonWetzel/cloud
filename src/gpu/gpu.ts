@@ -42,18 +42,18 @@ export function Resize(width: number, height: number): void {
 	context.configure({
 		device: device,
 		format: format,
-		size: { width: width, height: height },
+		size:   { width: width, height: height },
 	})
 	canvas.width = width
 	canvas.height = height
 
 	depth = device.createTexture({
 		size: {
-			width: canvas.width,
+			width:  canvas.width,
 			height: canvas.height,
 		},
 		format: 'depth32float',
-		usage: GPUTextureUsage.RENDER_ATTACHMENT,
+		usage:  GPUTextureUsage.RENDER_ATTACHMENT,
 	})
 }
 
@@ -63,16 +63,16 @@ export function StartRender(camera: Camera): void {
 		colorAttachments: [
 			{
 				loadValue: clearColor,
-				storeOp: 'store',
-				view: context.getCurrentTexture().createView(),
+				storeOp:   'store',
+				view:      context.getCurrentTexture().createView(),
 			},
 		],
 		depthStencilAttachment: {
-			depthLoadValue: 1.0,
-			depthStoreOp: 'store',
+			depthLoadValue:   1.0,
+			depthStoreOp:     'store',
 			stencilLoadValue: 0,
-			stencilStoreOp: 'store',
-			view: depth.createView(),
+			stencilStoreOp:   'store',
+			view:             depth.createView(),
 		},
 	})
 	cameraBuffer = camera.Buffer()
@@ -85,8 +85,8 @@ export function FinishRender(): void {
 
 export function CreateBuffer(data: Float32Array | Uint32Array, usage: GPUFlagsConstant): GPUBuffer {
 	const buffer = device.createBuffer({
-		size: data.byteLength,
-		usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC | usage,
+		size:             data.byteLength,
+		usage:            GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC | usage,
 		mappedAtCreation: true,
 	})
 	new Uint8Array(buffer.getMappedRange()).set(new Uint8Array(data.buffer))
@@ -96,8 +96,8 @@ export function CreateBuffer(data: Float32Array | Uint32Array, usage: GPUFlagsCo
 
 export function CreateEmptyBuffer(length: number, usage: GPUFlagsConstant): GPUBuffer {
 	const buffer = device.createBuffer({
-		size: length,
-		usage: usage,
+		size:             length,
+		usage:            usage,
 		mappedAtCreation: false,
 	})
 	return buffer

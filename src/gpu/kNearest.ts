@@ -9,7 +9,7 @@ export async function Compute(k: number, positions: GPUBuffer, length: number): 
 	if (computePipeline == undefined) {
 		computePipeline = GPU.device.createComputePipeline({
 			compute: {
-				module: Module.New(await (await fetch('compute/kNearest.wgsl')).text()),
+				module:     Module.New(await (await fetch('compute/kNearest.wgsl')).text()),
 				entryPoint: 'main',
 			},
 		})
@@ -21,18 +21,18 @@ export async function Compute(k: number, positions: GPUBuffer, length: number): 
 	const param = new Uint32Array([length, k])
 	const buffer = GPU.CreateBuffer(param, GPUBufferUsage.STORAGE)
 	const group = GPU.device.createBindGroup({
-		layout: computePipeline.getBindGroupLayout(0),
+		layout:  computePipeline.getBindGroupLayout(0),
 		entries: [
 			{
-				binding: 0,
+				binding:  0,
 				resource: { buffer: buffer },
 			},
 			{
-				binding: 1,
+				binding:  1,
 				resource: { buffer: positions },
 			},
 			{
-				binding: 3,
+				binding:  3,
 				resource: { buffer: nearest },
 			},
 		],
@@ -60,23 +60,23 @@ export async function Render(
 		const module = Module.New(src)
 		renderPipeline = GPU.device.createRenderPipeline({
 			vertex: {
-				module: module,
+				module:     module,
 				entryPoint: 'vertexMain',
-				buffers: [],
+				buffers:    [],
 			},
 			fragment: {
-				module: module,
+				module:     module,
 				entryPoint: 'fragmentMain',
-				targets: [
+				targets:    [
 					{
 						format: GPU.format,
 					},
 				],
 			},
 			depthStencil: {
-				format: 'depth32float',
+				format:            'depth32float',
 				depthWriteEnabled: true,
-				depthCompare: 'less',
+				depthCompare:      'less',
 			},
 			primitive: {
 				topology: 'line-list',
@@ -89,26 +89,26 @@ export async function Render(
 	const buffer = GPU.CreateBuffer(array, GPUBufferUsage.UNIFORM)
 	GPU.renderPass.setPipeline(renderPipeline)
 	const group = GPU.device.createBindGroup({
-		layout: renderPipeline.getBindGroupLayout(0),
+		layout:  renderPipeline.getBindGroupLayout(0),
 		entries: [
 			{
-				binding: 0,
+				binding:  0,
 				resource: { buffer: GPU.cameraBuffer },
 			},
 			{
-				binding: 1,
+				binding:  1,
 				resource: { buffer: buffer },
 			},
 			{
-				binding: 2,
+				binding:  2,
 				resource: { buffer: positions },
 			},
 			{
-				binding: 3,
+				binding:  3,
 				resource: { buffer: colors },
 			},
 			{
-				binding: 4,
+				binding:  4,
 				resource: { buffer: nearest },
 			},
 		],
