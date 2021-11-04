@@ -1,5 +1,5 @@
-import { Matrix } from './math'
 import * as GPU from './gpu'
+import { Matrix } from './math'
 
 export class Camera {
 	private projection: Matrix
@@ -7,14 +7,14 @@ export class Camera {
 	private fov: number
 
 	constructor(fieldOfView: number) {
-		this.projection = Matrix.Perspective(fieldOfView, GPU.global.aspect, 0.1, 1000)
+		this.projection = Matrix.Perspective(fieldOfView, GPU.aspect(), 0.1, 1000)
 		this.view = Matrix.Identity()
 		this.fov = fieldOfView
 	}
 
 	set fieldOfView(val: number) {
 		this.fov = val
-		this.projection = Matrix.Perspective(val, GPU.global.aspect, 0.1, 100)
+		this.projection = Matrix.Perspective(val, GPU.aspect(), 0.1, 100)
 	}
 
 	get fieldOfView(): number {
@@ -29,7 +29,7 @@ export class Camera {
 	}
 
 	UpdateSize(): void {
-		this.projection = Matrix.Perspective(this.fov, GPU.global.aspect, 1, 1000)
+		this.projection = Matrix.Perspective(this.fov, GPU.aspect(), 1, 1000)
 	}
 
 	Translate(x: number, y: number, z: number): void {

@@ -1,46 +1,37 @@
 import { Camera } from './camera'
 
-export let adapter: GPUAdapter
+let adapter: GPUAdapter
 export let device: GPUDevice
 
 export const clearColor = { r: 0.0, g: 0.1, b: 0.2, a: 1.0 }
 export let format: GPUTextureFormat
-export let sampler: GPUSampler
 
-export let canvas: HTMLCanvasElement
-export let context: GPUCanvasContext
+let canvas: HTMLCanvasElement
+let context: GPUCanvasContext
 
-export let global: {
-	aspect: number
+let depth: GPUTexture
+
+export let cameraBuffer: GPUBuffer
+export let renderPass: GPURenderPassEncoder
+let encoder: GPUCommandEncoder
+
+export function aspect(): number {
+	return canvas.width / canvas.height
 }
-
-export let depth: GPUTexture
 
 export async function Setup(width: number, height: number): Promise<HTMLCanvasElement | undefined> {
 	if (window.navigator.gpu == undefined) {
 		return undefined
 	}
-	adapter = (await window.navigator.gpu.requestAdapter({
+	adapter = await window.navigator.gpu.requestAdapter({
 		powerPreference: 'high-performance',
-	})) as GPUAdapter
-	device = (await adapter.requestDevice()) as GPUDevice
-	device.lost.then((info) => {
-		console.log(info)
 	})
+	device = await adapter.requestDevice()
 
 	canvas = document.createElement('canvas')
-	context = canvas.getContext('webgpu') as GPUCanvasContext
+	context = canvas.getContext('webgpu')
 
 	format = context.getPreferredFormat(adapter)
-
-	global = {
-		aspect: undefined as any,
-	}
-
-	sampler = device.createSampler({
-		magFilter: 'linear',
-		minFilter: 'linear',
-	})
 
 	Resize(width, height)
 
@@ -64,12 +55,7 @@ export function Resize(width: number, height: number): void {
 		format: 'depth32float',
 		usage: GPUTextureUsage.RENDER_ATTACHMENT,
 	})
-	global.aspect = canvas.width / canvas.height
 }
-
-export let cameraBuffer: GPUBuffer
-export let renderPass: GPURenderPassEncoder
-let encoder: GPUCommandEncoder
 
 export function StartRender(camera: Camera): void {
 	encoder = device.createCommandEncoder()

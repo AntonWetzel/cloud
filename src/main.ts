@@ -116,7 +116,7 @@ document.body.onload = async () => {
 				form = 'cube'
 				break
 			case 'cube': {
-				const response = await fetch('../src/loader/pcd/bunny.pcd')
+				const response = await fetch('pcd/bunny.pcd')
 				const content = await (await response.blob()).arrayBuffer()
 				const result = CreatePCD(content)
 				if (result != undefined) {
@@ -128,7 +128,7 @@ document.body.onload = async () => {
 				break
 			}
 			case 'bunny': {
-				const response = await fetch('../src/loader/pcd/rops_cloud.pcd')
+				const response = await fetch('pcd/rops_cloud.pcd')
 				const content = await (await response.blob()).arrayBuffer()
 				const result = CreatePCD(content)
 				if (result != undefined) {

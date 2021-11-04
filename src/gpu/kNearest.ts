@@ -1,6 +1,5 @@
 import * as GPU from './gpu'
 import * as Module from './module'
-import { GetServerFile } from '../helper/file'
 import { Position } from './position'
 
 let computePipeline: undefined | GPUComputePipeline = undefined
@@ -10,7 +9,7 @@ export async function Compute(k: number, positions: GPUBuffer, length: number): 
 	if (computePipeline == undefined) {
 		computePipeline = GPU.device.createComputePipeline({
 			compute: {
-				module: Module.New(await GetServerFile('compute/kNearest.wgsl')),
+				module: Module.New(await (await fetch('compute/kNearest.wgsl')).text()),
 				entryPoint: 'main',
 			},
 		})
@@ -57,7 +56,7 @@ export async function Render(
 	length: number,
 ): Promise<void> {
 	if (renderPipeline == undefined) {
-		const src = await GetServerFile('render/kNearest.wgsl')
+		const src = await (await fetch('render/kNearest.wgsl')).text()
 		const module = Module.New(src)
 		renderPipeline = GPU.device.createRenderPipeline({
 			vertex: {

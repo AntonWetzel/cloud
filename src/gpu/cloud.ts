@@ -1,6 +1,5 @@
 import * as GPU from './gpu'
 import * as Module from './module'
-import { GetServerFile } from '../helper/file'
 import { Position } from './position'
 
 let quadBuffer = undefined as GPUBuffer | undefined
@@ -15,7 +14,7 @@ export async function Render(
 	colors: GPUBuffer,
 ): Promise<void> {
 	if (pipeline == undefined || quadBuffer == undefined) {
-		const src = await GetServerFile('render/cloud.wgsl')
+		const src = await (await fetch('render/cloud.wgsl')).text()
 		const module = Module.New(src)
 		pipeline = GPU.device.createRenderPipeline({
 			vertex: {
@@ -86,7 +85,7 @@ export async function Render(
 	const array = new Float32Array(16 + 2)
 	position.Save(array, 0)
 	array[16] = radius
-	array[17] = GPU.global.aspect
+	array[17] = GPU.aspect()
 	const buffer = GPU.CreateBuffer(array, GPUBufferUsage.UNIFORM)
 	GPU.renderPass.setPipeline(pipeline)
 	const group = GPU.device.createBindGroup({

@@ -62,14 +62,10 @@
 			{
 				"label": "clear",
 				"type": "shell",
-				"command": "rd",
+				"command": "(rd -r dist) * 0",
 				"options": {
 					"cwd": "${workspaceFolder:all}"
 				},
-				"args": [
-					"-r",
-					"dist"
-				]
 			}
 		]
 	}

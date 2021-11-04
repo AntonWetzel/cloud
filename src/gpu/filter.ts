@@ -1,6 +1,5 @@
 import * as GPU from './gpu'
 import * as Module from './module'
-import { GetServerFile } from '../helper/file'
 
 let computePipeline: undefined | GPUComputePipeline = undefined
 
@@ -8,7 +7,7 @@ export async function Compute(nearest: GPUBuffer, k: number, length: number): Pr
 	if (computePipeline == undefined) {
 		computePipeline = GPU.device.createComputePipeline({
 			compute: {
-				module: Module.New(await GetServerFile('compute/filter.wgsl')),
+				module: Module.New(await (await fetch('compute/filter.wgsl')).text()),
 				entryPoint: 'main',
 			},
 		})

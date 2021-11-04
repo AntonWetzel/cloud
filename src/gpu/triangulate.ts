@@ -1,6 +1,5 @@
 import * as GPU from './gpu'
 import * as Module from './module'
-import { GetServerFile } from '../helper/file'
 import { Position } from './position'
 
 let computePipeline: undefined | GPUComputePipeline = undefined
@@ -12,7 +11,7 @@ export async function Compute(positions: GPUBuffer, length: number): Promise<GPU
 	if (computePipeline == undefined) {
 		computePipeline = GPU.device.createComputePipeline({
 			compute: {
-				module: Module.New(await GetServerFile('compute/triangulate.wgsl')),
+				module: Module.New(await (await fetch('compute/triangulate.wgsl')).text()),
 				entryPoint: 'main',
 			},
 		})
@@ -61,7 +60,7 @@ export async function Render(
 	length: number,
 ): Promise<void> {
 	if (renderPipeline == undefined) {
-		const src = await GetServerFile('render/triangle.wgsl')
+		const src = await (await fetch('render/triangle.wgsl')).text()
 		const module = Module.New(src)
 		renderPipeline = GPU.device.createRenderPipeline({
 			vertex: {

@@ -26,17 +26,3 @@ export async function GetUserFile(endings: string[]): Promise<File> {
 		input.click()
 	})
 }
-
-export async function GetServerFile(path: string): Promise<string> {
-	return new Promise((resolve, reject) => {
-		const request = new XMLHttpRequest()
-		request.onreadystatechange = () => {
-			if (request.readyState == 4 && request.status == 200) {
-				resolve(request.responseText)
-			}
-		}
-		request.open('GET', path)
-		request.send()
-		setTimeout(reject, 1000, 'file timeout')
-	})
-}
