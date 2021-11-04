@@ -1,6 +1,5 @@
-import { Matrix } from './math.js'
-import * as GPU from './gpu.js'
-import { Position } from './position.js'
+import { Matrix } from './math'
+import * as GPU from './gpu'
 
 export class Camera {
 	private projection: Matrix

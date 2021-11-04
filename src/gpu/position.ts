@@ -1,5 +1,4 @@
-import * as GPU from './gpu.js'
-import { Matrix } from './math.js'
+import { Matrix } from './math'
 
 export class Position {
 	model: Matrix

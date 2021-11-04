@@ -1,6 +1,6 @@
 //https://gitlab.com/taketwo/three-pcd-loader/-/blob/master/pcd-loader.js //edited
-import * as Decompress from './decompress.js'
-import * as GPU from '../gpu/gpu.js'
+import * as Decompress from './decompress'
+import * as GPU from '../gpu/gpu'
 
 /**
  * @author Filipe Caixeta / http://filipecaixeta.com.br

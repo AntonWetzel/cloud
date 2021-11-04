@@ -20,7 +20,7 @@ export async function GetUserFile(endings: string[]): Promise<File> {
 			if (endings.includes(format)) {
 				resolve(file)
 			} else {
-				reject("format '" + format + "' not supported")
+				reject('format "' + format + '" not supported')
 			}
 		}
 		input.click()

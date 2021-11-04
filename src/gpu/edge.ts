@@ -1,9 +1,6 @@
-import * as GPU from './gpu.js'
-import * as Module from './module.js'
-import { GetServerFile } from '../helper/file.js'
-import { Position } from './position.js'
-import { Matrix } from './math.js'
-import { Camera } from './camera.js'
+import * as GPU from './gpu'
+import * as Module from './module'
+import { GetServerFile } from '../helper/file'
 
 let computePipeline: undefined | GPUComputePipeline = undefined
 
@@ -17,7 +14,7 @@ export async function Compute(
 	if (computePipeline == undefined) {
 		computePipeline = GPU.device.createComputePipeline({
 			compute: {
-				module: Module.New(await GetServerFile('../shaders/compute/edge.wgsl')),
+				module: Module.New(await GetServerFile('compute/edge.wgsl')),
 				entryPoint: 'main',
 			},
 		})

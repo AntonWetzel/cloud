@@ -1,9 +1,7 @@
-import * as GPU from './gpu.js'
-import * as Module from './module.js'
-import { GetServerFile } from '../helper/file.js'
-import { Position } from './position.js'
-import { Matrix } from './math.js'
-import { Camera } from './camera.js'
+import * as GPU from './gpu'
+import * as Module from './module'
+import { GetServerFile } from '../helper/file'
+import { Position } from './position'
 
 let computePipeline: undefined | GPUComputePipeline = undefined
 let renderPipeline: undefined | GPURenderPipeline = undefined
@@ -14,7 +12,7 @@ export async function Compute(positions: GPUBuffer, length: number): Promise<GPU
 	if (computePipeline == undefined) {
 		computePipeline = GPU.device.createComputePipeline({
 			compute: {
-				module: Module.New(await GetServerFile('../shaders/compute/triangulate.wgsl')),
+				module: Module.New(await GetServerFile('compute/triangulate.wgsl')),
 				entryPoint: 'main',
 			},
 		})
@@ -23,7 +21,6 @@ export async function Compute(positions: GPUBuffer, length: number): Promise<GPU
 		length * 4 * K,
 		GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
 	)
-	const power = 14
 	const encoder = GPU.device.createCommandEncoder()
 	const param = new Uint32Array([length])
 	const buffer = GPU.CreateBuffer(param, GPUBufferUsage.STORAGE)
@@ -64,7 +61,7 @@ export async function Render(
 	length: number,
 ): Promise<void> {
 	if (renderPipeline == undefined) {
-		const src = await GetServerFile('../shaders/render/triangle.wgsl')
+		const src = await GetServerFile('render/triangle.wgsl')
 		const module = Module.New(src)
 		renderPipeline = GPU.device.createRenderPipeline({
 			vertex: {

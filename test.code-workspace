@@ -1,0 +1,46 @@
+{
+	"folders": [
+		{
+			"path": ".",
+			"name": "all"
+		},
+		{
+			"path": "./src",
+			"name": "src"
+		},
+		{
+			"path": "./static",
+			"name": "static"
+		},
+	],
+	"settings": {
+		"[typescript]": {
+			"editor.defaultFormatter": "dbaeumer.vscode-eslint"
+		},
+		"ltex.language": "de-DE",
+		"liveServer.settings.multiRootWorkspaceName": "all",
+	},
+	"tasks": {
+		"version": "2.0.0",
+		"tasks": [
+			{
+				"options": {
+					"cwd": "${workspaceFolder:all}"
+				},
+				"label": "build",
+				"group": {
+					"kind": "build",
+					"isDefault": true
+				},
+				"type": "shell",
+				"command": "npx",
+				"args": [
+					"parcel",
+					"./src/index.html",
+					"-p",
+					"5500"
+				]
+			},
+		]
+	}
+}

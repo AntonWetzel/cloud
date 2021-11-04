@@ -1,4 +1,4 @@
-import * as GPU from '../gpu/gpu.js'
+import * as GPU from '../gpu/gpu'
 
 export function CreateColors(points: number): GPUBuffer {
 	const colors = new Float32Array(points * 4)

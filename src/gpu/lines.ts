@@ -1,9 +1,7 @@
-import * as GPU from './gpu.js'
-import * as Module from './module.js'
-import { GetServerFile } from '../helper/file.js'
-import { Position } from './position.js'
-import { Matrix } from './math.js'
-import { Camera } from './camera.js'
+import * as GPU from './gpu'
+import * as Module from './module'
+import { GetServerFile } from '../helper/file'
+import { Position } from './position'
 
 let pipeline: GPURenderPipeline | undefined = undefined
 
@@ -14,7 +12,7 @@ export async function Render(
 	colors: GPUBuffer,
 ): Promise<void> {
 	if (pipeline == undefined) {
-		const src = await GetServerFile('../shaders/render/lines.wgsl')
+		const src = await GetServerFile('render/lines.wgsl')
 		const module = Module.New(src)
 
 		pipeline = GPU.device.createRenderPipeline({

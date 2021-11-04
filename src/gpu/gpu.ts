@@ -1,4 +1,4 @@
-import { Camera } from './camera.js'
+import { Camera } from './camera'
 
 export let adapter: GPUAdapter
 export let device: GPUDevice

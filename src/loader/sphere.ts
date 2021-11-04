@@ -1,4 +1,4 @@
-import * as GPU from '../gpu/gpu.js'
+import * as GPU from '../gpu/gpu'
 
 export function CreateSphere(points: number): GPUBuffer {
 	const vertices = new Float32Array(points * 4)

@@ -1,19 +1,18 @@
-import * as GPU from './gpu/gpu.js'
-import * as Lines from './gpu/lines.js'
-import { Position } from './gpu/position.js'
-import { Camera } from './gpu/camera.js'
-import { CreateCube } from './loader/cube.js'
-import * as Cloud from './gpu/cloud.js'
-import * as KNearest from './gpu/kNearest.js'
-import * as Triangulate from './gpu/triangulate.js'
-import * as Filter from './gpu/filter.js'
-import * as Edge from './gpu/edge.js'
-import * as EdgeOld from './gpu/edgeOld.js'
-import { CreateColors } from './loader/color.js'
-import { CreateGrid } from './loader/grid.js'
-import { CreateSphere } from './loader/sphere.js'
-import { CreatePCD } from './loader/pcd.js'
-//import './test.js'
+import * as GPU from './gpu/gpu'
+import * as Lines from './gpu/lines'
+import { Position } from './gpu/position'
+import { Camera } from './gpu/camera'
+import { CreateCube } from './loader/cube'
+import * as Cloud from './gpu/cloud'
+import * as KNearest from './gpu/kNearest'
+import * as Triangulate from './gpu/triangulate'
+import * as Filter from './gpu/filter'
+import * as Edge from './gpu/edge'
+import * as EdgeOld from './gpu/edgeOld'
+import { CreateColors } from './loader/color'
+import { CreateGrid } from './loader/grid'
+import { CreateSphere } from './loader/sphere'
+import { CreatePCD } from './loader/pcd'
 
 document.body.onload = async () => {
 	const display = document.getElementById('display') as HTMLDivElement
@@ -81,127 +80,124 @@ document.body.onload = async () => {
 	document.body.onkeydown = async (ev) => {
 		keys[ev.code] = true
 		switch (ev.code) {
-			case 'KeyH':
-				makeHint(
-					'Left mouse button: rotate camera',
-					'Mouse wheel: change cloud size',
-					'Mouse wheel + Control: change field of view',
-					'QWER: move camera',
-					'1: change cloud form',
-					'1 + Control: change cloud size for sphere and cube',
-					'2: compute k nearest points',
-					'2 + Control: change k',
-					'3: compute triangulation',
-					'4: approximate normal (best with triangulation)',
-					'4 + Control: approximate normal (best with k-nearest)',
-					'Space: render connections with polygons',
-					'0: open notes (german)',
-				)
-				break
-			case 'Digit1':
-				if (ev.ctrlKey) {
-					const number = getUserNumber('input new cloud size')
-					if (number != undefined) {
-						lengthOld = number
-						form = 'test'
-					} else {
-						break
-					}
-				}
-				cloud.destroy()
-				colors.destroy()
-				switch (form) {
-					case 'sphere':
-						length = lengthOld
-						cloud = CreateCube(length)
-						form = 'cube'
-						break
-					case 'cube': {
-						const response = await fetch('../src/loader/pcd/bunny.pcd')
-						const content = await (await response.blob()).arrayBuffer()
-						const result = CreatePCD(content)
-						if (result != undefined) {
-							// eslint-disable-next-line prettier/prettier
-							[cloud, length] = result
-						} else {
-							alert('pcd error')
-						}
-						form = 'bunny'
-						break
-					}
-					case 'bunny': {
-						const response = await fetch('../src/loader/pcd/rops_cloud.pcd')
-						const content = await (await response.blob()).arrayBuffer()
-						const result = CreatePCD(content)
-						if (result != undefined) {
-							// eslint-disable-next-line prettier/prettier
-							[cloud, length] = result
-						} else {
-							alert('pcd error')
-						}
-						form = 'test'
-						break
-					}
-					case 'test':
-						length = lengthOld
-						cloud = CreateSphere(length)
-						form = 'sphere'
-						break
-				}
-				colors = CreateColors(length)
-				if (nearest != undefined) {
-					nearest.destroy()
-					nearest = undefined
-				}
-				break
-			case 'Digit2':
-				if (ev.ctrlKey) {
-					const number = getUserNumber('input new k for nearest points')
-					if (number != undefined) {
-						kOld = number
-					}
-				}
-				if (nearest != undefined) {
-					nearest.destroy()
-				}
-				k = kOld
-				nearest = await KNearest.Compute(k, cloud, length)
-				break
-			case 'Digit3':
-				if (nearest != undefined) {
-					nearest.destroy()
-				}
-				nearest = await Triangulate.Compute(cloud, length)
-				k = Triangulate.K
-				break
-			case 'Digit4':
-				if (nearest == undefined) {
-					alert('please calculate the connections first')
-					break
-				}
-				if (ev.ctrlKey == false) {
-					await Edge.Compute(cloud, nearest, colors, k, length)
+		case 'KeyH':
+			makeHint(
+				'Left mouse button: rotate camera',
+				'Mouse wheel: change cloud size',
+				'Mouse wheel + Control: change field of view',
+				'QWER: move camera',
+				'1: change cloud form',
+				'1 + Control: change cloud size for sphere and cube',
+				'2: compute k nearest points',
+				'2 + Control: change k',
+				'3: compute triangulation',
+				'4: approximate normal (best with triangulation)',
+				'4 + Control: approximate normal (best with k-nearest)',
+				'Space: render connections with polygons',
+				'0: open notes (german)',
+			)
+			break
+		case 'Digit1':
+			if (ev.ctrlKey) {
+				const number = getUserNumber('input new cloud size')
+				if (number != undefined) {
+					lengthOld = number
+					form = 'test'
 				} else {
-					await EdgeOld.Compute(cloud, nearest, colors, k, length)
-				}
-				break
-			case 'Digit5':
-				if (nearest == undefined) {
-					alert('please calculate the connections first')
 					break
 				}
-				await Filter.Compute(nearest, k, length)
-				break
-			case 'Digit0': {
-				window.open('notes.html', '_blank')
 			}
+			cloud.destroy()
+			colors.destroy()
+			switch (form) {
+			case 'sphere':
+				length = lengthOld
+				cloud = CreateCube(length)
+				form = 'cube'
+				break
+			case 'cube': {
+				const response = await fetch('../src/loader/pcd/bunny.pcd')
+				const content = await (await response.blob()).arrayBuffer()
+				const result = CreatePCD(content)
+				if (result != undefined) {
+					[cloud, length] = result
+				} else {
+					alert('pcd error')
+				}
+				form = 'bunny'
+				break
+			}
+			case 'bunny': {
+				const response = await fetch('../src/loader/pcd/rops_cloud.pcd')
+				const content = await (await response.blob()).arrayBuffer()
+				const result = CreatePCD(content)
+				if (result != undefined) {
+					[cloud, length] = result
+				} else {
+					alert('pcd error')
+				}
+				form = 'test'
+				break
+			}
+			case 'test':
+				length = lengthOld
+				cloud = CreateSphere(length)
+				form = 'sphere'
+				break
+			}
+			colors = CreateColors(length)
+			if (nearest != undefined) {
+				nearest.destroy()
+				nearest = undefined
+			}
+			break
+		case 'Digit2':
+			if (ev.ctrlKey) {
+				const number = getUserNumber('input new k for nearest points')
+				if (number != undefined) {
+					kOld = number
+				}
+			}
+			if (nearest != undefined) {
+				nearest.destroy()
+			}
+			k = kOld
+			nearest = await KNearest.Compute(k, cloud, length)
+			break
+		case 'Digit3':
+			if (nearest != undefined) {
+				nearest.destroy()
+			}
+			nearest = await Triangulate.Compute(cloud, length)
+			k = Triangulate.K
+			break
+		case 'Digit4':
+			if (nearest == undefined) {
+				alert('please calculate the connections first')
+				break
+			}
+			if (ev.ctrlKey == false) {
+				await Edge.Compute(cloud, nearest, colors, k, length)
+			} else {
+				await EdgeOld.Compute(cloud, nearest, colors, k, length)
+			}
+			break
+		case 'Digit5':
+			if (nearest == undefined) {
+				alert('please calculate the connections first')
+				break
+			}
+			await Filter.Compute(nearest, k, length)
+			break
+		case 'Digit0':
+			window.open('notes.html', '_blank')
 		}
 	}
 
 	document.body.onkeyup = (ev) => {
 		delete keys[ev.code]
 	}
-	makeHint("press 'H' for help")
+	makeHint('press \'H\' for help')
 
 	display.onmousemove = (ev) => {
 		if ((ev.buttons & 1) != 0) {
@@ -210,7 +206,7 @@ document.body.onload = async () => {
 		}
 	}
 
-	let last: number = undefined as any
+	let last: number
 	requestAnimationFrame((time: number) => {
 		last = time
 	})
