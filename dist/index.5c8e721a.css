@@ -1,0 +1,2 @@
+body,html{background-color:#000;height:100%;margin:0;overflow:hidden;padding:0;width:100%}body{display:grid}#display{height:100%;overflow:hidden;width:100%}.hint{font-size:larger;margin:30px 0 0 30px;padding:30px;position:absolute;white-space:pre}.error,.hint{background-color:#fff}.error{align-content:center;align-items:center;display:flex;flex-direction:column;height:100%;justify-content:center;width:100%}.error>.large{color:darkred;font-size:100px}.error>.normal{color:#000;font-size:30px}
+/*# sourceMappingURL=index.5c8e721a.css.map */

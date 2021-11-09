@@ -2,6 +2,9 @@ import * as GPU from './gpu'
 import * as Module from './module'
 import { Position } from './position'
 
+const nearestComputeURL = new URL('./compute/kNearest.wgsl', import.meta.url)
+const nearestRenderURL = new URL('./render/kNearest.wgsl', import.meta.url)
+
 let computePipeline: undefined | GPUComputePipeline = undefined
 let renderPipeline: undefined | GPURenderPipeline = undefined
 
@@ -9,7 +12,7 @@ export async function Compute(k: number, positions: GPUBuffer, length: number): 
 	if (computePipeline == undefined) {
 		computePipeline = GPU.device.createComputePipeline({
 			compute: {
-				module:     Module.New(await (await fetch('compute/kNearest.wgsl')).text()),
+				module:     Module.New(await (await fetch(nearestComputeURL.href)).text()),
 				entryPoint: 'main',
 			},
 		})
@@ -56,7 +59,7 @@ export async function Render(
 	length: number,
 ): Promise<void> {
 	if (renderPipeline == undefined) {
-		const src = await (await fetch('render/kNearest.wgsl')).text()
+		const src = await (await fetch(nearestRenderURL.href)).text()
 		const module = Module.New(src)
 		renderPipeline = GPU.device.createRenderPipeline({
 			vertex: {

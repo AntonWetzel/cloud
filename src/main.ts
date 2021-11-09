@@ -14,6 +14,10 @@ import { CreateGrid } from './loader/grid'
 import { CreateSphere } from './loader/sphere'
 import { CreatePCD } from './loader/pcd'
 
+const bunnyURL = new URL('./pcd/bunny.pcd', import.meta.url)
+const ropsURL = new URL('./pcd/rops_cloud.pcd', import.meta.url)
+
+
 document.body.onload = async () => {
 	const display = document.getElementById('display') as HTMLDivElement
 	const canvas = await GPU.Setup(display.clientWidth, display.clientHeight)
@@ -116,7 +120,7 @@ document.body.onload = async () => {
 				form = 'cube'
 				break
 			case 'cube': {
-				const response = await fetch('pcd/bunny.pcd')
+				const response = await fetch(bunnyURL.href)
 				const content = await (await response.blob()).arrayBuffer()
 				const result = CreatePCD(content)
 				if (result != undefined) {
@@ -128,7 +132,7 @@ document.body.onload = async () => {
 				break
 			}
 			case 'bunny': {
-				const response = await fetch('pcd/rops_cloud.pcd')
+				const response = await fetch(ropsURL.href)
 				const content = await (await response.blob()).arrayBuffer()
 				const result = CreatePCD(content)
 				if (result != undefined) {

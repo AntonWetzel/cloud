@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
-    "target": "es2021",
-    "module": "es2020",
+    "target": "esNext",
+    "module": "esNext",
     "noFallthroughCasesInSwitch": true,
     "typeRoots": [
       "node_modules/@types",

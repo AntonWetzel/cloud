@@ -1,22 +1,14 @@
 {
   "name": "cloud",
   "version": "1.0.0",
-  "staticFiles": {
-    "staticPath": "static"
-  },
-  "browserslist": [
-    "last 1 Chrome version"
-  ],
   "author": "antonWetzel",
   "devDependencies": {
-    "@parcel/transformer-sass": "^2.0.0",
+    "@parcel/transformer-sass": "^2.0.1",
     "@typescript-eslint/eslint-plugin": "^5.3.0",
     "@typescript-eslint/parser": "^5.3.0",
     "@webgpu/types": "^0.1.7",
     "eslint": "^8.1.0",
-    "parcel-bundler": "^1.12.5",
-    "parcel-plugin-static-files-copy": "^2.6.0",
-    "regenerator": "^0.14.7",
+    "parcel": "^2.0.1",
     "sass": "^1.43.4",
     "typescript": "^4.4.3"
   }

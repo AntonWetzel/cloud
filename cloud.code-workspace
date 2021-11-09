@@ -8,10 +8,6 @@
 			"path": "./src",
 			"name": "src"
 		},
-		{
-			"path": "./static",
-			"name": "static"
-		},
 	],
 	"settings": {
 		"[typescript]": {
@@ -43,7 +39,7 @@
 				"dependsOn": "clear"
 			},
 			{
-				"label": "build final",
+				"label": "release",
 				"options": {
 					"cwd": "${workspaceFolder:all}"
 				},

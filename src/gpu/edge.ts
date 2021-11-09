@@ -1,6 +1,9 @@
 import * as GPU from './gpu'
 import * as Module from './module'
 
+const edgeURL = new URL('./compute/edge.wgsl', import.meta.url)
+
+
 let computePipeline: undefined | GPUComputePipeline = undefined
 
 export async function Compute(
@@ -13,7 +16,7 @@ export async function Compute(
 	if (computePipeline == undefined) {
 		computePipeline = GPU.device.createComputePipeline({
 			compute: {
-				module:     Module.New(await (await fetch('compute/edge.wgsl')).text()),
+				module:     Module.New(await (await fetch(edgeURL.href)).text()),
 				entryPoint: 'main',
 			},
 		})
