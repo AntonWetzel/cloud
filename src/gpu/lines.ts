@@ -11,7 +11,7 @@ export async function Render(
 	colors: GPUBuffer,
 ): Promise<void> {
 	if (pipeline == undefined) {
-		const src = await (await fetch('/render/lines.wgsl')).text()
+		const src = await (await fetch('./render/lines.wgsl')).text()
 		const module = Module.New(src)
 
 		pipeline = GPU.device.createRenderPipeline({

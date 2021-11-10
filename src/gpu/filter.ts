@@ -8,7 +8,7 @@ export async function Compute(nearest: GPUBuffer, cloud: GPUBuffer, k: number, l
 	if (computePipeline == undefined) {
 		computePipeline = GPU.device.createComputePipeline({
 			compute: {
-				module:     Module.New(await (await fetch('/compute/filter2.wgsl')).text()),
+				module:     Module.New(await (await fetch('./compute/filter2.wgsl')).text()),
 				entryPoint: 'main',
 			},
 		})

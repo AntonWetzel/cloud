@@ -14,7 +14,7 @@ export async function Compute(
 	if (computePipeline == undefined) {
 		computePipeline = GPU.device.createComputePipeline({
 			compute: {
-				module:     Module.New(await (await fetch('/compute/edge.wgsl')).text()),
+				module:     Module.New(await (await fetch('./compute/edge.wgsl')).text()),
 				entryPoint: 'main',
 			},
 		})

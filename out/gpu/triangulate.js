@@ -7,7 +7,7 @@ export async function Compute(positions, length) {
     if (computePipeline == undefined) {
         computePipeline = GPU.device.createComputePipeline({
             compute: {
-                module: Module.New(await (await fetch('/compute/triangulate.wgsl')).text()),
+                module: Module.New(await (await fetch('./compute/triangulate.wgsl')).text()),
                 entryPoint: 'main',
             },
         });
@@ -43,7 +43,7 @@ export async function Compute(positions, length) {
 }
 export async function Render(position, positions, colors, nearest, k, length) {
     if (renderPipeline == undefined) {
-        const src = await (await fetch('/render/triangle.wgsl')).text();
+        const src = await (await fetch('./render/triangle.wgsl')).text();
         const module = Module.New(src);
         renderPipeline = GPU.device.createRenderPipeline({
             vertex: {

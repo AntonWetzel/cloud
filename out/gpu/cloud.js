@@ -4,7 +4,7 @@ let quadBuffer = undefined;
 let pipeline = undefined;
 export async function Render(position, radius, length, positions, colors) {
     if (pipeline == undefined || quadBuffer == undefined) {
-        const src = await (await fetch('/render/cloud.wgsl')).text();
+        const src = await (await fetch('./render/cloud.wgsl')).text();
         const module = Module.New(src);
         pipeline = GPU.device.createRenderPipeline({
             vertex: {

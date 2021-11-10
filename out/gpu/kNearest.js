@@ -6,7 +6,7 @@ export async function Compute(k, positions, length) {
     if (computePipeline == undefined) {
         computePipeline = GPU.device.createComputePipeline({
             compute: {
-                module: Module.New(await (await fetch('/compute/kNearest.wgsl')).text()),
+                module: Module.New(await (await fetch('./compute/kNearest.wgsl')).text()),
                 entryPoint: 'main',
             },
         });
@@ -42,7 +42,7 @@ export async function Compute(k, positions, length) {
 }
 export async function Render(position, positions, colors, nearest, k, length) {
     if (renderPipeline == undefined) {
-        const src = await (await fetch('/render/kNearest.wgsl')).text();
+        const src = await (await fetch('./render/kNearest.wgsl')).text();
         const module = Module.New(src);
         renderPipeline = GPU.device.createRenderPipeline({
             vertex: {

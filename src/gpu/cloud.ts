@@ -14,7 +14,7 @@ export async function Render(
 	colors: GPUBuffer,
 ): Promise<void> {
 	if (pipeline == undefined || quadBuffer == undefined) {
-		const src = await (await fetch('/render/cloud.wgsl')).text()
+		const src = await (await fetch('./render/cloud.wgsl')).text()
 		const module = Module.New(src)
 		pipeline = GPU.device.createRenderPipeline({
 			vertex: {

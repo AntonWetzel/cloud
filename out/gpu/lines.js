@@ -3,7 +3,7 @@ import * as Module from './module.js';
 let pipeline = undefined;
 export async function Render(position, length, positions, colors) {
     if (pipeline == undefined) {
-        const src = await (await fetch('/render/lines.wgsl')).text();
+        const src = await (await fetch('./render/lines.wgsl')).text();
         const module = Module.New(src);
         pipeline = GPU.device.createRenderPipeline({
             vertex: {

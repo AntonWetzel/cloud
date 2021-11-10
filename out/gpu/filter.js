@@ -5,7 +5,7 @@ export async function Compute(nearest, cloud, k, length) {
     if (computePipeline == undefined) {
         computePipeline = GPU.device.createComputePipeline({
             compute: {
-                module: Module.New(await (await fetch('/compute/filter2.wgsl')).text()),
+                module: Module.New(await (await fetch('./compute/filter2.wgsl')).text()),
                 entryPoint: 'main',
             },
         });
