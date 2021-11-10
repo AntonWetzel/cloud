@@ -1,8 +1,6 @@
-import * as GPU from './gpu'
-import * as Module from './module'
-import { Position } from './position'
-
-const linesURL = new URL('./render/lines.wgsl', import.meta.url)
+import * as GPU from './gpu.js'
+import * as Module from './module.js'
+import { Position } from './position.js'
 
 let pipeline: GPURenderPipeline | undefined = undefined
 
@@ -13,7 +11,7 @@ export async function Render(
 	colors: GPUBuffer,
 ): Promise<void> {
 	if (pipeline == undefined) {
-		const src = await (await fetch(linesURL.href)).text()
+		const src = await (await fetch('/render/lines.wgsl')).text()
 		const module = Module.New(src)
 
 		pipeline = GPU.device.createRenderPipeline({

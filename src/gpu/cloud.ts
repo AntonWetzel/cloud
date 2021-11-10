@@ -1,8 +1,6 @@
-import * as GPU from './gpu'
-import * as Module from './module'
-import { Position } from './position'
-
-const cloudURL = new URL('./render/cloud.wgsl', import.meta.url)
+import * as GPU from './gpu.js'
+import * as Module from './module.js'
+import { Position } from './position.js'
 
 let quadBuffer = undefined as GPUBuffer | undefined
 
@@ -16,7 +14,7 @@ export async function Render(
 	colors: GPUBuffer,
 ): Promise<void> {
 	if (pipeline == undefined || quadBuffer == undefined) {
-		const src = await (await fetch(cloudURL.href)).text()
+		const src = await (await fetch('/render/cloud.wgsl')).text()
 		const module = Module.New(src)
 		pipeline = GPU.device.createRenderPipeline({
 			vertex: {

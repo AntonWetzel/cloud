@@ -1,15 +1,14 @@
-import * as GPU from './gpu'
-import * as Module from './module'
+import * as GPU from './gpu.js'
+import * as Module from './module.js'
 
-const filterURL = new URL('./compute/filter.wgsl', import.meta.url)
 
 let computePipeline: undefined | GPUComputePipeline = undefined
 
-export async function Compute(nearest: GPUBuffer, k: number, length: number): Promise<void> {
+export async function Compute(nearest: GPUBuffer, cloud: GPUBuffer, k: number, length: number): Promise<void> {
 	if (computePipeline == undefined) {
 		computePipeline = GPU.device.createComputePipeline({
 			compute: {
-				module:     Module.New(await (await fetch(filterURL.href)).text()),
+				module:     Module.New(await (await fetch('/compute/filter2.wgsl')).text()),
 				entryPoint: 'main',
 			},
 		})
@@ -25,6 +24,10 @@ export async function Compute(nearest: GPUBuffer, k: number, length: number): Pr
 			},
 			{
 				binding:  1,
+				resource: { buffer: cloud },
+			},
+			{
+				binding:  2,
 				resource: { buffer: nearest },
 			},
 		],

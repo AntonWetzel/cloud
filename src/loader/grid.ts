@@ -1,4 +1,4 @@
-import * as GPU from '../gpu/gpu'
+import * as GPU from '../gpu/gpu.js'
 
 export function CreateGrid(amount: number): {
 	length: number

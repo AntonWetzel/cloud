@@ -1,22 +1,19 @@
-import * as GPU from './gpu/gpu'
-import * as Lines from './gpu/lines'
-import { Position } from './gpu/position'
-import { Camera } from './gpu/camera'
-import { CreateCube } from './loader/cube'
-import * as Cloud from './gpu/cloud'
-import * as KNearest from './gpu/kNearest'
-import * as Triangulate from './gpu/triangulate'
-import * as Filter from './gpu/filter'
-import * as Edge from './gpu/edge'
-import * as EdgeOld from './gpu/edgeOld'
-import { CreateColors } from './loader/color'
-import { CreateGrid } from './loader/grid'
-import { CreateSphere } from './loader/sphere'
-import { CreatePCD } from './loader/pcd'
 
-const bunnyURL = new URL('./pcd/bunny.pcd', import.meta.url)
-const ropsURL = new URL('./pcd/rops_cloud.pcd', import.meta.url)
-
+import * as GPU from './gpu/gpu.js'
+import * as Lines from './gpu/lines.js'
+import { Position } from './gpu/position.js'
+import { Camera } from './gpu/camera.js'
+import { CreateCube } from './loader/cube.js'
+import * as Cloud from './gpu/cloud.js'
+import * as KNearest from './gpu/kNearest.js'
+import * as Triangulate from './gpu/triangulate.js'
+import * as Filter from './gpu/filter.js'
+import * as Edge from './gpu/edge.js'
+import * as EdgeOld from './gpu/edgeOld.js'
+import { CreateColors } from './loader/color.js'
+import { CreateGrid } from './loader/grid.js'
+import { CreateSphere } from './loader/sphere.js'
+import { CreatePCD } from './loader/pcd.js'
 
 document.body.onload = async () => {
 	const display = document.getElementById('display') as HTMLDivElement
@@ -120,7 +117,7 @@ document.body.onload = async () => {
 				form = 'cube'
 				break
 			case 'cube': {
-				const response = await fetch(bunnyURL.href)
+				const response = await fetch('/pcd/bunny.pcd')
 				const content = await (await response.blob()).arrayBuffer()
 				const result = CreatePCD(content)
 				if (result != undefined) {
@@ -132,7 +129,7 @@ document.body.onload = async () => {
 				break
 			}
 			case 'bunny': {
-				const response = await fetch(ropsURL.href)
+				const response = await fetch('/pcd/rops_cloud.pcd')
 				const content = await (await response.blob()).arrayBuffer()
 				const result = CreatePCD(content)
 				if (result != undefined) {
@@ -191,7 +188,7 @@ document.body.onload = async () => {
 				alert('please calculate the connections first')
 				break
 			}
-			await Filter.Compute(nearest, k, length)
+			await Filter.Compute(nearest, cloud, k, length)
 			break
 		case 'Digit0':
 			window.open('notes.html', '_blank')

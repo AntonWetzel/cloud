@@ -1,4 +1,4 @@
-import * as GPU from '../gpu/gpu'
+import * as GPU from '../gpu/gpu.js'
 
 export function CreateCube(points: number, noise = 0.001): GPUBuffer {
 	const vertices = new Float32Array(points * 4)

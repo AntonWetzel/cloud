@@ -1,9 +1,6 @@
-import * as GPU from './gpu'
-import * as Module from './module'
-import { Position } from './position'
-
-const triangulateComputeURL = new URL('./compute/triangulate.wgsl', import.meta.url)
-const triangulateRenderURL = new URL('./render/triangle.wgsl', import.meta.url)
+import * as GPU from './gpu.js'
+import * as Module from './module.js'
+import { Position } from './position.js'
 
 let computePipeline: undefined | GPUComputePipeline = undefined
 let renderPipeline: undefined | GPURenderPipeline = undefined
@@ -14,7 +11,7 @@ export async function Compute(positions: GPUBuffer, length: number): Promise<GPU
 	if (computePipeline == undefined) {
 		computePipeline = GPU.device.createComputePipeline({
 			compute: {
-				module:     Module.New(await (await fetch(triangulateComputeURL.href)).text()),
+				module:     Module.New(await (await fetch('/compute/triangulate.wgsl')).text()),
 				entryPoint: 'main',
 			},
 		})
@@ -63,7 +60,7 @@ export async function Render(
 	length: number,
 ): Promise<void> {
 	if (renderPipeline == undefined) {
-		const src = await (await fetch(triangulateRenderURL.href)).text()
+		const src = await (await fetch('/render/triangle.wgsl')).text()
 		const module = Module.New(src)
 		renderPipeline = GPU.device.createRenderPipeline({
 			vertex: {

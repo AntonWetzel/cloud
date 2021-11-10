@@ -8,12 +8,19 @@
 			"path": "./src",
 			"name": "src"
 		},
+		{
+			"path": "./render",
+			"name": "render"
+		},
+		{
+			"path": "./compute",
+			"name": "compute"
+		},
 	],
 	"settings": {
 		"[typescript]": {
 			"editor.defaultFormatter": "dbaeumer.vscode-eslint"
 		},
-		"ltex.language": "de-DE",
 		"liveServer.settings.multiRootWorkspaceName": "all",
 	},
 	"tasks": {
@@ -24,44 +31,33 @@
 					"cwd": "${workspaceFolder:all}"
 				},
 				"label": "build",
+				"type": "shell",
+				"command": "npx",
+				"args": [
+					"tsc",
+					"--watch"
+				],
+				"dependsOn": [
+					"clear",
+					"live",
+				],
+				"problemMatcher": [],
 				"group": {
 					"kind": "build",
 					"isDefault": true
-				},
-				"type": "shell",
-				"command": "npx",
-				"args": [
-					"parcel",
-					"-p",
-					"5500",
-					"./src/*.html"
-				],
-				"dependsOn": "clear"
+				}
 			},
 			{
-				"label": "release",
-				"options": {
-					"cwd": "${workspaceFolder:all}"
-				},
-				"type": "shell",
-				"command": "npx",
-				"args": [
-					"parcel",
-					"build",
-					"--public-url",
-					"./",
-					"./src/*.html"
-				],
-				"problemMatcher": [],
-				"dependsOn": "clear"
+				"label": "live",
+				"command": "${command:extension.liveServer.goOnline}"
 			},
 			{
 				"label": "clear",
 				"type": "shell",
-				"command": "(rd -r dist) * 0",
+				"command": "(rd -r out) * 0",
 				"options": {
 					"cwd": "${workspaceFolder:all}"
-				},
+				}
 			}
 		]
 	}

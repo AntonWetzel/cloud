@@ -70,10 +70,10 @@ fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
 				best = alpha;
 			}
 		}
+
 		if (next == near) { //full circle
 			break;
 		}
-			
 		let n_point = cloud.data[next];
 		if (next == parameter.length) { //not a valid next avaible (recover?)
 			for (var i = 0u; i < idx; i = i + 1u) {
