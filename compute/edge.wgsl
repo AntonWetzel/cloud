@@ -48,7 +48,8 @@ fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
 	}
 	off = off / f32(count);
 
-	colors.data[id] = vec3<f32>(1.0, 1.0, 1.0) * abs(off) * 100.0;
-	//colors.data[id] = abs(n);
-	//cloud.data[id] = p - n * off;
+	//ignore(colors);
+	//colors.data[id] = vec3<f32>(1.0, 1.0, 1.0) * abs(off) * 100.0;
+	colors.data[id] = abs(n);
+	cloud.data[id] = p - n * off;
 }
