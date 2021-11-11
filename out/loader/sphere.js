@@ -1,5 +1,5 @@
-import * as GPU from '../gpu/gpu.js';
-export function CreateSphere(points) {
+import * as GPU from '../gpu/header.js';
+export function Create(points) {
     const vertices = new Float32Array(points * 4);
     for (let i = 0; i < points; i++) {
         const long = Math.acos(Math.random() * 2 - 1); //less points near the poles

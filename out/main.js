@@ -1,18 +1,5 @@
-import * as GPU from './gpu/gpu.js';
-import * as Lines from './gpu/lines.js';
-import { Position } from './gpu/position.js';
-import { Camera } from './gpu/camera.js';
-import { CreateCube } from './loader/cube.js';
-import * as Cloud from './gpu/cloud.js';
-import * as KNearest from './gpu/kNearest.js';
-import * as Triangulate from './gpu/triangulate.js';
-import * as Filter from './gpu/filter.js';
-import * as Edge from './gpu/edge.js';
-import * as EdgeOld from './gpu/edgeOld.js';
-import { CreateColors } from './loader/color.js';
-import { CreateGrid } from './loader/grid.js';
-import { CreateSphere } from './loader/sphere.js';
-import { CreatePCD } from './loader/pcd.js';
+import * as GPU from './gpu/header.js';
+import * as Loader from './loader/header.js';
 document.body.onload = async () => {
     const display = document.getElementById('display');
     const canvas = await GPU.Setup(display.clientWidth, display.clientHeight);
@@ -33,19 +20,19 @@ document.body.onload = async () => {
         return;
     }
     display.append(canvas);
-    const cam = new Camera(Math.PI / 4);
+    const cam = new GPU.Camera(Math.PI / 4);
     cam.Translate(0, 5, 30);
-    const increase = new Position();
+    const increase = new GPU.Position();
     increase.Scale(5, 5, 5);
-    const normal = new Position();
+    const normal = new GPU.Position();
     let k = 64;
     let kOld = k;
     let length = 50_000;
     let lengthOld = length;
     let form = 'sphere';
-    let cloud = CreateSphere(length);
-    let colors = CreateColors(length);
-    const grid = CreateGrid(10);
+    let cloud = Loader.Sphere(length);
+    let colors = Loader.Color(length);
+    const grid = Loader.Grid(10);
     display.onwheel = (ev) => {
         const scale = 1 + ev.deltaY / 1000;
         if (ev.ctrlKey == false) {
@@ -74,7 +61,7 @@ document.body.onload = async () => {
         keys[ev.code] = true;
         switch (ev.code) {
             case 'KeyH':
-                makeHint('Left mouse button: rotate camera', 'Mouse wheel: change cloud size', 'Mouse wheel + Control: change field of view', 'QWER: move camera', '1: change cloud form', '1 + Control: change cloud size for sphere and cube', '2: compute k nearest points', '2 + Control: change k', '3: compute triangulation', '4: approximate normal (best with triangulation)', '4 + Control: approximate normal (best with k-nearest)', 'Space: render connections with polygons', '0: open notes (german)');
+                makeHint('Left mouse button: rotate camera', 'Mouse wheel: change cloud size', 'Mouse wheel + Control: change field of view', 'QWER: move camera', '1: change cloud form', '1 + Control: change cloud size for sphere and cube', '2: compute k nearest points', '2 + Control: change k', '3: compute triangulation', '4: approximate normal (best with triangulation)', '4 + Control: approximate normal (best with k-nearest)', 'Space: render connections with polygons');
                 break;
             case 'Digit1':
                 if (ev.ctrlKey) {
@@ -92,13 +79,13 @@ document.body.onload = async () => {
                 switch (form) {
                     case 'sphere':
                         length = lengthOld;
-                        cloud = CreateCube(length);
+                        cloud = Loader.Cube(length);
                         form = 'cube';
                         break;
                     case 'cube': {
                         const response = await fetch('/pcd/bunny.pcd');
                         const content = await (await response.blob()).arrayBuffer();
-                        const result = CreatePCD(content);
+                        const result = Loader.PCD(content);
                         if (result != undefined) {
                             [cloud, length] = result;
                         }
@@ -111,7 +98,7 @@ document.body.onload = async () => {
                     case 'bunny': {
                         const response = await fetch('/pcd/rops_cloud.pcd');
                         const content = await (await response.blob()).arrayBuffer();
-                        const result = CreatePCD(content);
+                        const result = Loader.PCD(content);
                         if (result != undefined) {
                             [cloud, length] = result;
                         }
@@ -123,11 +110,11 @@ document.body.onload = async () => {
                     }
                     case 'test':
                         length = lengthOld;
-                        cloud = CreateSphere(length);
+                        cloud = Loader.Sphere(length);
                         form = 'sphere';
                         break;
                 }
-                colors = CreateColors(length);
+                colors = Loader.Color(length);
                 if (nearest != undefined) {
                     nearest.destroy();
                     nearest = undefined;
@@ -144,14 +131,16 @@ document.body.onload = async () => {
                     nearest.destroy();
                 }
                 k = kOld;
-                nearest = await KNearest.Compute(k, cloud, length);
+                nearest = GPU.CreateEmptyBuffer(length * k * 4, GPUBufferUsage.STORAGE);
+                GPU.Compute('kNearest', length, [k], [cloud, nearest]);
                 break;
             case 'Digit3':
                 if (nearest != undefined) {
                     nearest.destroy();
                 }
-                nearest = await Triangulate.Compute(cloud, length);
-                k = Triangulate.K;
+                k = GPU.TriangulateK;
+                nearest = GPU.CreateEmptyBuffer(length * k * 4, GPUBufferUsage.STORAGE);
+                GPU.Compute('triangulate', length, [k], [cloud, nearest]);
                 break;
             case 'Digit4':
                 if (nearest == undefined) {
@@ -159,10 +148,10 @@ document.body.onload = async () => {
                     break;
                 }
                 if (ev.ctrlKey == false) {
-                    await Edge.Compute(cloud, nearest, colors, k, length);
+                    GPU.Compute('edge', length, [k], [cloud, nearest, colors]);
                 }
                 else {
-                    await EdgeOld.Compute(cloud, nearest, colors, k, length);
+                    GPU.Compute('edgeOld', length, [k], [cloud, nearest, colors]);
                 }
                 break;
             case 'Digit5':
@@ -170,11 +159,18 @@ document.body.onload = async () => {
                     alert('please calculate the connections first');
                     break;
                 }
-                await Filter.Compute(nearest, cloud, k, length);
+                if (ev.ctrlKey == false) {
+                    GPU.Compute('filter', length, [k], [nearest]);
+                }
+                else {
+                    GPU.Compute('filter2', length, [k], [cloud, nearest]);
+                }
                 break;
-            case 'Digit0':
-                window.open('notes.html', '_blank');
+            default:
+                return;
         }
+        ev.preventDefault();
+        ev.stopImmediatePropagation();
     };
     document.body.onkeyup = (ev) => {
         delete keys[ev.code];
@@ -207,18 +203,18 @@ document.body.onload = async () => {
         move('KeyF', 0, -1, 0);
         move('KeyR', 0, 1, 0);
         GPU.StartRender(cam);
-        await Lines.Render(normal, grid.length, grid.positions, grid.colors);
+        GPU.Lines(normal, grid.length, grid.positions, grid.colors);
         if (nearest != undefined) {
             if (keys['Space'] == undefined) {
-                await Cloud.Render(increase, 0.015, length, cloud, colors);
-                await KNearest.Render(increase, cloud, colors, nearest, k, length);
+                GPU.Cloud(increase, 0.015, length, cloud, colors);
+                GPU.KNearest(increase, cloud, colors, nearest, k, length);
             }
             else {
-                await Triangulate.Render(increase, cloud, colors, nearest, k, length);
+                GPU.Triangulate(increase, cloud, colors, nearest, k, length);
             }
         }
         else {
-            await Cloud.Render(increase, 0.015, length, cloud, colors);
+            GPU.Cloud(increase, 0.015, length, cloud, colors);
         }
         GPU.FinishRender();
         last = time;

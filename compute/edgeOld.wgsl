@@ -27,7 +27,7 @@ fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
 	let offset = global.x * parameter.k;
 	var count = 0u;
 	for (
-		/*none*/;
+		;
 		nearest.data[offset + count] != id && count < parameter.k;
 		count = count + 1u
 	) {} //get edge count (assumed packed list)
@@ -40,7 +40,7 @@ fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
 
 
 	for (var i = 0u; i < count; i = i + 1u) {
-		let p = cloud.data[nearest.data[offset + i]];
+		let p = cloud.data[nearest.data[offset + i] ];
 		AtA[0][0] = AtA[0][0] +  p.x * p.x;
 		AtA[0][1] = AtA[0][1] +  p.x * p.y;
 		AtA[0][2] = AtA[0][2] +  p.x * 1.0;
@@ -77,7 +77,7 @@ fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
 
 
 	for (var i = 0u; i < count; i = i + 1u) {
-		let p = cloud.data[nearest.data[offset + i]];
+		let p = cloud.data[nearest.data[offset + i] ];
 		AtB.x = AtB.x + p.x * p.z;
 		AtB.y = AtB.y + p.y * p.z;
 		AtB.z = AtB.z + 1.0 * p.z;

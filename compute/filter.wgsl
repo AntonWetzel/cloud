@@ -12,14 +12,12 @@
 };
 
 [[group(0), binding(0)]] var<storage, read> parameter: Parameter;
-[[group(0), binding(1)]] var<storage, read> cloud: Buffer;
-[[group(0), binding(2)]] var<storage, read_write> nearest: Indices;
+[[group(0), binding(1)]] var<storage, read_write> nearest: Indices;
 
 let PI = 3.1415926538;
 
 [[stage(compute), workgroup_size(256)]]
 fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
-	ignore(cloud);
 	if (global.x >= parameter.length) {
 		return;
 	}

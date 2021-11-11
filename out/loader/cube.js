@@ -1,5 +1,5 @@
-import * as GPU from '../gpu/gpu.js';
-export function CreateCube(points, noise = 0.001) {
+import * as GPU from '../gpu/header.js';
+export function Create(points, noise = 0.001) {
     const vertices = new Float32Array(points * 4);
     for (let i = 0; i < points; i++) {
         switch (Math.floor(Math.random() * 6)) {

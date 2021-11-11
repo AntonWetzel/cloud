@@ -1,5 +1,5 @@
-import * as GPU from '../gpu/gpu.js';
-export function CreateColors(points) {
+import * as GPU from '../gpu/header.js';
+export function Create(points) {
     const colors = new Float32Array(points * 4);
     for (let i = 0; i < points; i++) {
         colors[i * 4 + 0] = 0.3 + 0.7 * Math.random();

@@ -35,24 +35,13 @@ fn vertexMain(
 	var vertex = positions.data[id / (2u * parameter.k)];
 	var color = colors.data[id / (2u * parameter.k)];
 	if (id%2u != 0u) {
-		vertex = (vertex + positions.data[indices.data[id/2u]]) / 2.0;
+		vertex = (vertex + positions.data[indices.data[id/2u] ]) / 2.0;
 	}
 	var output : Transfer;
 	output.position = camera.projection * camera.view * parameter.model * vec4<f32>(vertex, 1.0);
 	
 	output.color = color;
 
-	//debug: color by index
-	/*switch ((id/2u)%parameter.k) { 
-	case 0u: { output.color = vec3<f32>(1.0, 0.0, 0.0); }
-	case 1u: { output.color = vec3<f32>(0.0, 1.0, 0.0); }
-	case 2u: { output.color = vec3<f32>(0.0, 0.0, 1.0); }
-	case 3u: { output.color = vec3<f32>(1.0, 1.0, 0.0); }
-	case 4u: { output.color = vec3<f32>(0.0, 1.0, 1.0); }
-	case 5u: { output.color = vec3<f32>(1.0, 0.0, 1.0); }
-	case 6u: { output.color = vec3<f32>(0.5, 0.5, 0.5); }
-	default: { output.color = vec3<f32>(1.0, 1.0, 1.0); }
-	}*/
 	return output;
 }
 

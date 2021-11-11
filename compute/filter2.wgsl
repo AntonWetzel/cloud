@@ -26,7 +26,7 @@ fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
 	var p = cloud.data[id];
 	var avg = 0.0;
 	var count = 0u;
-	for (/*none*/; count < parameter.k; count = count + 1u) {
+	for (; count < parameter.k; count = count + 1u) {
 		let o = nearest.data[id*parameter.k + count];
 		if (o == id) {
 			break;

@@ -1,6 +1,7 @@
-//https://gitlab.com/taketwo/three-pcd-loader/-/blob/master/pcd-loader.js //edited
+//https://gitlab.com/taketwo/three-pcd-loader/-/blob/master/pcd-loader.js
+//edited
 import * as Decompress from './decompress.js'
-import * as GPU from '../gpu/gpu.js'
+import * as GPU from '../gpu/header.js'
 
 /**
  * @author Filipe Caixeta / http://filipecaixeta.com.br
@@ -21,7 +22,7 @@ import * as GPU from '../gpu/gpu.js'
 
 const littleEndian = true
 
-export function CreatePCD(data: ArrayBufferLike): [GPUBuffer, number] | undefined {
+export function Create(data: ArrayBufferLike): [GPUBuffer, number] | undefined {
 	const header = parseHeader(data)
 	if (header == null) {
 		return undefined

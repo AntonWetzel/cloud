@@ -67,8 +67,9 @@ export function FinishRender() {
     device.queue.submit([encoder.finish()]);
 }
 export function CreateBuffer(data, usage) {
+    const size = data.byteLength < 80 ? 80 : data.byteLength;
     const buffer = device.createBuffer({
-        size: data.byteLength,
+        size: size,
         usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC | usage,
         mappedAtCreation: true,
     });
@@ -94,4 +95,10 @@ export async function ReadBuffer(buffer, size) {
     await temp.mapAsync(GPUMapMode.READ);
     const copyArrayBuffer = temp.getMappedRange();
     return copyArrayBuffer;
+}
+export function NewModule(src) {
+    const module = device.createShaderModule({
+        code: src,
+    });
+    return module;
 }

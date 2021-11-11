@@ -1,65 +1,21 @@
-import * as GPU from './gpu.js'
-import * as Module from './module.js'
+import { aspect, cameraBuffer, CreateBuffer, device, format, NewModule, renderPass } from './gpu.js'
 import { Position } from './position.js'
+import { sources } from './sources.js'
 
 
-let computePipeline: undefined | GPUComputePipeline = undefined
-let renderPipeline: undefined | GPURenderPipeline = undefined
+let pipeline: undefined | GPURenderPipeline = undefined
 
-export async function Compute(k: number, positions: GPUBuffer, length: number): Promise<GPUBuffer> {
-	if (computePipeline == undefined) {
-		computePipeline = GPU.device.createComputePipeline({
-			compute: {
-				module:     Module.New(await (await fetch('./compute/kNearest.wgsl')).text()),
-				entryPoint: 'main',
-			},
-		})
-	}
-	const nearest = GPU.CreateEmptyBuffer(
-		length * 4 * k,
-		GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
-	)
-	const param = new Uint32Array([length, k])
-	const buffer = GPU.CreateBuffer(param, GPUBufferUsage.STORAGE)
-	const group = GPU.device.createBindGroup({
-		layout:  computePipeline.getBindGroupLayout(0),
-		entries: [
-			{
-				binding:  0,
-				resource: { buffer: buffer },
-			},
-			{
-				binding:  1,
-				resource: { buffer: positions },
-			},
-			{
-				binding:  3,
-				resource: { buffer: nearest },
-			},
-		],
-	})
-	const encoder = GPU.device.createCommandEncoder()
-	const compute = encoder.beginComputePass({})
-	compute.setPipeline(computePipeline)
-	compute.setBindGroup(0, group)
-	compute.dispatch(Math.ceil(length / 256))
-	compute.endPass()
-	GPU.device.queue.submit([encoder.finish()])
-	return nearest
-}
-
-export async function Render(
+export function Render(
 	position: Position,
 	positions: GPUBuffer,
 	colors: GPUBuffer,
 	nearest: GPUBuffer,
 	k: number,
 	length: number,
-): Promise<void> {
-	if (renderPipeline == undefined) {
-		const src = await (await fetch('./render/kNearest.wgsl')).text()
-		const module = Module.New(src)
-		renderPipeline = GPU.device.createRenderPipeline({
+): void {
+	if (pipeline == undefined) {
+		const module = NewModule(sources['kNearest'])
+		pipeline = device.createRenderPipeline({
 			vertex: {
 				module:     module,
 				entryPoint: 'vertexMain',
@@ -70,7 +26,7 @@ export async function Render(
 				entryPoint: 'fragmentMain',
 				targets:    [
 					{
-						format: GPU.format,
+						format: format,
 					},
 				],
 			},
@@ -87,14 +43,14 @@ export async function Render(
 	const array = new Float32Array(16 + 1)
 	position.Save(array, 0)
 	new Uint32Array(array.buffer)[16] = k
-	const buffer = GPU.CreateBuffer(array, GPUBufferUsage.UNIFORM)
-	GPU.renderPass.setPipeline(renderPipeline)
-	const group = GPU.device.createBindGroup({
-		layout:  renderPipeline.getBindGroupLayout(0),
+	const buffer = CreateBuffer(array, GPUBufferUsage.UNIFORM)
+	renderPass.setPipeline(pipeline)
+	const group = device.createBindGroup({
+		layout:  pipeline.getBindGroupLayout(0),
 		entries: [
 			{
 				binding:  0,
-				resource: { buffer: GPU.cameraBuffer },
+				resource: { buffer: cameraBuffer },
 			},
 			{
 				binding:  1,
@@ -114,6 +70,6 @@ export async function Render(
 			},
 		],
 	})
-	GPU.renderPass.setBindGroup(0, group)
-	GPU.renderPass.draw(length * k * 2)
+	renderPass.setBindGroup(0, group)
+	renderPass.draw(length * k * 2)
 }

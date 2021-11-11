@@ -1,20 +1,19 @@
-import * as GPU from './gpu.js'
-import * as Module from './module.js'
+import { aspect, cameraBuffer, CreateBuffer, device, format, NewModule, renderPass } from './gpu.js'
 import { Position } from './position.js'
+import { sources } from './sources.js'
 
 let pipeline: GPURenderPipeline | undefined = undefined
 
-export async function Render(
+export function Render(
 	position: Position,
 	length: number,
 	positions: GPUBuffer,
 	colors: GPUBuffer,
-): Promise<void> {
+): void {
 	if (pipeline == undefined) {
-		const src = await (await fetch('./render/lines.wgsl')).text()
-		const module = Module.New(src)
+		const module = NewModule(sources['lines'])
 
-		pipeline = GPU.device.createRenderPipeline({
+		pipeline = device.createRenderPipeline({
 			vertex: {
 				module:     module,
 				entryPoint: 'vertexMain',
@@ -48,7 +47,7 @@ export async function Render(
 				entryPoint: 'fragmentMain',
 				targets:    [
 					{
-						format: GPU.format,
+						format: format,
 					},
 				],
 			},
@@ -65,14 +64,14 @@ export async function Render(
 
 	const array = new Float32Array(16)
 	position.Save(array, 0)
-	const buffer = GPU.CreateBuffer(array, GPUBufferUsage.UNIFORM)
-	GPU.renderPass.setPipeline(pipeline)
-	const group = GPU.device.createBindGroup({
+	const buffer = CreateBuffer(array, GPUBufferUsage.UNIFORM)
+	renderPass.setPipeline(pipeline)
+	const group = device.createBindGroup({
 		layout:  pipeline.getBindGroupLayout(0),
 		entries: [
 			{
 				binding:  0,
-				resource: { buffer: GPU.cameraBuffer },
+				resource: { buffer: cameraBuffer },
 			},
 			{
 				binding:  1,
@@ -80,8 +79,8 @@ export async function Render(
 			},
 		],
 	})
-	GPU.renderPass.setBindGroup(0, group)
-	GPU.renderPass.setVertexBuffer(0, positions)
-	GPU.renderPass.setVertexBuffer(1, colors)
-	GPU.renderPass.draw(length)
+	renderPass.setBindGroup(0, group)
+	renderPass.setVertexBuffer(0, positions)
+	renderPass.setVertexBuffer(1, colors)
+	renderPass.draw(length)
 }

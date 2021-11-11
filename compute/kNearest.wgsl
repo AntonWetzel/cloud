@@ -15,7 +15,7 @@ let MAX_DISTANCE = 340282346638528859811704183484516925440.0; //max value for f3
 
 [[group(0), binding(0)]] var<storage, read> parameter: Parameter;
 [[group(0), binding(1)]] var<storage, read> cloud: Buffer;
-[[group(0), binding(3)]] var<storage, write> nearest: Indices;
+[[group(0), binding(2)]] var<storage, read_write> nearest: Indices;
 
 [[stage(compute), workgroup_size(256)]]
 fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
@@ -34,8 +34,8 @@ fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
 		}
 		let d = distance(point, cloud.data[i]);
 		var idx = 0u;
-		for (/*none*/; idx < count; idx = idx + 1u) {
-			if (distance(point, cloud.data[nearest.data[offset + idx]]) < d) {
+		for (; idx < count; idx = idx + 1u) {
+			if (distance(point, cloud.data[nearest.data[offset + idx] ]) < d) {
 				break;
 			}
 		}
@@ -47,22 +47,22 @@ fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
 		nearest.data[offset + idx] = i;
 		count = count + 1u;
 	}
-	var dist = distance(point, cloud.data[nearest.data[offset]]);
-	for (/*none*/; i < parameter.length; i = i + 1u) { //check the remaining points
+	var dist = distance(point, cloud.data[nearest.data[offset] ]);
+	for (; i < parameter.length; i = i + 1u) { //check the remaining points
 		if (i == id) {
 			continue;
 		}
 		let d = distance(point, cloud.data[i]);
 		if (d < dist) {
 			var idx = 0u;
-			for (/*none*/; idx < parameter.k - 1u; idx = idx + 1u) {
-				if (distance(point, cloud.data[nearest.data[offset + idx + 1u]]) < d) {
+			for (; idx < parameter.k - 1u; idx = idx + 1u) {
+				if (distance(point, cloud.data[nearest.data[offset + idx + 1u] ]) < d) {
 					break;
 				}
 				nearest.data[offset + idx] = nearest.data[offset + idx + 1u];
 			}
 			nearest.data[offset + idx] = i;
-			dist = distance(point, cloud.data[nearest.data[offset]]);
+			dist = distance(point, cloud.data[nearest.data[offset] ]);
 		}
 	}
 }

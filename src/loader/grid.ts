@@ -1,6 +1,6 @@
-import * as GPU from '../gpu/gpu.js'
+import * as GPU from '../gpu/header.js'
 
-export function CreateGrid(amount: number): {
+export function Create(amount: number): {
 	length: number
 	positions: GPUBuffer
 	colors: GPUBuffer

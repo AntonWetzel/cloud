@@ -26,15 +26,15 @@ fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
 	}
 	let offset = global.x * parameter.k;
 	let p = cloud.data[id];
-	var last = cloud.data[nearest.data[offset]];
+	var last = cloud.data[nearest.data[offset] ];
 	var n = vec3<f32>(0.0, 0.0, 0.0);
 	var count = 1u;
 	for (
-		/*none*/;
+		;
 		nearest.data[offset + count] != id && count < parameter.k;
 		count = count + 1u
 	) {
-		let current = cloud.data[nearest.data[offset + count]];
+		let current = cloud.data[nearest.data[offset + count] ];
 		n = n + cross(last - p, current - p);
 		last = current;
 	}
@@ -42,7 +42,7 @@ fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
 
 	var off = 0.0;
 	for (var i = 0u; i < count; i = i + 1u) {
-		let diff = p - cloud.data[nearest.data[offset + i]];
+		let diff = p - cloud.data[nearest.data[offset + i] ];
 		let l = dot(normalize(diff), n) * length(diff);
 		off = off + l;
 	}

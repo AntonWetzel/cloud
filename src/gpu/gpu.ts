@@ -83,9 +83,10 @@ export function FinishRender(): void {
 	device.queue.submit([encoder.finish()])
 }
 
-export function CreateBuffer(data: Float32Array | Uint32Array, usage: GPUFlagsConstant): GPUBuffer {
+export function CreateBuffer(data: Float32Array | Uint32Array | Uint8Array, usage: GPUFlagsConstant): GPUBuffer {
+	const size = data.byteLength < 80? 80: data.byteLength
 	const buffer = device.createBuffer({
-		size:             data.byteLength,
+		size:             size,
 		usage:            GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC | usage,
 		mappedAtCreation: true,
 	})
@@ -118,4 +119,11 @@ export async function ReadBuffer(buffer: GPUBuffer, size: number): Promise<Array
 	await temp.mapAsync(GPUMapMode.READ)
 	const copyArrayBuffer = temp.getMappedRange()
 	return copyArrayBuffer
+}
+
+export function NewModule(src: string): GPUShaderModule {
+	const module = device.createShaderModule({
+		code: src,
+	})
+	return module
 }

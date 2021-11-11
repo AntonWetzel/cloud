@@ -47,7 +47,7 @@ fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
 	var idx = 1u;
 	var direction = vec3<f32>(0.0, 0.0, 0.0);
 	var current_point = cloud.data[current];
-	for (/*none*/; idx < MAX_K; idx = idx + 1u) {
+	for (; idx < MAX_K; idx = idx + 1u) {
 		var next = parameter.length;
 		var best = 0.0;
 
@@ -87,7 +87,7 @@ fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
 		last = current;
 		current = next;
 	}
-	for (/*none*/; idx < MAX_K; idx = idx + 1u) {
+	for (; idx < MAX_K; idx = idx + 1u) {
 		nearest.data[offset + idx] = id;
 	}
 }

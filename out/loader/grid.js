@@ -1,5 +1,5 @@
-import * as GPU from '../gpu/gpu.js';
-export function CreateGrid(amount) {
+import * as GPU from '../gpu/header.js';
+export function Create(amount) {
     const positions = new Float32Array((amount * 4 + 3) * 8);
     const colors = new Float32Array((amount * 4 + 3) * 8);
     const addLine = (idx, start, end, color, endColor = undefined) => {
