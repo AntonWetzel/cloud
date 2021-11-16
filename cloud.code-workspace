@@ -37,15 +37,15 @@
 					"tsc",
 					"--watch"
 				],
-				"dependsOn": [
-					"clear",
-					"live",
-				],
 				"problemMatcher": [],
 				"group": {
 					"kind": "build",
 					"isDefault": true
-				}
+				},
+				"dependsOn": [
+					"clear",
+					"live",
+				],
 			},
 			{
 				"label": "live",

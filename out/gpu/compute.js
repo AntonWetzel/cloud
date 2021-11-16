@@ -6,6 +6,8 @@ const pipelines = {
     filter2: undefined,
     kNearest: undefined,
     triangulate: undefined,
+    sort: undefined,
+    kNearestIter: undefined,
 };
 export async function Setup() {
     for (const name in pipelines) {

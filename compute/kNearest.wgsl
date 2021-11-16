@@ -19,10 +19,10 @@ let MAX_DISTANCE = 340282346638528859811704183484516925440.0; //max value for f3
 
 [[stage(compute), workgroup_size(256)]]
 fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
-	if (global.x >= parameter.length) {
+	let id = global.x;
+	if (id >= parameter.length) {
 		return;
 	}
-	let id = global.x;
 	let offset = id * parameter.k;
 
 	let point = cloud.data[id];

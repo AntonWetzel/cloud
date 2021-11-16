@@ -103,7 +103,7 @@ document.body.onload = async () => {
 				form = 'cube'
 				break
 			case 'cube': {
-				const response = await fetch('/pcd/bunny.pcd')
+				const response = await fetch('https://raw.githubusercontent.com/PointCloudLibrary/pcl/master/test/bunny.pcd')
 				const content = await (await response.blob()).arrayBuffer()
 				const result = Loader.PCD(content)
 				if (result != undefined) {
@@ -115,7 +115,7 @@ document.body.onload = async () => {
 				break
 			}
 			case 'bunny': {
-				const response = await fetch('/pcd/rops_cloud.pcd')
+				const response = await fetch('https://raw.githubusercontent.com/PointCloudLibrary/pcl/master/test/rops_cloud.pcd')
 				const content = await (await response.blob()).arrayBuffer()
 				const result = Loader.PCD(content)
 				if (result != undefined) {
@@ -150,7 +150,11 @@ document.body.onload = async () => {
 			}
 			k = kOld
 			nearest = GPU.CreateEmptyBuffer(length * k * 4, GPUBufferUsage.STORAGE)
-			GPU.Compute('kNearest', length, [k], [cloud, nearest])
+			if (ev.shiftKey== false) {
+				GPU.Compute('kNearest', length, [k], [cloud, nearest])
+			} else {
+				GPU.Compute('kNearestIter', length, [k], [cloud, nearest])
+			}
 			break
 		case 'Digit3':
 			if (nearest != undefined) {
@@ -182,6 +186,12 @@ document.body.onload = async () => {
 				GPU.Compute('filter2', length, [k], [cloud, nearest])
 			}
 			break
+		case 'Digit6': {
+			const copy = GPU.CreateEmptyBuffer(length * 4 * 4, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE)
+			GPU.Compute('sort', length, [], [cloud, copy, colors])
+			cloud = copy
+			break
+		}
 		default:
 			return
 		}
@@ -208,29 +218,29 @@ document.body.onload = async () => {
 		const delta = time - last
 		if (delta > 25) {
 			console.log(delta)
-		}
-		const dist = delta / 50
-		const move = (key: string, x: number, y: number, z: number) => {
-			if (keys[key] != undefined) {
-				cam.Translate(x * dist, y * dist, z * dist)
+		} else {
+			const dist = delta / 50
+			const move = (key: string, x: number, y: number, z: number) => {
+				if (keys[key] != undefined) {
+					cam.Translate(x * dist, y * dist, z * dist)
+				}
 			}
+			move('KeyW', 0, 0, -1)
+			move('KeyD', 1, 0, 0)
+			move('KeyS', 0, 0, 1)
+			move('KeyA', -1, 0, 0)
+			move('KeyF', 0, -1, 0)
+			move('KeyR', 0, 1, 0)
 		}
-
-		move('KeyW', 0, 0, -1)
-		move('KeyD', 1, 0, 0)
-		move('KeyS', 0, 0, 1)
-		move('KeyA', -1, 0, 0)
-		move('KeyF', 0, -1, 0)
-		move('KeyR', 0, 1, 0)
 
 		GPU.StartRender(cam)
 		GPU.Lines(normal, grid.length, grid.positions, grid.colors)
 		if (nearest != undefined) {
-			if (keys['Space'] == undefined) {
+			if (keys['Space'] != undefined) {
+				GPU.Triangulate(increase, cloud, colors, nearest, k, length)
+			} else {
 				GPU.Cloud(increase, 0.015, length, cloud, colors)
 				GPU.KNearest(increase, cloud, colors, nearest, k, length)
-			} else {
-				GPU.Triangulate(increase, cloud, colors, nearest, k, length)
 			}
 		} else {
 			GPU.Cloud(increase, 0.015, length, cloud, colors)

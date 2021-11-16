@@ -1,12 +1,14 @@
 import { CreateBuffer, device, NewModule } from './gpu.js'
 
 const pipelines =  {
-	edge:        undefined as GPUComputePipeline,
-	edgeOld:     undefined as GPUComputePipeline,
-	filter:      undefined as GPUComputePipeline,
-	filter2:     undefined as GPUComputePipeline,
-	kNearest:    undefined as GPUComputePipeline,
-	triangulate: undefined as GPUComputePipeline,
+	edge:         undefined as GPUComputePipeline,
+	edgeOld:      undefined as GPUComputePipeline,
+	filter:       undefined as GPUComputePipeline,
+	filter2:      undefined as GPUComputePipeline,
+	kNearest:     undefined as GPUComputePipeline,
+	triangulate:  undefined as GPUComputePipeline,
+	sort:         undefined as GPUComputePipeline,
+	kNearestIter: undefined as GPUComputePipeline,
 }
 
 export async function Setup() {

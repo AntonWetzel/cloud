@@ -1,4 +1,5 @@
-//https://gitlab.com/taketwo/three-pcd-loader/-/blob/master/decompress-lzf.js //edited
+//edited
+//https://gitlab.com/taketwo/three-pcd-loader/-/blob/master/decompress-lzf.js
 export function LZF(inData: Uint8Array, outLength: number): Uint8Array {
 	const inLength = inData.length
 	const outData = new Uint8Array(outLength)
