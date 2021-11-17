@@ -39,7 +39,6 @@ export function Create(data: ArrayBufferLike): [GPUBuffer, number] | undefined {
 		color = new Float32Array(header.points * 4)
 		color_offset = offset.rgb === undefined ? offset.rgba : offset.rgb
 	}
-
 	if (header.data === 'ascii') {
 		const charArrayView = new Uint8Array(data)
 		let dataString = ''
@@ -109,6 +108,23 @@ export function Create(data: ArrayBufferLike): [GPUBuffer, number] | undefined {
 	if (position == undefined) {
 		return undefined
 	}
+	let x = 0
+	let y = 0
+	let z = 0
+	for (let i = 0; i < position.length; i += 4) {
+		x += position[i+0]
+		y += position[i+1]
+		z += position[i+2]
+	}
+	x /= position.length/4
+	y /= position.length/4
+	z /= position.length/4
+	for (let i = 0; i < position.length; i += 4) {
+		position[i+0] -= x
+		position[i+1] -= y
+		position[i+2] -= z
+	}
+	console.log('Size:', position.length/4)
 	return [
 		GPU.CreateBuffer(position, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE),
 		header.points,

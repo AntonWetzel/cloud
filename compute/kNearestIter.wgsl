@@ -23,7 +23,7 @@ fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
 	if (id >= parameter.length) {
 		return;
 	}
-	let offset = id * parameter.k;
+	let offset = (id +1u) * parameter.k - 1u;
 	let p = cloud.data[id];
 	var last = 0.0;
 	for (var k = 0u; k < parameter.k; k = k + 1u) {
@@ -36,7 +36,7 @@ fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
 				dist = d;
 			}
 		}
-		nearest.data[offset + k] = best;
+		nearest.data[offset - k] = best;
 		last = dist;
 	}
 }

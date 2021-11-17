@@ -10,6 +10,7 @@ const pipelines = {
     triangulate: undefined,
     curvatureDist: undefined,
     curvatureAngle: undefined,
+    triangleNearest: undefined,
 };
 export async function Setup() {
     for (const name in pipelines) {

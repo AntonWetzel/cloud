@@ -34,7 +34,7 @@ document.body.onload = async () => {
 	let kOld = k
 	let length = 50_000
 	let lengthOld = length
-	let form: 'cube' | 'sphere' | 'bunny' | 'test' = 'sphere'
+	let form: 'cube' | 'sphere' | 'map' | 'bunny' | 'test' = 'sphere'
 	let cloud = Loader.Sphere(length)
 	let colors = Loader.Color(length)
 
@@ -79,6 +79,7 @@ document.body.onload = async () => {
 				'2: compute k nearest points',
 				'2 + Control: change k',
 				'3: compute triangulation',
+				'3 + Control: compute triangulation with k nearest',
 				'4: filter connections without a counterpart',
 				'4 + Control: filter connections with extrem length differences',
 				'5: approximate normal (best with triangulation)',
@@ -105,6 +106,11 @@ document.body.onload = async () => {
 				form = 'cube'
 				break
 			case 'cube': {
+				[cloud, length] = Loader.Map(length)
+				form = 'map'
+				break
+			}
+			case 'map': {
 				const response = await fetch('https://raw.githubusercontent.com/PointCloudLibrary/pcl/master/test/bunny.pcd')
 				const content = await (await response.blob()).arrayBuffer()
 				const result = Loader.PCD(content)
@@ -160,11 +166,19 @@ document.body.onload = async () => {
 			break
 		case 'Digit3':
 			if (nearest != undefined) {
-				nearest.destroy()
+				if (ev.ctrlKey) {
+					const copy = GPU.CreateEmptyBuffer(length * GPU.TriangulateK * 4, GPUBufferUsage.STORAGE)
+					GPU.Compute('triangleNearest', length, [k], [cloud, nearest, copy])
+					nearest = copy
+					k = GPU.TriangulateK
+					break
+				} else {
+					nearest.destroy()
+				}
 			}
 			k = GPU.TriangulateK
 			nearest = GPU.CreateEmptyBuffer(length * k * 4, GPUBufferUsage.STORAGE)
-			GPU.Compute('triangulate', length, [k], [cloud, nearest])
+			GPU.Compute('triangulate', length, [], [cloud, nearest])
 			break
 		case 'Digit4':
 			if (nearest == undefined) {
