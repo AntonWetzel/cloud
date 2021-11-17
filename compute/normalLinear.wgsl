@@ -72,20 +72,14 @@ fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
 	);
 
 	var AtB = vec3<f32>(0.0, 0.0, 0.0);
-	var avg_distance = 0.0;
-	let point = cloud.data[id];
-
 
 	for (var i = 0u; i < count; i = i + 1u) {
 		let p = cloud.data[nearest.data[offset + i] ];
 		AtB.x = AtB.x + p.x * p.z;
 		AtB.y = AtB.y + p.y * p.z;
 		AtB.z = AtB.z + 1.0 * p.z;
-
-		avg_distance = distance(point, p);
 	}
 
-	avg_distance = avg_distance / f32(count);
 
 	// A*x + B*y + C = z
 	let plane = AtA1 * AtB;
@@ -94,11 +88,5 @@ fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
 		normalize(vec3<f32>(1.0, 0.0, plane.x)),
 		normalize(vec3<f32>(0.0, 1.0, plane.y)),
 	);
-
-	//let d = (point.z - plane.z - plane.x * point.x - plane.y * point.y) / (plane.x * n.x + plane.y * n.y - n.z);
-
-	//colors.data[id] = vec3<f32>(abs(n.x), 0.0, 0.0);
-	//colors.data[id] = vec3<f32>(0.0, abs(n.y), 0.0);
-	//colors.data[id] = vec3<f32>(0.0, 0.0, abs(n.z));
-	colors.data[id] = abs(n);
+	colors.data[id] = n;
 }

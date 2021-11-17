@@ -79,8 +79,10 @@ document.body.onload = async () => {
 				'2: compute k nearest points',
 				'2 + Control: change k',
 				'3: compute triangulation',
-				'4: approximate normal (best with triangulation)',
-				'4 + Control: approximate normal (best with k-nearest)',
+				'4: filter connections without a counterpart',
+				'4 + Control: filter connections with extrem length differences',
+				'5: approximate normal (best with triangulation)',
+				'5 + Control: approximate normal (best with k-nearest)',
 				'Space: render connections with polygons',
 			)
 			break
@@ -170,9 +172,9 @@ document.body.onload = async () => {
 				break
 			}
 			if (ev.ctrlKey == false) {
-				GPU.Compute('edge', length, [k], [cloud, nearest, colors])
-			} else {
-				GPU.Compute('edgeOld', length, [k], [cloud, nearest, colors])
+				GPU.Compute('filterDang', length, [k], [nearest])
+			}else {
+				GPU.Compute('filterDist', length, [k], [cloud, nearest])
 			}
 			break
 		case 'Digit5':
@@ -181,15 +183,31 @@ document.body.onload = async () => {
 				break
 			}
 			if (ev.ctrlKey == false) {
-				GPU.Compute('filter', length, [k], [nearest])
-			}else {
-				GPU.Compute('filter2', length, [k], [cloud, nearest])
+				GPU.Compute('normalTriang', length, [k], [cloud, nearest, colors])
+			} else {
+				GPU.Compute('normalLinear', length, [k], [cloud, nearest, colors])
 			}
 			break
 		case 'Digit6': {
+			if (nearest == undefined) {
+				alert('please calculate the connections first')
+				break
+			}
+			if (ev.ctrlKey == false) {
+				GPU.Compute('curvatureDist', length, [k], [cloud, nearest, colors])
+			} else {
+				GPU.Compute('curvatureAngle', length, [k], [cloud, nearest, colors])
+			}
+			break
+		}
+		case 'Digit7': {
 			const copy = GPU.CreateEmptyBuffer(length * 4 * 4, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE)
 			GPU.Compute('sort', length, [], [cloud, copy, colors])
 			cloud = copy
+			if (nearest != undefined) {
+				nearest.destroy()
+				nearest = undefined
+			}
 			break
 		}
 		default:

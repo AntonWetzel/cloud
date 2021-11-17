@@ -30,7 +30,7 @@ fn vertexMain(
 	output.position.x = output.position.x + offset.x * parameter.radius;
 	output.position.y = output.position.y + offset.y * parameter.radius * parameter.aspect;
 	output.offset = offset;
-	output.color = color;
+	output.color = abs(color);
 	return output;
 }
 

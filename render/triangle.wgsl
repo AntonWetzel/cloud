@@ -53,7 +53,7 @@ fn vertexMain(
 
 	var output : Transfer;
 	output.position = camera.projection * camera.view * parameter.model * vec4<f32>(positions.data[index_id], 1.0);
-	output.color = colors.data[index_id];
+	output.color = abs(colors.data[index_id]);
 	return output;
 }
 

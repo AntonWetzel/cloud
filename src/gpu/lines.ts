@@ -1,4 +1,4 @@
-import { aspect, cameraBuffer, CreateBuffer, device, format, NewModule, renderPass } from './gpu.js'
+import { cameraBuffer, CreateBuffer, device, format, NewModule, renderPass } from './gpu.js'
 import { Position } from './position.js'
 import { sources } from './sources.js'
 

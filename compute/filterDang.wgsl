@@ -18,12 +18,18 @@ let PI = 3.1415926538;
 
 [[stage(compute), workgroup_size(256)]]
 fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
-	if (global.x >= parameter.length) {
+	let id = global.x;
+	if (id >= parameter.length) {
 		return;
 	}
-	let id = global.x;
+	var target = 0u;
+	var off = id * parameter.k;
 	for (var i = 0u; i < parameter.k; i = i + 1u) {
-		let offset = nearest.data[id * parameter.k + i] * parameter.k;
+		let idx = nearest.data[id * parameter.k + i];
+		if (idx == id) {
+			break;
+		}
+		let offset = idx * parameter.k;
 		var connected = false;
 		for (var j = 0u; j < parameter.k; j = j + 1u) {
 			if (nearest.data[offset + j] == id) {
@@ -31,8 +37,12 @@ fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
 				break;
 			}
 		}
-		if (!connected) {
-			nearest.data[id * parameter.k + i] = id;
+		if (connected) {
+			nearest.data[off + target] = idx;
+			target = target + 1u;
 		}
+	}
+	for (; target < parameter.k; target = target + 1u) {
+		nearest.data[off + target] = id;
 	}
 }

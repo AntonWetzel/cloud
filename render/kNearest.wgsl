@@ -40,7 +40,7 @@ fn vertexMain(
 	var output : Transfer;
 	output.position = camera.projection * camera.view * parameter.model * vec4<f32>(vertex, 1.0);
 	
-	output.color = color;
+	output.color = abs(color);
 
 	return output;
 }

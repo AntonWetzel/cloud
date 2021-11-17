@@ -1,13 +1,15 @@
 import { CreateBuffer, device, NewModule } from './gpu.js';
 const pipelines = {
-    edge: undefined,
-    edgeOld: undefined,
-    filter: undefined,
-    filter2: undefined,
+    filterDang: undefined,
+    filterDist: undefined,
     kNearest: undefined,
-    triangulate: undefined,
-    sort: undefined,
     kNearestIter: undefined,
+    normalLinear: undefined,
+    normalTriang: undefined,
+    sort: undefined,
+    triangulate: undefined,
+    curvatureDist: undefined,
+    curvatureAngle: undefined,
 };
 export async function Setup() {
     for (const name in pipelines) {
