@@ -247,7 +247,7 @@ document.body.onload = async () => {
 			break
 		}
 		case 'Digit7': {
-			if (display == undefined) {
+			if (curvature == undefined) {
 				alert('please calculate curvature first')
 				break
 			}
@@ -269,8 +269,34 @@ document.body.onload = async () => {
 			nearest = undefined
 			normals = undefined
 			curvature= undefined
+
 			break
 		}
+		case 'Digit8':{
+			infoIdx = 0
+			const newCloud = GPU.CreateEmptyBuffer(length * 16, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE)
+			const newColor = GPU.CreateEmptyBuffer(length * 16, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE)
+			GPU.Compute('sort', length, [], [cloud, colors, newCloud, newColor])
+			cloud.destroy()
+			colors.destroy()
+			if (nearest != undefined) { nearest.destroy() }
+			if (normals != undefined) { normals.destroy() }
+			if (curvature != undefined) { curvature.destroy() }
+			cloud = newCloud
+			colors = newColor
+			nearest = undefined
+			normals = undefined
+			curvature= undefined
+			break			
+		}
+		case 'Digit9':
+			infoIdx = 1
+			if (nearest != undefined) {
+				nearest.destroy()
+			}
+			nearest = GPU.CreateEmptyBuffer(length * k * 4, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE)
+			GPU.Compute('kNearestSorted', length, [k], [cloud, nearest])
+			break
 		case 'Space': {
 			let valid = false
 			while (valid == false) {

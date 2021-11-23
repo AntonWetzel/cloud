@@ -13,6 +13,8 @@ const pipelines =  {
 	triangulateNearest: undefined as GPUComputePipeline,
 	reduceP1:           undefined as GPUComputePipeline,
 	reduceP2:           undefined as GPUComputePipeline,
+	sort:               undefined as GPUComputePipeline,
+	kNearestSorted:     undefined as GPUComputePipeline,
 }
 
 export async function Setup() {
