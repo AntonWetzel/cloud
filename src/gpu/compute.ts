@@ -1,17 +1,18 @@
-import { CreateBuffer, device, NewModule } from './gpu.js'
+import { CreateBuffer, device, NewModule, ReadBuffer } from './gpu.js'
 
 const pipelines =  {
-	filterDang:      undefined as GPUComputePipeline,
-	filterDist:      undefined as GPUComputePipeline,
-	kNearest:        undefined as GPUComputePipeline,
-	kNearestIter:    undefined as GPUComputePipeline,
-	normalLinear:    undefined as GPUComputePipeline,
-	normalTriang:    undefined as GPUComputePipeline,
-	sort:            undefined as GPUComputePipeline,
-	triangulate:     undefined as GPUComputePipeline,
-	curvatureDist:   undefined as GPUComputePipeline,
-	curvatureAngle:  undefined as GPUComputePipeline,
-	triangleNearest: undefined as GPUComputePipeline,
+	filterDang:         undefined as GPUComputePipeline,
+	filterDist:         undefined as GPUComputePipeline,
+	kNearestList:       undefined as GPUComputePipeline,
+	kNearestIter:       undefined as GPUComputePipeline,
+	normalLinear:       undefined as GPUComputePipeline,
+	normalTriang:       undefined as GPUComputePipeline,
+	curvatureDist:      undefined as GPUComputePipeline,
+	curvatureAngle:     undefined as GPUComputePipeline,
+	triangulateAll:     undefined as GPUComputePipeline,
+	triangulateNearest: undefined as GPUComputePipeline,
+	reduceP1:           undefined as GPUComputePipeline,
+	reduceP2:           undefined as GPUComputePipeline,
 }
 
 export async function Setup() {
@@ -25,7 +26,13 @@ export async function Setup() {
 	}
 }
 
-export function Compute(name: keyof typeof pipelines, length: number, parameter: number[], buffers: GPUBuffer[]) {
+export function Compute(
+	name: keyof typeof pipelines,
+	length: number,
+	parameter: number[],
+	buffers: GPUBuffer[],
+	result = false,
+): GPUBuffer | undefined {
 	const paramU32 = new Uint32Array(parameter.length+1)
 	paramU32[0] = length
 	for (let i = 0; i < parameter.length; i++) {
@@ -58,4 +65,10 @@ export function Compute(name: keyof typeof pipelines, length: number, parameter:
 	compute.endPass()
 	const commands = encoder.finish()
 	device.queue.submit([commands])
+	if (result) {
+		return buffer
+	} else {
+		buffer.destroy()
+		return undefined
+	}
 }

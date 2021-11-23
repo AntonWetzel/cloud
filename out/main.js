@@ -32,6 +32,10 @@ document.body.onload = async () => {
     let form = 'sphere';
     let cloud = Loader.Sphere(length);
     let colors = Loader.Color(length);
+    let nearest = undefined;
+    let normals = undefined;
+    let curvature = undefined;
+    let infoIdx = 0;
     const grid = Loader.Grid(10);
     display.onwheel = (ev) => {
         const scale = 1 + ev.deltaY / 1000;
@@ -56,12 +60,11 @@ document.body.onload = async () => {
         cam.UpdateSize();
     };
     const keys = {};
-    let nearest = undefined;
     document.body.onkeydown = async (ev) => {
         keys[ev.code] = true;
         switch (ev.code) {
             case 'KeyH':
-                makeHint('Left mouse button: rotate camera', 'Mouse wheel: change cloud size', 'Mouse wheel + Control: change field of view', 'QWER: move camera', '1: change cloud form', '1 + Control: change cloud size for sphere and cube', '2: compute k nearest points', '2 + Control: change k', '3: compute triangulation', '3 + Control: compute triangulation with k nearest', '4: filter connections without a counterpart', '4 + Control: filter connections with extrem length differences', '5: approximate normal (best with triangulation)', '5 + Control: approximate normal (best with k-nearest)', 'Space: render connections with polygons');
+                makeHint('Left mouse button: rotate camera', 'Mouse wheel: change cloud size', 'Mouse wheel + Control: change field of view', 'QWER: move camera', '1: change cloud form', '1 + Control: change cloud size for sphere and cube', '2: compute k nearest points', '2 + Control: change k', '3: compute triangulation', '3 + Control: compute triangulation with k nearest', '4: filter connections without a counterpart', '4 + Control: filter connections with extrem length differences', '5: approximate normal (best with triangulation)', '5 + Control: approximate normal (best with k-nearest)', '6: calculate local curvature with distance to plane', '6 + Control: calculate local curvature with difference in normals', '7: filter points with low local curvature', 'Space: render connections with polygons');
                 break;
             case 'Digit1':
                 if (ev.ctrlKey) {
@@ -74,8 +77,17 @@ document.body.onload = async () => {
                         break;
                     }
                 }
+                infoIdx = 0;
                 cloud.destroy();
                 colors.destroy();
+                if (normals != undefined) {
+                    normals.destroy();
+                    normals = undefined;
+                }
+                if (curvature != undefined) {
+                    curvature.destroy();
+                    curvature = undefined;
+                }
                 switch (form) {
                     case 'sphere':
                         length = lengthOld;
@@ -126,10 +138,14 @@ document.body.onload = async () => {
                 }
                 break;
             case 'Digit2':
+                infoIdx = 1;
                 if (ev.ctrlKey) {
                     const number = getUserNumber('input new k for nearest points');
                     if (number != undefined) {
                         kOld = number;
+                    }
+                    else {
+                        break;
                     }
                 }
                 if (nearest != undefined) {
@@ -138,17 +154,19 @@ document.body.onload = async () => {
                 k = kOld;
                 nearest = GPU.CreateEmptyBuffer(length * k * 4, GPUBufferUsage.STORAGE);
                 if (ev.shiftKey == false) {
-                    GPU.Compute('kNearest', length, [k], [cloud, nearest]);
+                    GPU.Compute('kNearestList', length, [k], [cloud, nearest]);
                 }
                 else {
                     GPU.Compute('kNearestIter', length, [k], [cloud, nearest]);
                 }
                 break;
             case 'Digit3':
+                infoIdx = 1;
                 if (nearest != undefined) {
                     if (ev.ctrlKey) {
                         const copy = GPU.CreateEmptyBuffer(length * GPU.TriangulateK * 4, GPUBufferUsage.STORAGE);
-                        GPU.Compute('triangleNearest', length, [k], [cloud, nearest, copy]);
+                        GPU.Compute('triangulateNearest', length, [k], [cloud, nearest, copy]);
+                        nearest.destroy();
                         nearest = copy;
                         k = GPU.TriangulateK;
                         break;
@@ -159,7 +177,7 @@ document.body.onload = async () => {
                 }
                 k = GPU.TriangulateK;
                 nearest = GPU.CreateEmptyBuffer(length * k * 4, GPUBufferUsage.STORAGE);
-                GPU.Compute('triangulate', length, [], [cloud, nearest]);
+                GPU.Compute('triangulateAll', length, [], [cloud, nearest]);
                 break;
             case 'Digit4':
                 if (nearest == undefined) {
@@ -178,33 +196,77 @@ document.body.onload = async () => {
                     alert('please calculate the connections first');
                     break;
                 }
+                infoIdx = 2;
+                if (normals == undefined) {
+                    normals = GPU.CreateEmptyBuffer(length * 16, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE);
+                }
                 if (ev.ctrlKey == false) {
-                    GPU.Compute('normalTriang', length, [k], [cloud, nearest, colors]);
+                    GPU.Compute('normalTriang', length, [k], [cloud, nearest, normals]);
                 }
                 else {
-                    GPU.Compute('normalLinear', length, [k], [cloud, nearest, colors]);
+                    GPU.Compute('normalLinear', length, [k], [cloud, nearest, normals]);
                 }
                 break;
             case 'Digit6': {
-                if (nearest == undefined) {
-                    alert('please calculate the connections first');
+                if (normals == undefined) {
+                    alert('please calculate the normals first');
                     break;
                 }
+                infoIdx = 3;
+                if (curvature == undefined) {
+                    curvature = GPU.CreateEmptyBuffer(length * 16, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC);
+                }
                 if (ev.ctrlKey == false) {
-                    GPU.Compute('curvatureDist', length, [k], [cloud, nearest, colors]);
+                    GPU.Compute('curvatureDist', length, [k], [cloud, nearest, normals, curvature]);
                 }
                 else {
-                    GPU.Compute('curvatureAngle', length, [k], [cloud, nearest, colors]);
+                    GPU.Compute('curvatureAngle', length, [k], [cloud, nearest, normals, curvature]);
                 }
                 break;
             }
             case 'Digit7': {
-                const copy = GPU.CreateEmptyBuffer(length * 4 * 4, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE);
-                GPU.Compute('sort', length, [], [cloud, copy, colors]);
-                cloud = copy;
-                if (nearest != undefined) {
-                    nearest.destroy();
-                    nearest = undefined;
+                if (display == undefined) {
+                    alert('please calculate curvature first');
+                    break;
+                }
+                infoIdx = 0;
+                const newCloud = GPU.CreateEmptyBuffer(length * 16, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE);
+                const newColor = GPU.CreateEmptyBuffer(length * 16, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE);
+                GPU.Compute('reduceP1', length, [], [cloud, colors, curvature, newCloud, newColor]);
+                const x = GPU.Compute('reduceP2', 1, [length, 0], [curvature], true);
+                length = new Uint32Array(await GPU.ReadBuffer(x, 3 * 4))[2];
+                console.log('length:', length);
+                x.destroy();
+                cloud.destroy();
+                colors.destroy();
+                nearest.destroy();
+                normals.destroy();
+                curvature.destroy();
+                cloud = newCloud;
+                colors = newColor;
+                nearest = undefined;
+                normals = undefined;
+                curvature = undefined;
+                break;
+            }
+            case 'Space': {
+                let valid = false;
+                while (valid == false) {
+                    infoIdx = (infoIdx + 1) % 4;
+                    switch (infoIdx) {
+                        case 0:
+                            valid = true;
+                            break;
+                        case 1:
+                            valid = nearest != undefined;
+                            break;
+                        case 2:
+                            valid = normals != undefined;
+                            break;
+                        case 3:
+                            valid = curvature != undefined;
+                            break;
+                    }
                 }
                 break;
             }
@@ -246,19 +308,30 @@ document.body.onload = async () => {
             move('KeyF', 0, -1, 0);
             move('KeyR', 0, 1, 0);
         }
-        GPU.StartRender(cam);
-        GPU.Lines(normal, grid.length, grid.positions, grid.colors);
-        if (nearest != undefined) {
-            if (keys['Space'] != undefined) {
-                GPU.Triangulate(increase, cloud, colors, nearest, k, length);
+        const render = (info) => {
+            if (keys['ShiftLeft'] == undefined) {
+                GPU.Cloud(increase, 0.015, length, cloud, colors);
+                GPU.KNearest(increase, cloud, info, nearest, k, length);
             }
             else {
-                GPU.Cloud(increase, 0.015, length, cloud, colors);
-                GPU.KNearest(increase, cloud, colors, nearest, k, length);
+                GPU.Triangulate(increase, cloud, info, nearest, k, length);
             }
-        }
-        else {
-            GPU.Cloud(increase, 0.015, length, cloud, colors);
+        };
+        GPU.StartRender(cam);
+        GPU.Lines(normal, grid.length, grid.positions, grid.colors);
+        switch (infoIdx) {
+            case 0:
+                GPU.Cloud(increase, 0.015, length, cloud, colors);
+                break;
+            case 1:
+                render(colors);
+                break;
+            case 2:
+                render(normals);
+                break;
+            case 3:
+                render(curvature);
+                break;
         }
         GPU.FinishRender();
         last = time;

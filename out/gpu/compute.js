@@ -2,15 +2,16 @@ import { CreateBuffer, device, NewModule } from './gpu.js';
 const pipelines = {
     filterDang: undefined,
     filterDist: undefined,
-    kNearest: undefined,
+    kNearestList: undefined,
     kNearestIter: undefined,
     normalLinear: undefined,
     normalTriang: undefined,
-    sort: undefined,
-    triangulate: undefined,
     curvatureDist: undefined,
     curvatureAngle: undefined,
-    triangleNearest: undefined,
+    triangulateAll: undefined,
+    triangulateNearest: undefined,
+    reduceP1: undefined,
+    reduceP2: undefined,
 };
 export async function Setup() {
     for (const name in pipelines) {
@@ -22,7 +23,7 @@ export async function Setup() {
         });
     }
 }
-export function Compute(name, length, parameter, buffers) {
+export function Compute(name, length, parameter, buffers, result = false) {
     const paramU32 = new Uint32Array(parameter.length + 1);
     paramU32[0] = length;
     for (let i = 0; i < parameter.length; i++) {
@@ -55,4 +56,11 @@ export function Compute(name, length, parameter, buffers) {
     compute.endPass();
     const commands = encoder.finish();
     device.queue.submit([commands]);
+    if (result) {
+        return buffer;
+    }
+    else {
+        buffer.destroy();
+        return undefined;
+    }
 }

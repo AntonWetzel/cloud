@@ -85,6 +85,10 @@ export function CreateEmptyBuffer(length, usage) {
     });
     return buffer;
 }
+export function CopyBuffer(source, target, size) {
+    const copyEncoder = device.createCommandEncoder();
+    copyEncoder.copyBufferToBuffer(source /* source buffer */, 0 /* source offset */, target /* destination buffer */, 0 /* destination offset */, size /* size */);
+}
 export async function ReadBuffer(buffer, size) {
     const temp = CreateEmptyBuffer(size, GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST);
     // Encode commands for copying buffer to buffer.

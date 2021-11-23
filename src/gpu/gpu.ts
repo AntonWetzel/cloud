@@ -103,6 +103,17 @@ export function CreateEmptyBuffer(length: number, usage: GPUFlagsConstant): GPUB
 	})
 	return buffer
 }
+
+export function CopyBuffer(source: GPUBuffer, target: GPUBuffer, size: number) {
+	const copyEncoder = device.createCommandEncoder()
+	copyEncoder.copyBufferToBuffer(
+		source /* source buffer */,
+		0 /* source offset */,
+		target /* destination buffer */,
+		0 /* destination offset */,
+		size /* size */,
+	)
+}
 export async function ReadBuffer(buffer: GPUBuffer, size: number): Promise<ArrayBuffer> {
 	const temp = CreateEmptyBuffer(size, GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST)
 	// Encode commands for copying buffer to buffer.

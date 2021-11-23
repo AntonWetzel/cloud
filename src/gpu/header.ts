@@ -2,7 +2,7 @@ import { Setup as SetupGPU } from './gpu.js'
 import { Setup as SetupCompute } from './compute.js'
 import { Setup as SetupSources } from './sources.js'
 
-export { Resize, CreateBuffer, CreateEmptyBuffer, StartRender, FinishRender} from './gpu.js'
+export { Resize, CreateBuffer, CreateEmptyBuffer, StartRender, FinishRender, ReadBuffer} from './gpu.js'
 export { Position } from './position.js'
 export { Camera } from './camera.js'
 export { Render as Lines } from './lines.js'
