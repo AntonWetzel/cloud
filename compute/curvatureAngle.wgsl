@@ -38,7 +38,7 @@ fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
 		off = off + 1.0 - abs(dot(normalize(normals.data[idx]), normalize(n)));
 		//off = off + diff;
 	} 
-	//off = 0.1 * off / f32(i);
+	off = off / f32(i);
 	//colors.data[id] = n / f32(i);
 	colors.data[id] = vec3<f32>(1.0, 1.0, 1.0) * off;
 }

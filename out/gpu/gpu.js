@@ -1,6 +1,7 @@
 let adapter;
 export let device;
-export const clearColor = { r: 0.0, g: 0.1, b: 0.2, a: 1.0 };
+export const clearColor = { r: 1.0, g: 1.0, b: 1.0, a: 1.0 };
+//export const clearColor = { r: 0.0, g: 0.1, b: 0.2, a: 1.0 }
 export let format;
 let canvas;
 let context;

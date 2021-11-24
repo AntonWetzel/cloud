@@ -8,6 +8,7 @@
 
 [[block]] struct Parameter {
 	length: u32;
+	threshhold: f32;
 };
 
 [[group(0), binding(0)]] var<storage, read> parameter: Parameter;
@@ -18,7 +19,6 @@
 [[group(0), binding(5)]] var<storage, write> color_filter: Buffer;
 
 let MAX_DISTANCE = 340282346638528859811704183484516925440.0; //max value for f32 (i think)
-let Threshhold = 0.1;
 
 [[stage(compute), workgroup_size(256)]]
 fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
@@ -27,12 +27,12 @@ fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
 		return;
 	}
 
-	if (distances.data[id].x < Threshhold) {
+	if (distances.data[id].x < parameter.threshhold) {
 		return;
 	}
 	var idx = 0u;
 	for (var i = 0u; i < id; i = i + 1u) {
-		if (distances.data[i].x >= Threshhold) {
+		if (distances.data[i].x >= parameter.threshhold) {
 			idx = idx + 1u;
 		}
 	}

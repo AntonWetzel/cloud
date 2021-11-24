@@ -1,7 +1,7 @@
 import { CreateBuffer, device, NewModule } from './gpu.js';
 const pipelines = {
-    filterDang: undefined,
-    filterDist: undefined,
+    cleanDang: undefined,
+    cleanLong: undefined,
     kNearestList: undefined,
     kNearestIter: undefined,
     normalLinear: undefined,
@@ -26,10 +26,14 @@ export async function Setup() {
     }
 }
 export function Compute(name, length, parameter, buffers, result = false) {
-    const paramU32 = new Uint32Array(parameter.length + 1);
+    const paramU32 = new Uint32Array(1 + parameter[0].length + parameter[1].length);
+    const paramF32 = new Float32Array(paramU32.buffer);
     paramU32[0] = length;
-    for (let i = 0; i < parameter.length; i++) {
-        paramU32[i + 1] = parameter[i];
+    for (let i = 0; i < parameter[0].length; i++) {
+        paramU32[i + 1] = parameter[0][i];
+    }
+    for (let i = 0; i < parameter[1].length; i++) {
+        paramF32[parameter[0].length + i + 1] = parameter[1][i];
     }
     const buffer = CreateBuffer(paramU32, GPUBufferUsage.STORAGE);
     const x = [];

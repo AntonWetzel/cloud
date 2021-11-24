@@ -20,6 +20,75 @@
 
 <body>
 	<div id="display"></div>
+	<div id="control">
+		<div class="item">
+			<p>Control</p>
+			<button onclick="ShowText(`Move camera: WASD
+Tilt camera: Left mouse button
+Scale cloud: Mouse wheel`
+		)">Help</button>
+			<select id="mode">
+				<option value="points">Points</option>
+				<option value="connections">Connections</option>
+				<option value="polygons">Polygons</option>
+			</select>
+			<select id="color">
+				<option value="color">Color</option>
+				<option value="normal">Normal</option>
+				<option value="curve">Curvature</option>
+			</select>
+			<div>
+				<label for="grid">Grid</label>
+				<input type="checkbox" id="grid" checked=true>
+			</div>
+		</div>
+		<div class="item">
+			<p>Generate Input</p>
+			<input type="number" title="Size" min="100" max="150000" value="50000" step="1" id="size">
+			<button onclick="CreateForm('sphere')">Sphere</button>
+			<button onclick="CreateForm('cube')">Cube</button>
+		</div>
+		<div class="item">
+			<p>Load PCD</p>
+			<button onclick="CreateForm('bunny')">Bunny</button>
+			<button onclick="CreateForm('statue')">Statue</button>
+		</div>
+
+		<div class="item">
+			<p>Nearest neighbors</p>
+			<input type="number" title="K" min="1" max="128" value="64" step="1" id="k">
+			<button onclick="Compute('nearestList')">List</button>
+			<button onclick="Compute('nearestIter')">Iterated</button>
+			<button onclick="Compute('nearestSort')">Sort</button>
+		</div>
+		<div class="item">
+			<p>Triangulate</p>
+			<button onclick="Compute('triangulateAll')">With all</button>
+			<button onclick="Compute('triangulateNear')">With nearest neighbors</button>
+		</div>
+		<div class="item">
+			<p>Clean up</p>
+			<button onclick="Compute('cleanDang')">Dangling connections</button>
+			<button onclick="Compute('cleanLong')">Long connections</button>
+		</div>
+		<div class="item">
+			<p>Calculate normal</p>
+			<button onclick="Compute('normalPlane')">Plane equation</button>
+			<button onclick="Compute('normalTriang')">Average triangle normal</button>
+		</div>
+		<div class="item">
+			<p>Calculate curvature</p>
+			<button onclick="Compute('curvaturePlane')">Distance to plane</button>
+			<button onclick="Compute('curvatureNormal')">Change in normal</button>
+		</div>
+		<div class="item">
+			<p>Filter points</p>
+			<div id="tDis">Threshhold: 0.1</div>
+			<input type="range" title="Threshhold" min="0.0" max="1.0" value="0.1" step="0.01" id="threshhold"
+				onchange="document.getElementById('tDis').innerText='Threshhold: ' + this.value">
+			<button onclick="Compute('filterCurve')">Low curvature</button>
+		</div>
+	</div>
 </body>
 
 

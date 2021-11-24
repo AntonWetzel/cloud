@@ -10,19 +10,19 @@
 	placeholder: u32;
 	length: u32;
 	new_length: u32;
+	threshhold: f32;
 };
 
 [[group(0), binding(0)]] var<storage, read_write> parameter: Parameter;
 [[group(0), binding(1)]] var<storage, read> distances: Buffer;
 
 let MAX_DISTANCE = 340282346638528859811704183484516925440.0; //max value for f32 (i think)
-let Threshhold = 0.1;
 
 [[stage(compute), workgroup_size(1)]]
 fn main() {
 	var count = 0u;
 	for (var i = 0u; i < parameter.length; i = i + 1u) {
-		if (distances.data[i].x >= Threshhold) {
+		if (distances.data[i].x >= parameter.threshhold) {
 			count = count + 1u;
 		}
 	}

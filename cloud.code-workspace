@@ -21,6 +21,10 @@
 		"[typescript]": {
 			"editor.defaultFormatter": "dbaeumer.vscode-eslint"
 		},
+		"[html]": {
+			"editor.suggest.insertMode": "replace",
+		},
+		"ltex.language": "en-US",
 		"liveServer.settings.multiRootWorkspaceName": "all",
 	},
 	"tasks": {
