@@ -65,6 +65,9 @@ document.body.onload = async () => {
 		case 'cube':
 			cloud = Loader.Cube(length)
 			break
+		case 'map':
+			[cloud, length] = Loader.Map(length)
+			break
 		case 'bunny': {
 			const response = await fetch('https://raw.githubusercontent.com/PointCloudLibrary/pcl/master/test/bunny.pcd')
 			const content = await (await response.blob()).arrayBuffer()
