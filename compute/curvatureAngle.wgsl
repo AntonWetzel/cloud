@@ -40,5 +40,5 @@ fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
 	} 
 	off = off / f32(i);
 	//colors.data[id] = n / f32(i);
-	colors.data[id] = vec3<f32>(1.0, 1.0, 1.0) * off;
+	colors.data[id] = vec3<f32>(off, 0.0, 0.0);
 }
