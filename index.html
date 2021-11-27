@@ -89,6 +89,13 @@ Scale cloud: Mouse wheel`
 				onchange="document.getElementById('tDis').innerText='Threshhold: ' + this.value">
 			<button onclick="Compute('filterCurve')">Low curvature</button>
 		</div>
+		<div class="item">
+			<p>Noise</p>
+			<div id="nDis">Weight: 0.5</div>
+			<input type="range" title="Weight" min="0.0" max="1.0" value="0.5" step="0.01" id="noise"
+				onchange="document.getElementById('nDis').innerText='Weight: ' + this.value">
+			<button onclick="Compute('noise')">Reduce</button>
+		</div>
 	</div>
 </body>
 

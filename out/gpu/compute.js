@@ -14,6 +14,7 @@ const pipelines = {
     reduceP2: undefined,
     sort: undefined,
     kNearestSorted: undefined,
+    noise: undefined,
 };
 export async function Setup() {
     for (const name in pipelines) {

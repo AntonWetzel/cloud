@@ -26,7 +26,6 @@ fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
 	let offset = id * parameter.k;
 
 	let point = cloud.data[id];
-	var maxDist = MAX_DISTANCE;
 	var i = 0u;
 	for (var count = 0u; count < parameter.k; i = i + 1u) { //init the k values with the first in cloud
 		if (i == id) {
@@ -39,10 +38,8 @@ fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
 				break;
 			}
 		}
-		if (idx < count) { //move smaller values
-			for (var x = count; x > idx; x = x - 1u) {
-				nearest.data[offset + x] = nearest.data[offset + x - 1u];
-			}
+		for (var x = count; x > idx; x = x - 1u) {
+			nearest.data[offset + x] = nearest.data[offset + x - 1u];
 		}
 		nearest.data[offset + idx] = i;
 		count = count + 1u;

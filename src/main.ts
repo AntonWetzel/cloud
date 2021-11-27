@@ -237,6 +237,8 @@ document.body.onload = async () => {
 			const result = GPU.Compute('reduceP2', 1, [[length, 0], [t]], [curvature], true)
 			length = new Uint32Array(await GPU.ReadBuffer(result, 3*4))[2]
 			console.log('length:', length)
+			color.value = 'color'
+			mode.value = 'points'
 			result.destroy()
 			cloud.destroy()
 			colors.destroy()
@@ -248,6 +250,16 @@ document.body.onload = async () => {
 			nearest = undefined
 			normals = undefined
 			curvature= undefined
+			break
+		case 'noise':
+			if (curvature == undefined) {
+				alert('please calculate the curvature first')
+				break
+			}
+			const copy =  GPU.CreateEmptyBuffer(length * 16, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE)
+			GPU.Compute('noise', length, [[k], [1.0]], [cloud, normals, curvature, copy])
+			cloud.destroy()
+			cloud = copy
 			break
 		default:
 			alert('wrong name: ' + name)

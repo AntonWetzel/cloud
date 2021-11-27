@@ -22,7 +22,7 @@ let MAX_DISTANCE = 340282346638528859811704183484516925440.0; //max value for f3
 fn main() {
 	var count = 0u;
 	for (var i = 0u; i < parameter.length; i = i + 1u) {
-		if (distances.data[i].x >= parameter.threshhold) {
+		if (abs(distances.data[i].x) >= parameter.threshhold) {
 			count = count + 1u;
 		}
 	}

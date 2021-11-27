@@ -15,6 +15,7 @@ const pipelines =  {
 	reduceP2:           undefined as GPUComputePipeline,
 	sort:               undefined as GPUComputePipeline,
 	kNearestSorted:     undefined as GPUComputePipeline,
+	noise:              undefined as GPUComputePipeline,
 }
 
 export async function Setup() {

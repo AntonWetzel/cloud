@@ -27,12 +27,12 @@ fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
 		return;
 	}
 
-	if (distances.data[id].x < parameter.threshhold) {
+	if (abs(distances.data[id].x) < parameter.threshhold) {
 		return;
 	}
 	var idx = 0u;
 	for (var i = 0u; i < id; i = i + 1u) {
-		if (distances.data[i].x >= parameter.threshhold) {
+		if (abs(distances.data[i].x) >= parameter.threshhold) {
 			idx = idx + 1u;
 		}
 	}
