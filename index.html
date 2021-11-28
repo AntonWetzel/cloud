@@ -41,6 +41,9 @@ Scale cloud: Mouse wheel`
 				<label for="grid">Grid</label>
 				<input type="checkbox" id="grid" checked=true>
 			</div>
+			<div id="rDis">Radius: 0.015</div>
+			<input type="range" title="Radius" min="0.005" max="0.1" value="0.015" step="0.005" id="radius"
+				onchange="document.getElementById('rDis').innerText='Radius: ' + this.value">
 		</div>
 		<div class="item">
 			<p>Generate Input</p>

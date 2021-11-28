@@ -233,9 +233,8 @@ document.body.onload = async () => {
 			const t = parseFloat(tDiv.value)
 			const newCloud = GPU.CreateEmptyBuffer(length * 16, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE)
 			const newColor = GPU.CreateEmptyBuffer(length * 16, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE)
-			GPU.Compute('reduceP1', length, [[], [t]], [cloud, colors, curvature, newCloud, newColor])
-			const result = GPU.Compute('reduceP2', 1, [[length, 0], [t]], [curvature], true)
-			length = new Uint32Array(await GPU.ReadBuffer(result, 3*4))[2]
+			const result = GPU.Compute('reduce', length, [[0], [t]], [cloud, colors, curvature, newCloud, newColor], true)
+			length = new Uint32Array(await GPU.ReadBuffer(result, 3*4))[1]
 			console.log('length:', length)
 			color.value = 'color'
 			mode.value = 'points'
@@ -296,6 +295,7 @@ document.body.onload = async () => {
 
 	let last = await new Promise(requestAnimationFrame)
 	const run = true
+	const radDiv = document.getElementById('radius') as HTMLInputElement
 	while(run) {
 		const time = await new Promise(requestAnimationFrame)
 		const delta = time - last
@@ -338,18 +338,19 @@ document.body.onload = async () => {
 			}
 			break
 		}
+		const rad = parseFloat( radDiv.value)
 		GPU.StartRender(cam)
 		if (gridCheckbox.checked) {
 			GPU.Lines(normal, grid.length, grid.positions, grid.colors)
 		}
 		switch (mode.value) {
 		case 'points':
-			GPU.Cloud(increase, 0.015, length, cloud, c)
+			GPU.Cloud(increase, rad, length, cloud, c)
 			break
 		case 'connections':
 			if (nearest == undefined) {
 				mode.value = 'points'
-				GPU.Cloud(increase, 0.015, length, cloud, c)
+				GPU.Cloud(increase, rad, length, cloud, c)
 				alert('connections not calculated')
 			} else {
 				GPU.KNearest(increase, cloud, c, nearest, k, length)
@@ -358,7 +359,7 @@ document.body.onload = async () => {
 		case 'polygons':
 			if (nearest == undefined) {
 				mode.value = 'points'
-				GPU.Cloud(increase, 0.015, length, cloud, c)
+				GPU.Cloud(increase, rad, length, cloud, c)
 				alert('connections not calculated')
 			} else {
 				GPU.Triangulate(increase, cloud, c, nearest, k, length)
