@@ -225,6 +225,7 @@ document.body.onload = async () => {
 			}
 			break
 		case 'filterCurve':
+		case 'filterAnomaly':
 			if (curvature == undefined) {
 				alert('please calculate curvature first')
 				break
@@ -233,7 +234,16 @@ document.body.onload = async () => {
 			const t = parseFloat(tDiv.value)
 			const newCloud = GPU.CreateEmptyBuffer(length * 16, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE)
 			const newColor = GPU.CreateEmptyBuffer(length * 16, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE)
-			const result = GPU.Compute('reduce', length, [[0], [t]], [cloud, colors, curvature, newCloud, newColor], true)
+			let com: 'reduceLow' | 'reduceAnomaly'
+			switch (name) {
+			case 'filterCurve':
+				com = 'reduceLow'
+				break
+			case 'filterAnomaly':
+				com = 'reduceAnomaly'
+				break
+			}
+			const result = GPU.Compute(com, length, [[0], [t]], [cloud, colors, curvature, newCloud, newColor], true)
 			length = new Uint32Array(await GPU.ReadBuffer(result, 3*4))[1]
 			console.log('length:', length)
 			color.value = 'color'
