@@ -31,7 +31,7 @@ fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
 		var dist = MAX_DISTANCE;
 		for (var i = 0u; i < parameter.length; i = i + 1u) {
 			var d = distance(p, cloud.data[i]);
-			if (last < d & d < dist) {
+			if (last < d && d < dist) {
 				best = i;
 				dist = d;
 			}
