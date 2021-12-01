@@ -16,10 +16,14 @@ export async function Setup(width, height) {
     if (window.navigator.gpu == undefined) {
         return undefined;
     }
-    adapter = await window.navigator.gpu.requestAdapter({
-        powerPreference: 'high-performance',
-    });
+    adapter = await window.navigator.gpu.requestAdapter();
+    if (adapter == null) {
+        return undefined;
+    }
     device = await adapter.requestDevice();
+    if (device == null) {
+        return undefined;
+    }
     canvas = document.createElement('canvas');
     context = canvas.getContext('webgpu');
     format = context.getPreferredFormat(adapter);

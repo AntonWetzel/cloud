@@ -25,7 +25,7 @@ fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
 	if (id >= parameter.length) {
 		return;
 	}
-	let offset =id * parameter.k;
+	let offset = id * parameter.k;
 	let p = cloud.data[id];
 	let n = normals.data[id];
 	var off = 0.0;
@@ -35,11 +35,8 @@ fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
 		if (idx == id) {
 			break;
 		}
-		let diff = p - cloud.data[idx];
-		let l = dot(normalize(diff), n) * length(diff);
-		off = off + l;
-	}
-	off = off / f32(i);
-
+		off = off + abs(dot(normalize(normals.data[idx]), normalize(n)));
+	} 
+	off = 1.0 - off / f32(i);
 	colors.data[id] = vec3<f32>(off, 0.0, 0.0);
 }

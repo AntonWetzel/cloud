@@ -36,20 +36,25 @@ document.body.onload = async () => {
     let nearest = undefined;
     let normals = undefined;
     let curvature = undefined;
+    let valid = true;
     window.CreateForm = async (name) => {
         const size = document.getElementById('size');
         length = parseInt(size.value);
         cloud.destroy();
         colors.destroy();
+        valid = false;
         switch (name) {
             case 'sphere':
                 cloud = Loader.Sphere(length);
+                valid = true;
                 break;
             case 'cube':
                 cloud = Loader.Cube(length);
+                valid = true;
                 break;
             case 'map':
                 [cloud, length] = Loader.Map(length);
+                valid = true;
                 break;
             case 'bunny': {
                 const response = await fetch('https://raw.githubusercontent.com/PointCloudLibrary/pcl/master/test/bunny.pcd');
@@ -57,24 +62,46 @@ document.body.onload = async () => {
                 const result = Loader.PCD(content);
                 if (result != undefined) {
                     [cloud, length] = result;
+                    valid = true;
                 }
                 else {
                     alert('pcd error');
                 }
                 break;
             }
-            case 'statue': {
+            case 'statue':
                 const response = await fetch('https://raw.githubusercontent.com/PointCloudLibrary/pcl/master/test/rops_cloud.pcd');
                 const content = await (await response.blob()).arrayBuffer();
                 const result = Loader.PCD(content);
                 if (result != undefined) {
                     [cloud, length] = result;
+                    valid = true;
                 }
                 else {
                     alert('pcd error');
                 }
                 break;
-            }
+            case 'upload':
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.pcd';
+                input.multiple = false;
+                input.onchange = async () => {
+                    if (input.files.length == 0) {
+                        alert('please select file');
+                        return;
+                    }
+                    const file = input.files[0];
+                    const result = Loader.PCD(await file.arrayBuffer());
+                    if (result != undefined) {
+                        [cloud, length] = result;
+                        valid = true;
+                    }
+                    else {
+                        alert('pcd error');
+                    }
+                };
+                input.click();
         }
         colors = Loader.Color(length);
         if (nearest != undefined) {
@@ -190,7 +217,7 @@ document.body.onload = async () => {
                         break;
                 }
                 break;
-            case 'curvaturePlane':
+            case 'curvaturePoints':
             case 'curvatureNormal':
                 if (normals == undefined) {
                     alert('please calculate the normals first');
@@ -202,10 +229,10 @@ document.body.onload = async () => {
                 }
                 switch (name) {
                     case 'curvatureNormal':
-                        GPU.Compute('curvatureAngle', length, [[k], []], [cloud, nearest, normals, curvature]);
+                        GPU.Compute('curvatureNormal', length, [[k], []], [cloud, nearest, normals, curvature]);
                         break;
-                    case 'curvaturePlane':
-                        GPU.Compute('curvatureDist', length, [[k], []], [cloud, nearest, normals, curvature]);
+                    case 'curvaturePoints':
+                        GPU.Compute('curvaturePoints', length, [[k], []], [cloud, nearest, normals, curvature]);
                         break;
                 }
                 break;
@@ -334,30 +361,32 @@ document.body.onload = async () => {
         if (gridCheckbox.checked) {
             GPU.Lines(normal, grid.length, grid.positions, grid.colors);
         }
-        switch (mode.value) {
-            case 'points':
-                GPU.Cloud(increase, rad, length, cloud, c);
-                break;
-            case 'connections':
-                if (nearest == undefined) {
-                    mode.value = 'points';
+        if (valid) {
+            switch (mode.value) {
+                case 'points':
                     GPU.Cloud(increase, rad, length, cloud, c);
-                    alert('connections not calculated');
-                }
-                else {
-                    GPU.KNearest(increase, cloud, c, nearest, k, length);
-                }
-                break;
-            case 'polygons':
-                if (nearest == undefined) {
-                    mode.value = 'points';
-                    GPU.Cloud(increase, rad, length, cloud, c);
-                    alert('connections not calculated');
-                }
-                else {
-                    GPU.Triangulate(increase, cloud, c, nearest, k, length);
-                }
-                break;
+                    break;
+                case 'connections':
+                    if (nearest == undefined) {
+                        mode.value = 'points';
+                        GPU.Cloud(increase, rad, length, cloud, c);
+                        alert('connections not calculated');
+                    }
+                    else {
+                        GPU.KNearest(increase, cloud, c, nearest, k, length);
+                    }
+                    break;
+                case 'polygons':
+                    if (nearest == undefined) {
+                        mode.value = 'points';
+                        GPU.Cloud(increase, rad, length, cloud, c);
+                        alert('connections not calculated');
+                    }
+                    else {
+                        GPU.Triangulate(increase, cloud, c, nearest, k, length);
+                    }
+                    break;
+            }
         }
         GPU.FinishRender();
         last = time;
