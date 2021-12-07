@@ -5,6 +5,9 @@ export function Create(points) {
         colors[i * 4 + 0] = 0.2 + 0.5 * Math.random();
         colors[i * 4 + 1] = 0.2 + 0.5 * Math.random();
         colors[i * 4 + 2] = 0.2 + 0.5 * Math.random();
+        //colors[i * 4 + 0] = 0.2 + 0.5 * i / points
+        //colors[i * 4 + 1] = 0.2 + 0.5 * i / points
+        //colors[i * 4 + 2] = 0.2 + 0.5 * i / points
     }
     return GPU.CreateBuffer(colors, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE);
 }

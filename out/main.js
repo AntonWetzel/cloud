@@ -390,5 +390,15 @@ document.body.onload = async () => {
         }
         GPU.FinishRender();
         last = time;
+        if (keys['KeyP'] != undefined) {
+            const name = prompt('Please enter file name', 'cloud');
+            if (name != null && name.length > 0) {
+                const link = document.createElement('a');
+                link.download = name + '.png';
+                link.href = canvas.toDataURL();
+                link.click();
+            }
+            delete keys['KeyP'];
+        }
     }
 };

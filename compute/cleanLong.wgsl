@@ -35,13 +35,12 @@ fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
 	}
 	avg = avg / f32(count) * 3.0;
 
+	var idx = 0u;
 	for (var i = 0u; i < count; i = i + 1u) {
 		let o = nearest.data[id*parameter.k + i];
-		if (distance(p, cloud.data[o]) > avg) {
-			for (var j = 0u; j < count; j = j + 1u) {
-				nearest.data[id*parameter.k + j] = id;
-			}
-			break;
+		if (distance(p, cloud.data[o]) <= avg) {
+			nearest.data[id*parameter.k + idx] = o;
+			idx = idx + 1u;
 		}
 	}
 }
