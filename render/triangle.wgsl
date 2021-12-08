@@ -32,9 +32,10 @@ fn vertexMain(
 	[[builtin(vertex_index)]] id: u32,
 ) -> Transfer {
 	var index_id: u32;
+	let center = id / (3u * parameter.k);
 	switch (id%3u) {
 		case 0u: {
-			index_id = id / (3u * parameter.k);
+			index_id = center;
 			break;
 		}
 		case 1u: {
@@ -43,9 +44,8 @@ fn vertexMain(
 		}
 		default: {
 			index_id = indices.data[id/3u + 1u];
-			let cen = id / (3u * parameter.k);
-			if (index_id == cen || (id + 1u)%(parameter.k * 3u) == 0u) { //loop around to the first vertex in the circle
-				index_id = indices.data[cen*parameter.k];
+			if (index_id == center || (id + 1u)%(parameter.k * 3u) == 0u) { //loop around to the first vertex in the circle
+				index_id = indices.data[center*parameter.k];
 			}
 			break;
 		}
@@ -53,7 +53,7 @@ fn vertexMain(
 
 	var output : Transfer;
 	output.position = camera.projection * camera.view * parameter.model * vec4<f32>(positions.data[index_id], 1.0);
-	output.color = abs(colors.data[index_id]);
+	output.color = abs(colors.data[center]);
 	return output;
 }
 

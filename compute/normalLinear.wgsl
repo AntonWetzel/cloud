@@ -91,7 +91,6 @@ fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
 			vec3<f32>(1.0, 0.0, plane.x),
 			vec3<f32>(0.0, 1.0, plane.y),
 		));
-
 	} elseif (dim.y < dim.x) {
 
 		for (var i = 0u; i < count; i = i + 1u) {
@@ -159,6 +158,5 @@ fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
 			vec3<f32>(plane.x, 1.0, 0.0),
 			vec3<f32>(plane.y, 0.0, 1.0),
 		));
-
 	}
 }
