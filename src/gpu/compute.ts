@@ -29,13 +29,13 @@ export async function Setup() {
 	}
 }
 
-export function Compute(
+export async function Compute(
 	name: keyof typeof pipelines,
 	length: number,
 	parameter: [number[], number[]],
 	buffers: GPUBuffer[],
 	result = false,
-): GPUBuffer | undefined {
+): Promise<GPUBuffer | undefined> {
 	const paramU32 = new Uint32Array(1 + parameter[0].length + parameter[1].length)
 	const paramF32 = new Float32Array(paramU32.buffer)
 	paramU32[0] = length
@@ -62,16 +62,18 @@ export function Compute(
 		layout:  pipeline.getBindGroupLayout(0),
 		entries: x,
 	})
-	const encoder = device.createCommandEncoder({
-		measureExecutionTime: true
-	})
+	const encoder = device.createCommandEncoder()
 	const compute = encoder.beginComputePass({})
 	compute.setPipeline(pipeline)
 	compute.setBindGroup(0, group)
 	compute.dispatch(Math.ceil(length / 256))
 	compute.endPass()
+
+	console.time(name)
 	const commands = encoder.finish()
 	device.queue.submit([commands])
+	await ReadBuffer(buffer, 4)
+	console.timeEnd(name)
 	if (result) {
 		return buffer
 	} else {

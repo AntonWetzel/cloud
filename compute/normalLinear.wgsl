@@ -51,7 +51,7 @@ fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
 	var count = 0u;
 	var dim = vec3<f32>(0.0, 0.0, 0.0);
 	for (; nearest.data[offset + count] != id && count < parameter.k; count = count + 1u) {
-		dim = dim + abs(point - cloud.data[nearest.data[offset + count]]);
+		dim = dim + abs(point - cloud.data[nearest.data[offset + count] ]);
 	}
 
 	var AtA = mat3x3<f32>(

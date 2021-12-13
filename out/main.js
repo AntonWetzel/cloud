@@ -136,37 +136,37 @@ document.body.onload = async () => {
                 if (nearest != undefined) {
                     nearest.destroy();
                 }
-                mode.value = 'connections';
                 const kDiv = document.getElementById('k');
                 k = parseInt(kDiv.value);
                 nearest = GPU.CreateEmptyBuffer(length * k * 4, GPUBufferUsage.STORAGE);
                 switch (name) {
                     case 'nearestList':
-                        GPU.Compute('kNearestList', length, [[k], []], [cloud, nearest]);
+                        await GPU.Compute('kNearestList', length, [[k], []], [cloud, nearest]);
                         break;
                     case 'nearestIter':
-                        GPU.Compute('kNearestIter', length, [[k], []], [cloud, nearest]);
+                        await GPU.Compute('kNearestIter', length, [[k], []], [cloud, nearest]);
                         break;
                     case 'nearestSort':
                         const newCloud = GPU.CreateEmptyBuffer(length * 16, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE);
                         const newColor = GPU.CreateEmptyBuffer(length * 16, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE);
-                        GPU.Compute('sort', length, [[], []], [cloud, colors, newCloud, newColor]);
+                        await GPU.Compute('sort', length, [[], []], [cloud, colors, newCloud, newColor]);
                         cloud.destroy();
                         colors.destroy();
                         cloud = newCloud;
                         colors = newColor;
-                        GPU.Compute('kNearestSorted', length, [[k], []], [cloud, nearest]);
+                        await GPU.Compute('kNearestSorted', length, [[k], []], [cloud, nearest]);
                         break;
                 }
+                mode.value = 'connections';
                 break;
             case 'triangulateAll':
                 k = GPU.TriangulateK;
                 if (nearest != undefined) {
                     nearest.destroy();
                 }
-                mode.value = 'connections';
                 nearest = GPU.CreateEmptyBuffer(length * k * 4, GPUBufferUsage.STORAGE);
-                GPU.Compute('triangulateAll', length, [[], []], [cloud, nearest]);
+                await GPU.Compute('triangulateAll', length, [[], []], [cloud, nearest]);
+                mode.value = 'connections';
                 break;
             case 'triangulateNear':
                 if (nearest == undefined) {
@@ -174,7 +174,7 @@ document.body.onload = async () => {
                 }
                 else {
                     const copy = GPU.CreateEmptyBuffer(length * GPU.TriangulateK * 4, GPUBufferUsage.STORAGE);
-                    GPU.Compute('triangulateNearest', length, [[k], []], [cloud, nearest, copy]);
+                    await GPU.Compute('triangulateNearest', length, [[k], []], [cloud, nearest, copy]);
                     nearest.destroy();
                     nearest = copy;
                     k = GPU.TriangulateK;
@@ -188,15 +188,15 @@ document.body.onload = async () => {
                     alert('please calculate the connections first');
                     break;
                 }
-                mode.value = 'connections';
                 switch (name) {
                     case 'cleanDang':
-                        GPU.Compute('cleanDang', length, [[k], []], [nearest]);
+                        await GPU.Compute('cleanDang', length, [[k], []], [nearest]);
                         break;
                     case 'cleanLong':
-                        GPU.Compute('cleanLong', length, [[k], []], [cloud, nearest]);
+                        await GPU.Compute('cleanLong', length, [[k], []], [cloud, nearest]);
                         break;
                 }
+                mode.value = 'connections';
                 break;
             case 'normalPlane':
             case 'normalTriang':
@@ -204,18 +204,18 @@ document.body.onload = async () => {
                     alert('please calculate the connections first');
                     break;
                 }
-                color.value = 'normal';
                 if (normals == undefined) {
                     normals = GPU.CreateEmptyBuffer(length * 16, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE);
                 }
                 switch (name) {
                     case 'normalPlane':
-                        GPU.Compute('normalLinear', length, [[k], []], [cloud, nearest, normals]);
+                        await GPU.Compute('normalLinear', length, [[k], []], [cloud, nearest, normals]);
                         break;
                     case 'normalTriang':
-                        GPU.Compute('normalTriang', length, [[k], []], [cloud, nearest, normals]);
+                        await GPU.Compute('normalTriang', length, [[k], []], [cloud, nearest, normals]);
                         break;
                 }
+                color.value = 'normal';
                 break;
             case 'curvaturePoints':
             case 'curvatureNormal':
@@ -223,18 +223,18 @@ document.body.onload = async () => {
                     alert('please calculate the normals first');
                     break;
                 }
-                color.value = 'curve';
                 if (curvature == undefined) {
                     curvature = GPU.CreateEmptyBuffer(length * 16, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC);
                 }
                 switch (name) {
                     case 'curvatureNormal':
-                        GPU.Compute('curvatureNormal', length, [[k], []], [cloud, nearest, normals, curvature]);
+                        await GPU.Compute('curvatureNormal', length, [[k], []], [cloud, nearest, normals, curvature]);
                         break;
                     case 'curvaturePoints':
-                        GPU.Compute('curvaturePoints', length, [[k], []], [cloud, nearest, normals, curvature]);
+                        await GPU.Compute('curvaturePoints', length, [[k], []], [cloud, nearest, normals, curvature]);
                         break;
                 }
+                color.value = 'curve';
                 break;
             case 'filterCurve':
             case 'filterAnomaly':
@@ -255,11 +255,9 @@ document.body.onload = async () => {
                         com = 'reduceAnomaly';
                         break;
                 }
-                const result = GPU.Compute(com, length, [[0], [t]], [cloud, colors, curvature, newCloud, newColor], true);
+                const result = await GPU.Compute(com, length, [[0], [t]], [cloud, colors, curvature, newCloud, newColor], true);
                 length = new Uint32Array(await GPU.ReadBuffer(result, 3 * 4))[1];
                 console.log('length:', length);
-                color.value = 'color';
-                mode.value = 'points';
                 result.destroy();
                 cloud.destroy();
                 colors.destroy();
@@ -271,6 +269,8 @@ document.body.onload = async () => {
                 nearest = undefined;
                 normals = undefined;
                 curvature = undefined;
+                color.value = 'color';
+                mode.value = 'points';
                 break;
             case 'noise':
                 if (curvature == undefined) {
@@ -278,7 +278,7 @@ document.body.onload = async () => {
                     break;
                 }
                 const copy = GPU.CreateEmptyBuffer(length * 16, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE);
-                GPU.Compute('noise', length, [[k], [1.0]], [cloud, normals, curvature, copy]);
+                await GPU.Compute('noise', length, [[k], [1.0]], [cloud, normals, curvature, copy]);
                 cloud.destroy();
                 cloud = copy;
                 break;
@@ -315,10 +315,7 @@ document.body.onload = async () => {
     while (run) {
         const time = await new Promise(requestAnimationFrame);
         const delta = time - last;
-        if (delta > 25) {
-            console.log(delta);
-        }
-        else {
+        if (delta < 50) {
             const dist = delta / 50;
             const move = (key, x, y, z) => {
                 if (keys[key] != undefined) {

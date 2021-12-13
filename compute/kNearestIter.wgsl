@@ -1,5 +1,5 @@
 [[block]] struct Buffer {
-	data: array<vec3<f32>>;
+	data: array<vec3<f32> >;
 };
 
 [[block]] struct Indices {
