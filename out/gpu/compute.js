@@ -1,4 +1,4 @@
-import { CreateBuffer, device, NewModule, ReadBuffer } from './gpu.js';
+import { CreateBuffer, device, NewModule } from './gpu.js';
 const pipelines = {
     cleanDang: undefined,
     cleanLong: undefined,
@@ -26,7 +26,7 @@ export async function Setup() {
         });
     }
 }
-export async function Compute(name, length, parameter, buffers, result = false) {
+export function Compute(name, length, parameter, buffers, result = false) {
     const paramU32 = new Uint32Array(1 + parameter[0].length + parameter[1].length);
     const paramF32 = new Float32Array(paramU32.buffer);
     paramU32[0] = length;
@@ -59,11 +59,8 @@ export async function Compute(name, length, parameter, buffers, result = false) 
     compute.setBindGroup(0, group);
     compute.dispatch(Math.ceil(length / 256));
     compute.endPass();
-    console.time(name);
     const commands = encoder.finish();
     device.queue.submit([commands]);
-    await ReadBuffer(buffer, 4);
-    console.timeEnd(name);
     if (result) {
         return buffer;
     }

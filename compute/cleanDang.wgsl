@@ -12,7 +12,8 @@
 };
 
 [[group(0), binding(0)]] var<storage, read> parameter: Parameter;
-[[group(0), binding(1)]] var<storage, read_write> nearest: Indices;
+[[group(0), binding(1)]] var<storage, read> nearest: Indices;
+[[group(0), binding(2)]] var<storage, write> new_nearest: Indices;
 
 let PI = 3.1415926538;
 
@@ -38,11 +39,11 @@ fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
 			}
 		}
 		if (connected) {
-			nearest.data[off + target] = idx;
+			new_nearest.data[off + target] = idx;
 			target = target + 1u;
 		}
 	}
 	for (; target < parameter.k; target = target + 1u) {
-		nearest.data[off + target] = id;
+		new_nearest.data[off + target] = id;
 	}
 }

@@ -141,20 +141,20 @@ document.body.onload = async () => {
                 nearest = GPU.CreateEmptyBuffer(length * k * 4, GPUBufferUsage.STORAGE);
                 switch (name) {
                     case 'nearestList':
-                        await GPU.Compute('kNearestList', length, [[k], []], [cloud, nearest]);
+                        GPU.Compute('kNearestList', length, [[k], []], [cloud, nearest]);
                         break;
                     case 'nearestIter':
-                        await GPU.Compute('kNearestIter', length, [[k], []], [cloud, nearest]);
+                        GPU.Compute('kNearestIter', length, [[k], []], [cloud, nearest]);
                         break;
                     case 'nearestSort':
                         const newCloud = GPU.CreateEmptyBuffer(length * 16, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE);
                         const newColor = GPU.CreateEmptyBuffer(length * 16, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE);
-                        await GPU.Compute('sort', length, [[], []], [cloud, colors, newCloud, newColor]);
+                        GPU.Compute('sort', length, [[], []], [cloud, colors, newCloud, newColor]);
                         cloud.destroy();
                         colors.destroy();
                         cloud = newCloud;
                         colors = newColor;
-                        await GPU.Compute('kNearestSorted', length, [[k], []], [cloud, nearest]);
+                        GPU.Compute('kNearestSorted', length, [[k], []], [cloud, nearest]);
                         break;
                 }
                 mode.value = 'connections';
@@ -165,7 +165,7 @@ document.body.onload = async () => {
                     nearest.destroy();
                 }
                 nearest = GPU.CreateEmptyBuffer(length * k * 4, GPUBufferUsage.STORAGE);
-                await GPU.Compute('triangulateAll', length, [[], []], [cloud, nearest]);
+                GPU.Compute('triangulateAll', length, [[], []], [cloud, nearest]);
                 mode.value = 'connections';
                 break;
             case 'triangulateNear':
@@ -174,7 +174,7 @@ document.body.onload = async () => {
                 }
                 else {
                     const copy = GPU.CreateEmptyBuffer(length * GPU.TriangulateK * 4, GPUBufferUsage.STORAGE);
-                    await GPU.Compute('triangulateNearest', length, [[k], []], [cloud, nearest, copy]);
+                    GPU.Compute('triangulateNearest', length, [[k], []], [cloud, nearest, copy]);
                     nearest.destroy();
                     nearest = copy;
                     k = GPU.TriangulateK;
@@ -188,14 +188,17 @@ document.body.onload = async () => {
                     alert('please calculate the connections first');
                     break;
                 }
+                const newNearest = GPU.CreateEmptyBuffer(length * k * 4, GPUBufferUsage.STORAGE);
                 switch (name) {
                     case 'cleanDang':
-                        await GPU.Compute('cleanDang', length, [[k], []], [nearest]);
+                        GPU.Compute('cleanDang', length, [[k], []], [nearest, newNearest]);
                         break;
                     case 'cleanLong':
-                        await GPU.Compute('cleanLong', length, [[k], []], [cloud, nearest]);
+                        GPU.Compute('cleanLong', length, [[k], []], [cloud, nearest, newNearest]);
                         break;
                 }
+                nearest.destroy();
+                nearest = newNearest;
                 mode.value = 'connections';
                 break;
             case 'normalPlane':
@@ -209,10 +212,10 @@ document.body.onload = async () => {
                 }
                 switch (name) {
                     case 'normalPlane':
-                        await GPU.Compute('normalLinear', length, [[k], []], [cloud, nearest, normals]);
+                        GPU.Compute('normalLinear', length, [[k], []], [cloud, nearest, normals]);
                         break;
                     case 'normalTriang':
-                        await GPU.Compute('normalTriang', length, [[k], []], [cloud, nearest, normals]);
+                        GPU.Compute('normalTriang', length, [[k], []], [cloud, nearest, normals]);
                         break;
                 }
                 color.value = 'normal';
@@ -228,10 +231,10 @@ document.body.onload = async () => {
                 }
                 switch (name) {
                     case 'curvatureNormal':
-                        await GPU.Compute('curvatureNormal', length, [[k], []], [cloud, nearest, normals, curvature]);
+                        GPU.Compute('curvatureNormal', length, [[k], []], [cloud, nearest, normals, curvature]);
                         break;
                     case 'curvaturePoints':
-                        await GPU.Compute('curvaturePoints', length, [[k], []], [cloud, nearest, normals, curvature]);
+                        GPU.Compute('curvaturePoints', length, [[k], []], [cloud, nearest, normals, curvature]);
                         break;
                 }
                 color.value = 'curve';
@@ -255,7 +258,7 @@ document.body.onload = async () => {
                         com = 'reduceAnomaly';
                         break;
                 }
-                const result = await GPU.Compute(com, length, [[0], [t]], [cloud, colors, curvature, newCloud, newColor], true);
+                const result = GPU.Compute(com, length, [[0], [t]], [cloud, colors, curvature, newCloud, newColor], true);
                 length = new Uint32Array(await GPU.ReadBuffer(result, 3 * 4))[1];
                 console.log('length:', length);
                 result.destroy();
@@ -278,7 +281,7 @@ document.body.onload = async () => {
                     break;
                 }
                 const copy = GPU.CreateEmptyBuffer(length * 16, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE);
-                await GPU.Compute('noise', length, [[k], [1.0]], [cloud, normals, curvature, copy]);
+                GPU.Compute('noise', length, [[k], [1.0]], [cloud, normals, curvature, copy]);
                 cloud.destroy();
                 cloud = copy;
                 break;

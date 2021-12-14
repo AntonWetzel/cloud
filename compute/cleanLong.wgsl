@@ -13,7 +13,8 @@
 
 [[group(0), binding(0)]] var<storage, read> parameter: Parameter;
 [[group(0), binding(1)]] var<storage, read> cloud: Buffer;
-[[group(0), binding(2)]] var<storage, read_write> nearest: Indices;
+[[group(0), binding(2)]] var<storage, read> nearest: Indices;
+[[group(0), binding(3)]] var<storage, write> new_nearest: Indices;
 
 let PI = 3.1415926538;
 
@@ -39,8 +40,11 @@ fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
 	for (var i = 0u; i < count; i = i + 1u) {
 		let o = nearest.data[id*parameter.k + i];
 		if (distance(p, cloud.data[o]) <= avg) {
-			nearest.data[id*parameter.k + idx] = o;
+			new_nearest.data[id*parameter.k + idx] = o;
 			idx = idx + 1u;
 		}
+	}
+	for (;idx < parameter.k; idx = idx + 1u) {
+		new_nearest.data[id*parameter.k + idx] = id;
 	}
 }

@@ -1,9 +1,7 @@
 import * as GPU from '../gpu/header.js';
 import SimplexNoise from './noise.js';
 export function Create(points) {
-    console.log(points);
     const count = Math.floor(Math.sqrt(points));
-    console.log(count * count);
     const vertices = new Float32Array(count * count * 4);
     const noise = new SimplexNoise();
     for (let i = 0; i < count; i++) {
