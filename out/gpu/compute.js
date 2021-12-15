@@ -4,6 +4,8 @@ const pipelines = {
     cleanLong: undefined,
     kNearestList: undefined,
     kNearestIter: undefined,
+    kNearestIterSorted: undefined,
+    kNearestListSorted: undefined,
     normalLinear: undefined,
     normalTriang: undefined,
     curvaturePoints: undefined,
@@ -13,7 +15,6 @@ const pipelines = {
     reduceLow: undefined,
     reduceAnomaly: undefined,
     sort: undefined,
-    kNearestSorted: undefined,
     noise: undefined,
 };
 export async function Setup() {

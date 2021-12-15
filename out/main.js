@@ -1,5 +1,6 @@
 import * as GPU from './gpu/header.js';
 import * as Loader from './loader/header.js';
+import * as Time from './time.js';
 document.body.onload = async () => {
     const mode = document.getElementById('mode');
     const color = document.getElementById('color');
@@ -22,6 +23,8 @@ document.body.onload = async () => {
         document.body.append(error);
         return;
     }
+    await Time.MeasureTimes();
+    return;
     display.append(canvas);
     const cam = new GPU.Camera(Math.PI / 4);
     cam.Translate(0, 5, 30);
@@ -130,9 +133,10 @@ document.body.onload = async () => {
     };
     window.Compute = async (name) => {
         switch (name) {
-            case 'nearestList':
-            case 'nearestIter':
-            case 'nearestSort':
+            case 'kNearestList':
+            case 'kNearestIter':
+            case 'kNearestListSorted':
+            case 'kNearestIterSorted':
                 if (nearest != undefined) {
                     nearest.destroy();
                 }
@@ -140,13 +144,12 @@ document.body.onload = async () => {
                 k = parseInt(kDiv.value);
                 nearest = GPU.CreateEmptyBuffer(length * k * 4, GPUBufferUsage.STORAGE);
                 switch (name) {
-                    case 'nearestList':
-                        GPU.Compute('kNearestList', length, [[k], []], [cloud, nearest]);
+                    case 'kNearestList':
+                    case 'kNearestIter':
+                        GPU.Compute(name, length, [[k], []], [cloud, nearest]);
                         break;
-                    case 'nearestIter':
-                        GPU.Compute('kNearestIter', length, [[k], []], [cloud, nearest]);
-                        break;
-                    case 'nearestSort':
+                    case 'kNearestListSorted':
+                    case 'kNearestIterSorted':
                         const newCloud = GPU.CreateEmptyBuffer(length * 16, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE);
                         const newColor = GPU.CreateEmptyBuffer(length * 16, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE);
                         GPU.Compute('sort', length, [[], []], [cloud, colors, newCloud, newColor]);
@@ -154,7 +157,7 @@ document.body.onload = async () => {
                         colors.destroy();
                         cloud = newCloud;
                         colors = newColor;
-                        GPU.Compute('kNearestSorted', length, [[k], []], [cloud, nearest]);
+                        GPU.Compute(name, length, [[k], []], [cloud, nearest]);
                         break;
                 }
                 mode.value = 'connections';

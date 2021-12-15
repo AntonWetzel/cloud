@@ -63,9 +63,10 @@ Scale cloud: Mouse wheel`
 		<div class="item">
 			<p>Nearest neighbors</p>
 			<input type="number" title="K" min="1" max="128" value="64" step="1" id="k">
-			<button onclick="Compute('nearestList')">List</button>
-			<button onclick="Compute('nearestIter')">Iterated</button>
-			<button onclick="Compute('nearestSort')">Sort</button>
+			<button onclick="Compute('kNearestList')">List</button>
+			<button onclick="Compute('kNearestIter')">Iterated</button>
+			<button onclick="Compute('kNearestListSorted')">Sort and List</button>
+			<button onclick="Compute('kNearestIterSorted')">Sort and Iterated</button>
 		</div>
 		<div class="item">
 			<p>Triangulate</p>
