@@ -31,10 +31,23 @@
 		"version": "2.0.0",
 		"tasks": [
 			{
+				"label": "build",
+				"group": {
+					"kind": "build",
+					"isDefault": true
+				},
+				"dependsOn": [
+					"clear",
+					"tsc",
+					"rollup",
+					"live",
+				]
+			},
+			{
 				"options": {
 					"cwd": "${workspaceFolder:all}"
 				},
-				"label": "build",
+				"label": "tsc",
 				"type": "shell",
 				"command": "npx",
 				"args": [
@@ -42,23 +55,23 @@
 					"--watch"
 				],
 				"problemMatcher": [],
-				"group": {
-					"kind": "build",
-					"isDefault": true
-				},
-				"dependsOn": [
-					"clear",
-					"live",
-				],
 			},
 			{
 				"label": "live",
 				"command": "${command:extension.liveServer.goOnline}"
 			},
 			{
-				"label": "clear",
+				"label": "rollup",
 				"type": "shell",
-				"command": "(rd -r out) * 0",
+				"command": "npx",
+				"args": [
+					"rollup",
+					"./out/main.js",
+					"--file",
+					"./bundle.js",
+					"--format iife",
+					"--watch",
+				],
 				"options": {
 					"cwd": "${workspaceFolder:all}"
 				}

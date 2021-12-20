@@ -35,8 +35,8 @@ document.body.onload = async () => {
 		return
 	}
 
-	await Time.MeasureTimes()
-	return
+	//await Time.MeasureTimes()
+	//return
 	display.append(canvas)
 
 	const cam = new GPU.Camera(Math.PI / 4)
@@ -165,13 +165,14 @@ document.body.onload = async () => {
 				break
 			case 'kNearestListSorted':
 			case 'kNearestIterSorted':
-				const newCloud = GPU.CreateEmptyBuffer(length * 16, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE)
-				const newColor = GPU.CreateEmptyBuffer(length * 16, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE)
-				GPU.Compute('sort', length, [[],[]], [cloud, colors, newCloud, newColor])
-				cloud.destroy()
-				colors.destroy()
-				cloud = newCloud
-				colors = newColor
+				//const newCloud = GPU.CreateEmptyBuffer(length * 16, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE)
+				//const newColor = GPU.CreateEmptyBuffer(length * 16, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE)
+				//GPU.Compute('sort', length, [[],[]], [cloud, colors, newCloud, newColor])
+				//cloud.destroy()
+				//colors.destroy()
+				//cloud = newCloud
+				//colors = newColor
+				await GPU.Sort(cloud, length)
 				GPU.Compute(name, length, [[k], []], [cloud, nearest])
 				break
 			}

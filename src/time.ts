@@ -15,17 +15,19 @@ function Save(name: string) {
 	result = ''
 }
 export async function MeasureTimes(): Promise<void> {
-	for (let c = 0; c < 3; c++) {
-		for (let i = 8; i <= 32; i += 4) {
+	for (let c = 0; c < 1; c++) {
+		for (let i = 192 * 2; i >= 16; i /= 2) {
 			const name = forms[c]
 			await WithK(name, i * 1024)
 		}
 	}
+	/*
 	for (let c = 3; c < 5; c++) {
 		const name = forms[c]
 		await WithK(name, 0)
 	}
-	Save('sortedNearest')
+	*/
+	Save('sort')
 }
 
 async function Generate(name: typeof forms[number], length = 1024) : Promise<[GPUBuffer, number]>{
@@ -60,7 +62,8 @@ async function Generate(name: typeof forms[number], length = 1024) : Promise<[GP
 }
 
 async function WithK(name: typeof forms[number], l: number) {
-	for (let k = 8; k <= 64; k += 8) {
+	//for (let k = 8; k <= 64; k += 8) {
+	for (let k = 64; k <= 64; k += 8) {
 		const [cloud, length] = await Generate(name, l)
 		await Order(cloud, length , k, name)
 		cloud.destroy()
@@ -82,12 +85,9 @@ export async function Order(cloud: GPUBuffer, length: number, k: number, name: s
 	//await Compute(length, k, name, 'kNearestList',  [[k], []], [cloud, nearest], 'unsorted')
 	//await Compute(length, k, name, 'triangulateAll',  [[], []], [cloud, nearest], 'unsorted')
 
-	const buffer = GPU.Compute('sort', length, [[], []], [cloud, color, cloudSorted, colorSorted], true)
-	await GPU.ReadBuffer(buffer, 0)
-	buffer.destroy()
-	//await Compute(length, k, name, 'sort', [[], []], [cloud, color, cloudSorted, colorSorted])
+	await Compute(length, k, name, 'sort', [[], []], [cloud, color, cloudSorted, colorSorted])
 	await Compute(length, k, name, 'kNearestListSorted',  [[k], []], [cloudSorted, nearest])
-	await Compute(length, k, name, 'kNearestIterSorted',  [[k], []], [cloudSorted, nearest])
+	//await Compute(length, k, name, 'kNearestIterSorted',  [[k], []], [cloudSorted, nearest])
 	//await Compute(length, k, name, 'kNearestIter',  [[k], []], [cloudSorted, nearest], 'sorted')
 	//await Compute(length, k, name, 'kNearestList',  [[k], []], [cloudSorted, nearest], 'sorted')
 	//await Compute(length, k, name, 'triangulateAll',  [[], []], [cloudSorted, triangulate], 'sorted')

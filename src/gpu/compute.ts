@@ -20,10 +20,15 @@ const pipelines =  {
 }
 
 export async function Setup() {
+	const requests: { [key: string]: Promise<Response>} = {}
+	for (const name in pipelines) {
+		requests[name] = fetch('./compute/'+name+'.wgsl')
+
+	}
 	for (const name in pipelines) {
 		pipelines[name] = device.createComputePipeline({
 			compute: {
-				module:     NewModule(await (await fetch('./compute/'+name+'.wgsl')).text()),
+				module:     NewModule(await (await requests[name]).text()),
 				entryPoint: 'main',
 			},
 		})

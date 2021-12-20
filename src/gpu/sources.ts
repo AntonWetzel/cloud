@@ -7,7 +7,11 @@ export const sources =  {
 
 
 export async function Setup() {
+	const requests: { [key: string]: Promise<Response>} = {}
 	for (const name in sources) {
-		sources[name] = await (await fetch('./render/'+name+'.wgsl')).text()
+		requests[name] = fetch('./render/'+name+'.wgsl')
+	}
+	for (const name in sources) {
+		sources[name] = await (await requests[name]).text()
 	}
 }
