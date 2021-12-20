@@ -37,8 +37,6 @@
 					"isDefault": true
 				},
 				"dependsOn": [
-					"clear",
-					"tsc",
 					"rollup",
 					"live",
 				]
@@ -47,12 +45,13 @@
 				"options": {
 					"cwd": "${workspaceFolder:all}"
 				},
-				"label": "tsc",
+				"label": "rollup",
 				"type": "shell",
 				"command": "npx",
 				"args": [
-					"tsc",
-					"--watch"
+					"rollup",
+					"-c",
+					"-w",
 				],
 				"problemMatcher": [],
 			},
@@ -60,22 +59,6 @@
 				"label": "live",
 				"command": "${command:extension.liveServer.goOnline}"
 			},
-			{
-				"label": "rollup",
-				"type": "shell",
-				"command": "npx",
-				"args": [
-					"rollup",
-					"./out/main.js",
-					"--file",
-					"./bundle.js",
-					"--format iife",
-					"--watch",
-				],
-				"options": {
-					"cwd": "${workspaceFolder:all}"
-				}
-			}
 		]
 	}
 }

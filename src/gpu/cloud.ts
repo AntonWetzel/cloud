@@ -1,6 +1,6 @@
-import { aspect, cameraBuffer, CreateBuffer, device, format, NewModule, renderPass } from './gpu.js'
+import { aspect, cameraBuffer, ConvertURI, CreateBuffer, device, format, NewModule, renderPass } from './gpu.js'
 import { Position } from './position.js'
-import { sources } from './sources.js'
+import srcURI from '../../render/cloud.wgsl'
 
 let quadBuffer = undefined as GPUBuffer | undefined
 
@@ -14,7 +14,7 @@ export function Render(
 	colors: GPUBuffer,
 ): void {
 	if (pipeline == undefined || quadBuffer == undefined) {
-		const module = NewModule(sources['cloud'])
+		const module = NewModule(ConvertURI(srcURI))
 		pipeline = device.createRenderPipeline({
 			vertex: {
 				module:     module,

@@ -1,6 +1,5 @@
 import { Setup as SetupGPU } from './gpu.js'
 import { Setup as SetupCompute } from './compute.js'
-import { Setup as SetupSources } from './sources.js'
 
 export { Resize, CreateBuffer, CreateEmptyBuffer, StartRender, FinishRender, ReadBuffer} from './gpu.js'
 export { Position } from './position.js'
@@ -17,7 +16,6 @@ export async function Setup(width: number, height: number): Promise<HTMLCanvasEl
 	if (c == undefined) {
 		return undefined
 	}
-	await SetupSources()
-	await SetupCompute()
+	SetupCompute()
 	return c
 }

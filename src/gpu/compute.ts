@@ -1,6 +1,23 @@
-import { CreateBuffer, device, NewModule, ReadBuffer } from './gpu.js'
+import { ConvertURI, CreateBuffer, device, NewModule, ReadBuffer } from './gpu.js'
 
-const pipelines =  {
+import cleanDangURI          from '../../compute/cleanDang.wgsl'
+import cleanLongURI          from '../../compute/cleanLong.wgsl'
+import kNearestListURI       from '../../compute/kNearestList.wgsl'
+import kNearestIterURI       from '../../compute/kNearestIter.wgsl'
+import kNearestIterSortedURI from '../../compute/kNearestIterSorted.wgsl'
+import kNearestListSortedURI from '../../compute/kNearestListSorted.wgsl'
+import normalLinearURI       from '../../compute/normalLinear.wgsl'
+import normalTriangURI       from '../../compute/normalTriang.wgsl'
+import curvaturePointsURI    from '../../compute/curvaturePoints.wgsl'
+import curvatureNormalURI    from '../../compute/curvatureNormal.wgsl'
+import triangulateAllURI     from '../../compute/triangulateAll.wgsl'
+import triangulateNearestURI from '../../compute/triangulateNearest.wgsl'
+import reduceLowURI          from '../../compute/reduceLow.wgsl'
+import reduceAnomalyURI      from '../../compute/reduceAnomaly.wgsl'
+import sortURI               from '../../compute/sort.wgsl'
+import noiseURI              from '../../compute/noise.wgsl'
+
+let pipelines = {
 	cleanDang:          undefined as GPUComputePipeline,
 	cleanLong:          undefined as GPUComputePipeline,
 	kNearestList:       undefined as GPUComputePipeline,
@@ -19,19 +36,33 @@ const pipelines =  {
 	noise:              undefined as GPUComputePipeline,
 }
 
-export async function Setup() {
-	const requests: { [key: string]: Promise<Response>} = {}
-	for (const name in pipelines) {
-		requests[name] = fetch('./compute/'+name+'.wgsl')
-
-	}
-	for (const name in pipelines) {
-		pipelines[name] = device.createComputePipeline({
+export function Setup() {
+	const helper = (uri: string): GPUComputePipeline => {
+		return device.createComputePipeline({
 			compute: {
-				module:     NewModule(await (await requests[name]).text()),
+				module:     NewModule(ConvertURI(uri)),
 				entryPoint: 'main',
 			},
 		})
+	}
+
+	pipelines = {
+		cleanDang:          helper(cleanDangURI),
+		cleanLong:          helper(cleanLongURI),
+		kNearestList:       helper(kNearestListURI),
+		kNearestIter:       helper(kNearestIterURI),
+		kNearestIterSorted: helper(kNearestIterSortedURI),
+		kNearestListSorted: helper(kNearestListSortedURI),
+		normalLinear:       helper(normalLinearURI),
+		normalTriang:       helper(normalTriangURI),
+		curvaturePoints:    helper(curvaturePointsURI),
+		curvatureNormal:    helper(curvatureNormalURI),
+		triangulateAll:     helper(triangulateAllURI),
+		triangulateNearest: helper(triangulateNearestURI),
+		reduceLow:          helper(reduceLowURI),
+		reduceAnomaly:      helper(reduceAnomalyURI),
+		sort:               helper(sortURI),
+		noise:              helper(noiseURI),
 	}
 }
 

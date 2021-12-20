@@ -7,7 +7,7 @@ declare global {
 	interface Window {
 		CreateForm: (name: string) => void
 		ShowText: (text: string) => void
-		Compute: (name: string) => void
+		StartCompute: (name: string) => void
 	}
 }
 
@@ -146,7 +146,7 @@ document.body.onload = async () => {
 		}, 5000)
 	}
 
-	window.Compute = async (name: string) => {
+	window.StartCompute = async (name: string) => {
 		switch (name) {
 		case 'kNearestList':
 		case 'kNearestIter':

@@ -1,6 +1,6 @@
-import { cameraBuffer, CreateBuffer, device, format, NewModule, renderPass } from './gpu.js'
+import { cameraBuffer, ConvertURI, CreateBuffer, device, format, NewModule, renderPass } from './gpu.js'
 import { Position } from './position.js'
-import { sources } from './sources.js'
+import srcURI from '../../render/lines.wgsl'
 
 let pipeline: GPURenderPipeline | undefined = undefined
 
@@ -11,7 +11,7 @@ export function Render(
 	colors: GPUBuffer,
 ): void {
 	if (pipeline == undefined) {
-		const module = NewModule(sources['lines'])
+		const module = NewModule(ConvertURI(srcURI))
 
 		pipeline = device.createRenderPipeline({
 			vertex: {

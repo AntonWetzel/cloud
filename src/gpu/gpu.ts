@@ -145,3 +145,7 @@ export function NewModule(src: string): GPUShaderModule {
 	})
 	return module
 }
+
+export function ConvertURI(uri: string): string {
+	return window.atob(uri.split(',')[1])
+}

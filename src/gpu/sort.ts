@@ -3,19 +3,15 @@ import { device, ReadBuffer } from './gpu.js'
 export  async function Sort(data: GPUBuffer, length: number): Promise<void> {
 	const arr = new Float32Array(await ReadBuffer(data, length * 4 * 4))
 	quickSort(arr, 0, length - 1)
-	for (let i = 0; i < length-1; i++) {
-		if (arr[i*4] > arr[(i+1)*4]) {
-			console.log(i)
-		}
-	}
 	device.queue.writeBuffer(data, 0, arr)
 }
 
 function quickSort(arr: Float32Array, low: number, high: number) {
 	if (low < high) 
 	{
-		const id = Math.floor(Math.random() * high) * 4 
-		const  pivot = arr[id] // pivot 
+		const id = Math.floor((low + high)/2)
+		swap(arr, id, high)
+		const  pivot = arr[high*4] // pivot 
 		let i = (low - 1) // Index of smaller element and indicates the right position of pivot found so far
   
 		for (let j = low; j <= high - 1; j++) 

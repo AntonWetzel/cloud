@@ -1,7 +1,6 @@
-import { aspect, cameraBuffer, CreateBuffer, device, format, NewModule, renderPass } from './gpu.js'
+import { aspect, cameraBuffer, ConvertURI, CreateBuffer, device, format, NewModule, renderPass } from './gpu.js'
 import { Position } from './position.js'
-import { sources } from './sources.js'
-
+import srcURI from '../../render/kNearest.wgsl'
 
 let pipeline: undefined | GPURenderPipeline = undefined
 
@@ -14,7 +13,7 @@ export function Render(
 	length: number,
 ): void {
 	if (pipeline == undefined) {
-		const module = NewModule(sources['kNearest'])
+		const module = NewModule(ConvertURI(srcURI))
 		pipeline = device.createRenderPipeline({
 			vertex: {
 				module:     module,

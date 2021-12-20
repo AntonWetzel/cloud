@@ -60,45 +60,45 @@ Scale cloud: Mouse wheel`
 		<div class="item">
 			<p>Nearest neighbors</p>
 			<input type="number" title="K" min="1" max="128" value="64" step="1" id="k">
-			<button onclick="Compute('kNearestList')">List</button>
-			<button onclick="Compute('kNearestIter')">Iterated</button>
-			<button onclick="Compute('kNearestListSorted')">Sort and List</button>
-			<button onclick="Compute('kNearestIterSorted')">Sort and Iterated</button>
+			<button onclick="StartCompute('kNearestList')">List</button>
+			<button onclick="StartCompute('kNearestIter')">Iterated</button>
+			<button onclick="StartCompute('kNearestListSorted')">Sort and List</button>
+			<button onclick="StartCompute('kNearestIterSorted')">Sort and Iterated</button>
 		</div>
 		<div class="item">
 			<p>Triangulate</p>
-			<button onclick="Compute('triangulateAll')">With all</button>
-			<button onclick="Compute('triangulateNear')">With nearest neighbors</button>
+			<button onclick="StartCompute('triangulateAll')">With all</button>
+			<button onclick="StartCompute('triangulateNear')">With nearest neighbors</button>
 		</div>
 		<div class="item">
 			<p>Clean up</p>
-			<button onclick="Compute('cleanDang')">Dangling connections</button>
-			<button onclick="Compute('cleanLong')">Long connections</button>
+			<button onclick="StartCompute('cleanDang')">Dangling connections</button>
+			<button onclick="StartCompute('cleanLong')">Long connections</button>
 		</div>
 		<div class="item">
 			<p>Calculate normal</p>
-			<button onclick="Compute('normalPlane')">Plane equation</button>
-			<button onclick="Compute('normalTriang')">Average triangle normal</button>
+			<button onclick="StartCompute('normalPlane')">Plane equation</button>
+			<button onclick="StartCompute('normalTriang')">Average triangle normal</button>
 		</div>
 		<div class="item">
 			<p>Calculate curvature</p>
-			<button onclick="Compute('curvaturePoints')">Angle to points</button>
-			<button onclick="Compute('curvatureNormal')">Change in normal</button>
+			<button onclick="StartCompute('curvaturePoints')">Angle to points</button>
+			<button onclick="StartCompute('curvatureNormal')">Change in normal</button>
 		</div>
 		<div class="item">
 			<p>Filter points</p>
 			<div id="tDis">Threshhold: 0.1</div>
 			<input type="range" title="Threshhold" min="0.0" max="1.0" value="0.1" step="0.01" id="threshhold"
 				onchange="document.getElementById('tDis').innerText='Threshhold: ' + this.value">
-			<button onclick="Compute('filterCurve')">Low curvature</button>
-			<button onclick="Compute('filterAnomaly')">Anomaly</button>
+			<button onclick="StartCompute('filterCurve')">Low curvature</button>
+			<button onclick="StartCompute('filterAnomaly')">Anomaly</button>
 		</div>
 		<div class="item">
 			<p>Noise</p>
 			<div id="nDis">Weight: 0.5</div>
 			<input type="range" title="Weight" min="0.0" max="1.0" value="0.5" step="0.01" id="noise"
 				onchange="document.getElementById('nDis').innerText='Weight: ' + this.value">
-			<button onclick="Compute('noise')">Reduce</button>
+			<button onclick="StartCompute('noise')">Reduce</button>
 		</div>
 	</div>
 </body>

@@ -9,5 +9,6 @@
     ],
     "outDir": "./out",
     "rootDir": "./src",
+    "removeComments": true,
   }
 }
