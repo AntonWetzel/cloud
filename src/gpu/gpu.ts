@@ -102,7 +102,7 @@ export function CreateBuffer(data: Float32Array | Uint32Array | Uint8Array, usag
 export function CreateEmptyBuffer(length: number, usage: GPUFlagsConstant): GPUBuffer {
 	const buffer = device.createBuffer({
 		size:             length,
-		usage:            usage,
+		usage:            GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC | usage,
 		mappedAtCreation: false,
 	})
 	return buffer
@@ -122,7 +122,11 @@ export function CopyBuffer(source: GPUBuffer, target: GPUBuffer, size: number) {
 }
 
 export async function ReadBuffer(buffer: GPUBuffer, size: number): Promise<ArrayBuffer> {
-	const temp = CreateEmptyBuffer(size, GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST)
+	const temp = device.createBuffer({
+		size:             size,
+		usage:            GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
+		mappedAtCreation: false,
+	})
 	// Encode commands for copying buffer to buffer.
 	const copyEncoder = device.createCommandEncoder()
 	copyEncoder.copyBufferToBuffer(

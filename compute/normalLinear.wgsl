@@ -16,8 +16,6 @@
 [[group(0), binding(2)]] var<storage, read> nearest: Indices;
 [[group(0), binding(3)]] var<storage, write> colors: Buffer;
 
-let PI = 3.1415926538;
-
 fn inverse(m: mat3x3<f32>) -> mat3x3<f32> {
 	let det = determinant(m);
 	return mat3x3<f32>(

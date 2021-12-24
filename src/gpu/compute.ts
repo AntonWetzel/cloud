@@ -1,21 +1,24 @@
 import { ConvertURI, CreateBuffer, device, NewModule, ReadBuffer } from './gpu.js'
 
-import cleanDangURI          from '../../compute/cleanDang.wgsl'
-import cleanLongURI          from '../../compute/cleanLong.wgsl'
-import kNearestListURI       from '../../compute/kNearestList.wgsl'
-import kNearestIterURI       from '../../compute/kNearestIter.wgsl'
-import kNearestIterSortedURI from '../../compute/kNearestIterSorted.wgsl'
-import kNearestListSortedURI from '../../compute/kNearestListSorted.wgsl'
-import normalLinearURI       from '../../compute/normalLinear.wgsl'
-import normalTriangURI       from '../../compute/normalTriang.wgsl'
-import curvaturePointsURI    from '../../compute/curvaturePoints.wgsl'
-import curvatureNormalURI    from '../../compute/curvatureNormal.wgsl'
-import triangulateAllURI     from '../../compute/triangulateAll.wgsl'
-import triangulateNearestURI from '../../compute/triangulateNearest.wgsl'
-import reduceLowURI          from '../../compute/reduceLow.wgsl'
-import reduceAnomalyURI      from '../../compute/reduceAnomaly.wgsl'
-import sortURI               from '../../compute/sort.wgsl'
-import noiseURI              from '../../compute/noise.wgsl'
+import cleanDangURI          from 'compute/cleanDang.wgsl'
+import cleanLongURI          from 'compute/cleanLong.wgsl'
+import kNearestListURI       from 'compute/kNearestList.wgsl'
+import kNearestIterURI       from 'compute/kNearestIter.wgsl'
+import kNearestIterSortedURI from 'compute/kNearestIterSorted.wgsl'
+import kNearestListSortedURI from 'compute/kNearestListSorted.wgsl'
+import normalLinearURI       from 'compute/normalLinear.wgsl'
+import normalTriangURI       from 'compute/normalTriang.wgsl'
+import curvaturePointsURI    from 'compute/curvaturePoints.wgsl'
+import curvatureNormalURI    from 'compute/curvatureNormal.wgsl'
+import triangulateAllURI     from 'compute/triangulateAll.wgsl'
+import triangulateNearestURI from 'compute/triangulateNearest.wgsl'
+import reduceLowURI          from 'compute/reduceLow.wgsl'
+import reduceAnomalyURI      from 'compute/reduceAnomaly.wgsl'
+import sortURI               from 'compute/sort.wgsl'
+import noiseURI              from 'compute/noise.wgsl'
+import rippleURI             from 'compute/ripple.wgsl'
+import peekURI               from 'compute/peek.wgsl'
+import threshholdURI         from 'compute/threshhold.wgsl'
 
 let pipelines = {
 	cleanDang:          undefined as GPUComputePipeline,
@@ -34,6 +37,9 @@ let pipelines = {
 	reduceAnomaly:      undefined as GPUComputePipeline,
 	sort:               undefined as GPUComputePipeline,
 	noise:              undefined as GPUComputePipeline,
+	ripple:             undefined as GPUComputePipeline,
+	peek:               undefined as GPUComputePipeline,
+	threshhold:         undefined as GPUComputePipeline,
 }
 
 export function Setup() {
@@ -63,6 +69,9 @@ export function Setup() {
 		reduceAnomaly:      helper(reduceAnomalyURI),
 		sort:               helper(sortURI),
 		noise:              helper(noiseURI),
+		ripple:             helper(rippleURI),
+		peek:               helper(peekURI),
+		threshhold:         helper(threshholdURI),
 	}
 }
 

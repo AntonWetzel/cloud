@@ -99,10 +99,12 @@ Scale cloud: Mouse wheel`
 			<input type="range" title="Weight" min="0.0" max="1.0" value="0.5" step="0.01" id="noise"
 				onchange="document.getElementById('nDis').innerText='Weight: ' + this.value">
 			<button onclick="StartCompute('noise')">Reduce</button>
+			<button onclick="StartCompute('ripple')">Ripple</button>
+			<button onclick="StartCompute('peek')">Peek</button>
+			<button onclick="StartCompute('threshhold')">Threshhold</button>
 		</div>
 	</div>
 </body>
-
 <script src="./bundle.js"></script>
 
 </html>

@@ -1,6 +1,6 @@
 import { aspect, cameraBuffer, ConvertURI, CreateBuffer, device, format, NewModule, renderPass } from './gpu.js'
 import { Position } from './position.js'
-import srcURI from '../../render/triangle.wgsl'
+import srcURI from 'render/triangle.wgsl'
 
 let pipeline: undefined | GPURenderPipeline = undefined
 

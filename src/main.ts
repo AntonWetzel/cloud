@@ -12,6 +12,8 @@ declare global {
 }
 
 document.body.onload = async () => {
+
+
 	const mode = document.getElementById('mode') as HTMLSelectElement
 	const color = document.getElementById('color') as HTMLSelectElement
 	const gridCheckbox = document.getElementById('grid') as HTMLInputElement
@@ -76,8 +78,18 @@ document.body.onload = async () => {
 			[cloud, length] = Loader.Map(length)
 			valid = true
 			break
-		case 'bunny': {
-			const response = await fetch('https://raw.githubusercontent.com/PointCloudLibrary/pcl/master/test/bunny.pcd')
+		case 'bunny':
+		case 'statue':
+			let url = ''
+			switch (name) {
+			case 'bunny':
+				url = 'https://raw.githubusercontent.com/PointCloudLibrary/pcl/master/test/bunny.pcd'
+				break
+			case 'statue':
+				url = 'https://raw.githubusercontent.com/PointCloudLibrary/pcl/master/test/rops_cloud.pcd'
+				break 
+			}
+			const response = await fetch(url)
 			const content = await (await response.blob()).arrayBuffer()
 			const result = Loader.PCD(content)
 			if (result != undefined) {
@@ -87,18 +99,6 @@ document.body.onload = async () => {
 				alert('pcd error')
 			}
 			break		
-		}		
-		case 'statue':
-			const response = await fetch('https://raw.githubusercontent.com/PointCloudLibrary/pcl/master/test/rops_cloud.pcd')
-			const content = await (await response.blob()).arrayBuffer()
-			const result = Loader.PCD(content)
-			if (result != undefined) {
-				[cloud, length] = result
-				valid = true
-			} else {
-				alert('pcd error')
-			}
-			break
 		case 'upload':
 			const input = document.createElement('input')
 			input.type = 'file'
@@ -165,13 +165,6 @@ document.body.onload = async () => {
 				break
 			case 'kNearestListSorted':
 			case 'kNearestIterSorted':
-				//const newCloud = GPU.CreateEmptyBuffer(length * 16, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE)
-				//const newColor = GPU.CreateEmptyBuffer(length * 16, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE)
-				//GPU.Compute('sort', length, [[],[]], [cloud, colors, newCloud, newColor])
-				//cloud.destroy()
-				//colors.destroy()
-				//cloud = newCloud
-				//colors = newColor
 				await GPU.Sort(cloud, length)
 				GPU.Compute(name, length, [[k], []], [cloud, nearest])
 				break
@@ -294,14 +287,44 @@ document.body.onload = async () => {
 			mode.value = 'points'
 			break
 		case 'noise':
+			if (nearest == undefined) {
+				alert('please calculate nearest first')
+				break
+			}
+			const copy = GPU.CreateEmptyBuffer(length * 16, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE)
+			GPU.Compute('noise', length, [[k], []], [cloud, nearest, copy])
+			cloud.destroy()
+			cloud = copy
+			break
+		case 'ripple':
 			if (curvature == undefined) {
 				alert('please calculate the curvature first')
 				break
 			}
-			const copy =  GPU.CreateEmptyBuffer(length * 16, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE)
-			GPU.Compute('noise', length, [[k], [1.0]], [cloud, normals, curvature, copy])
-			cloud.destroy()
-			cloud = copy
+			const derivative =  GPU.CreateEmptyBuffer(length * 16, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE)
+			GPU.Compute('ripple', length, [[k], [5]], [nearest, curvature, derivative])
+			curvature.destroy()
+			curvature = derivative
+			break
+		case 'peek':
+			if (curvature == undefined) {
+				alert('please calculate the curvature first')
+				break
+			}
+			const newCurve =  GPU.CreateEmptyBuffer(length * 16, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE)
+			GPU.Compute('peek', length, [[k], []], [nearest, curvature, newCurve])
+			curvature.destroy()
+			curvature = newCurve
+			break
+		case 'threshhold':
+			if (curvature == undefined) {
+				alert('please calculate the curvature first')
+				break
+			}
+			const threshhold = GPU.CreateEmptyBuffer(length * 16, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE)
+			GPU.Compute('threshhold', length, [[k], [0.2]], [curvature, threshhold])
+			curvature.destroy()
+			curvature = threshhold
 			break
 		default:
 			alert('wrong name: ' + name)

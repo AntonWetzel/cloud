@@ -1,6 +1,6 @@
 import { aspect, cameraBuffer, ConvertURI, CreateBuffer, device, format, NewModule, renderPass } from './gpu.js'
 import { Position } from './position.js'
-import srcURI from '../../render/cloud.wgsl'
+import srcURI from 'render/cloud.wgsl'
 
 let quadBuffer = undefined as GPUBuffer | undefined
 

@@ -9,14 +9,13 @@
 [[block]] struct Parameter {
 	length: u32;
 	k: u32;
+	weight: f32;
 };
 
 [[group(0), binding(0)]] var<storage, read> parameter: Parameter;
-[[group(0), binding(1)]] var<storage, read> cloud: Buffer;
-[[group(0), binding(2)]] var<storage, read> nearest: Indices;
-[[group(0), binding(3)]] var<storage, write> colors: Buffer;
-
-let PI = 3.1415926538;
+[[group(0), binding(1)]] var<storage, read> nearest: Indices;
+[[group(0), binding(2)]] var<storage, read> curvature: Buffer;
+[[group(0), binding(3)]] var<storage, write> derivative: Buffer;
 
 [[stage(compute), workgroup_size(256)]]
 fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
@@ -25,18 +24,14 @@ fn main([[builtin(global_invocation_id)]] global : vec3<u32>) {
 		return;
 	}
 	let offset = global.x * parameter.k;
-	let p = cloud.data[id];
-	var last = cloud.data[nearest.data[offset] ];
-	var n = vec3<f32>(0.0, 0.0, 0.0);
+	var sum = curvature.data[id].x * parameter.weight;
+	var count = 0u;
 	for (
-		var count = 1u;
+		;
 		nearest.data[offset + count] != id && count < parameter.k;
 		count = count + 1u
 	) {
-		let current = cloud.data[nearest.data[offset + count] ];
-		n = n + cross(last - p, current - p);
-		last = current;
+		sum = sum + curvature.data[nearest.data[offset + count]].x;
 	}
-
-	colors.data[id] =  normalize(n);
+	derivative.data[id] = vec3<f32>(sum / (f32(count) + parameter.weight), 0.0, 0.0);
 }

@@ -1,5 +1,6 @@
 import typescript from 'rollup-plugin-typescript2'
 import url from '@rollup/plugin-url'
+import includePaths from 'rollup-plugin-includepaths'
 
 export default {
 	input: './src/main.ts',
@@ -7,7 +8,12 @@ export default {
 		file: './bundle.js',
 		format: 'iife',
 	},
+
 	plugins: [
+		includePaths({
+			paths: ['.'],
+			extensions: ['.wgsl']
+		}),
 		url({
 			include: [
 				'**/*.wgsl',
