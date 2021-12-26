@@ -12,63 +12,60 @@ declare global {
 
 const formIdOffset = 1
 const computeIdOffset = 33
+const renderFlag = GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE
+const computeFlag = GPUBufferUsage.STORAGE
 
-type forms = 'sphere' | 'cube' | 'map' | 'bunny' | 'statue'
+
 async function main(socket: WebSocket) {
 
-	const queue: (forms | 'nearestIter')[] = []
-	const extraQueue: number[] = []
-
-	socket.onmessage = async (ev: MessageEvent<string | Blob>) => {
-		if (typeof ev.data  == 'string') {
-			console.log('got: ' + ev.data)
-		} else {
-			const data = await ev.data.arrayBuffer()
-			if (data.byteLength == 0) {
-				alert('socket data transfer error')
+	socket.onmessage = async (ev: MessageEvent<Blob>) => {
+		let data = await ev.data.arrayBuffer()
+		console.log('message: ', data.byteLength)
+		const info = new Int32Array(data)[0]
+		data = data.slice(4)
+		switch (info) {
+		case 1:
+			cloud.destroy()
+			colors.destroy()
+			if (nearest != undefined) {
+				nearest.destroy()
+				nearest = undefined
 			}
-			switch (queue.shift()) {
-			case 'sphere':
-			case 'cube':
-			case 'map':
-			case 'bunny':
-			case 'statue':
-				length = extraQueue.shift()
-				cloud.destroy()
-				colors.destroy()
-				colors = Loader.Color(length)
-				if (nearest != undefined) {
-					nearest.destroy()
-					nearest = undefined
-				}
-				if (normals != undefined) {
-					normals.destroy()
-					normals = undefined
-				}
-				if (curvature != undefined) {
-					curvature.destroy()
-					curvature =undefined
-				}
-				cloud = GPU.CreateBuffer(new Float32Array(data), GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE)
-				mode.value = 'points'
-				color.value = 'color'
-				break
-			case 'nearestIter':
-				const nData = new Uint32Array(data)
-				if (nearest != undefined) {
-					nearest.destroy()
-				}
-				nearest = GPU.CreateBuffer(nData, GPUBufferUsage.STORAGE)
-				k = extraQueue.shift()
-				mode.value = 'connections'
-			}			
+			if (normals != undefined) {
+				normals.destroy()
+				normals = undefined
+			}
+			if (curvature != undefined) {
+				curvature.destroy()
+				curvature =undefined
+			}
+			length = new Int32Array(data)[0]
+			data = data.slice(4)
+			if (length * 16 != data.byteLength) {
+				alert('wrong length')
+				console.log(length, data.byteLength)
+			}
+			cloud = GPU.CreateBuffer(new Float32Array(data), renderFlag)
+			colors = Loader.Color(length)
+			mode.value = 'points'
+			color.value = 'color'
+			break
+		case 2:
+			if (nearest != undefined) {
+				nearest.destroy()
+			}
+			k = new Int32Array(data)[0]
+			data = data.slice(4)
+			nearest = GPU.CreateBuffer(new Uint32Array(data), computeFlag)
+			mode.value = 'connections'
+			break
 		}
 	}
-	
+
 	const mode = document.getElementById('mode') as HTMLSelectElement
 	const color = document.getElementById('color') as HTMLSelectElement
 	const gridCheckbox = document.getElementById('grid') as HTMLInputElement
-	
+
 	const display = document.getElementById('display') as HTMLDivElement
 	const canvas = await GPU.Setup(display.clientWidth, display.clientHeight)
 	if (canvas == undefined) {
@@ -92,7 +89,7 @@ async function main(socket: WebSocket) {
 
 	const cam = new GPU.Camera(Math.PI / 4)
 	cam.Translate(0, 5, 30)
-		
+
 	const increase = new GPU.Position()
 	increase.Scale(5, 5, 5)
 	const normal = new GPU.Position()
@@ -100,14 +97,14 @@ async function main(socket: WebSocket) {
 
 	let k = 0
 	let length = 0
-	
+
 	let cloud = GPU.CreateEmptyBuffer(0, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE)
 	let colors = GPU.CreateEmptyBuffer(0, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE)
 	let nearest : GPUBuffer = undefined
 	let normals: GPUBuffer = undefined
 	let curvature: GPUBuffer = undefined
-	
-	window.CreateForm =  (name: forms) => {
+
+	window.CreateForm =  (name: string) => {
 		const sizeDiv = document.getElementById('size') as HTMLInputElement
 
 		const data = new ArrayBuffer(8)
@@ -123,60 +120,6 @@ async function main(socket: WebSocket) {
 		new Int32Array(data)[0] = id
 		new Int32Array(data)[1] = size
 		socket.send(data)
-		queue.push(name)
-		extraQueue.push(size)
-		/*
-		case 'cube':
-			cloud = Loader.Cube(length)
-			valid = true
-			break
-		case 'map':
-			[cloud, length] = Loader.Map(length)
-			valid = true
-			break
-		case 'bunny':
-		case 'statue':
-			let url = ''
-			switch (name) {
-			case 'bunny':
-				url = 'https://raw.githubusercontent.com/PointCloudLibrary/pcl/master/test/bunny.pcd'
-				break
-			case 'statue':
-				url = 'https://raw.githubusercontent.com/PointCloudLibrary/pcl/master/test/rops_cloud.pcd'
-				break 
-			}
-			const response = await fetch(url)
-			const content = await (await response.blob()).arrayBuffer()
-			const result = Loader.PCD(content)
-			if (result != undefined) {
-				[cloud, length] = result
-				valid = true
-			} else {
-				alert('pcd error')
-			}
-			break		
-		case 'upload':
-			const input = document.createElement('input')
-			input.type = 'file'
-			input.accept = '.pcd'
-			input.multiple = false
-			input.onchange = async () => {
-				if (input.files.length == 0) {
-					alert('please select file')
-					return
-				}
-				const file = input.files[0]
-				const result = Loader.PCD(await file.arrayBuffer())
-				if (result != undefined) {
-					[cloud, length] = result
-					valid = true
-				} else {
-					alert('pcd error')
-				}
-			}
-			input.click()
-		}
-		*/
 	}
 	window.ShowText = (text: string) => {
 		const hint = document.createElement('div')
@@ -191,37 +134,22 @@ async function main(socket: WebSocket) {
 	window.StartCompute = async (name: string) => {
 		switch (name) {
 		case 'kNearestIter':
+		case 'kNearestList':
+		case 'kNearestIterSorted':
+		case 'kNearestListSorted':
 			const test = document.getElementById('k') as HTMLInputElement
 			const t_k = parseInt(test.value)
 			const data = new ArrayBuffer(8)
-			new Int32Array(data)[0] = computeIdOffset + 0
+			let id: number
+			switch (name) {
+			case 'kNearestIter': id = 0; break
+			case 'kNearestList': id = 1; break
+			case 'kNearestIterSorted': id = 2; break
+			case 'kNearestListSorted': id = 3; break
+			}
+			new Int32Array(data)[0] = computeIdOffset + id
 			new Int32Array(data)[1] = t_k
 			socket.send(data)
-			queue.push('nearestIter')
-			extraQueue.push(t_k)
-			break
-			//case 'kNearestIter':
-		case 'kNearestList':
-		case 'kNearestListSorted':
-		case 'kNearestIterSorted':
-			if (nearest != undefined) {
-				nearest.destroy()
-			}
-			const kDiv = document.getElementById('k') as HTMLInputElement
-			k = parseInt(kDiv.value)
-			nearest = GPU.CreateEmptyBuffer(length * k * 4, GPUBufferUsage.STORAGE)
-			switch (name) {
-			case 'kNearestList':
-			//case 'kNearestIter':
-				GPU.Compute(name, length, [[k], []], [cloud,nearest])
-				break
-			case 'kNearestListSorted':
-			case 'kNearestIterSorted':
-				await GPU.Sort(cloud, length)
-				GPU.Compute(name, length, [[k], []], [cloud, nearest])
-				break
-			}
-			mode.value = 'connections'
 			break
 		case 'triangulateAll':
 			k = GPU.TriangulateK
@@ -410,6 +338,7 @@ async function main(socket: WebSocket) {
 			cam.RotateGlobalY(-ev.movementX / 200)
 		}
 	}
+	window.CreateForm('sphere')
 
 	let last = await new Promise(requestAnimationFrame)
 	const run = true

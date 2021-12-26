@@ -45,7 +45,7 @@ Scale cloud: Mouse wheel`
 		</div>
 		<div class="item">
 			<p>Generate Input</p>
-			<input type="number" title="Size" min="100" max="150000" value="50000" step="1" id="size">
+			<input type="number" title="Size" value="50000" step="1" id="size">
 			<button onclick="CreateForm('sphere')">Sphere</button>
 			<button onclick="CreateForm('cube')">Cube</button>
 			<button onclick="CreateForm('map')">Map</button>
@@ -54,16 +54,16 @@ Scale cloud: Mouse wheel`
 			<p>Load PCD</p>
 			<button onclick="CreateForm('bunny')">Bunny</button>
 			<button onclick="CreateForm('statue')">Statue</button>
-			<button onclick="CreateForm('upload')">Upload</button>
+			<!--button onclick="CreateForm('upload')">Upload</button-->
 		</div>
 
 		<div class="item">
 			<p>Nearest neighbors</p>
 			<input type="number" title="K" min="1" max="128" value="64" step="1" id="k">
-			<button onclick="StartCompute('kNearestList')">List</button>
 			<button onclick="StartCompute('kNearestIter')">Iterated</button>
-			<button onclick="StartCompute('kNearestListSorted')">Sort and List</button>
+			<button onclick="StartCompute('kNearestList')">List</button>
 			<button onclick="StartCompute('kNearestIterSorted')">Sort and Iterated</button>
+			<button onclick="StartCompute('kNearestListSorted')">Sort and List</button>
 		</div>
 		<div class="item">
 			<p>Triangulate</p>

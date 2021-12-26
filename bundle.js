@@ -761,44 +761,6 @@
 	    renderPass.draw(length * k * 3);
 	}
 
-	async function Sort(data, length) {
-	    const arr = new Float32Array(await ReadBuffer(data, length * 4 * 4));
-	    quickSort(arr, 0, length - 1);
-	    device.queue.writeBuffer(data, 0, arr);
-	}
-	function quickSort(arr, low, high) {
-	    if (low < high) {
-	        const id = Math.floor((low + high) / 2);
-	        swap(arr, id, high);
-	        const pivot = arr[high * 4];
-	        let i = (low - 1);
-	        for (let j = low; j <= high - 1; j++) {
-	            if (arr[j * 4] < pivot) {
-	                i++;
-	                swap(arr, i, j);
-	            }
-	        }
-	        swap(arr, i + 1, high);
-	        const pi = (i + 1);
-	        quickSort(arr, low, pi - 1);
-	        quickSort(arr, pi + 1, high);
-	    }
-	}
-	function swap(arr, a, b) {
-	    const t0 = arr[a * 4 + 0];
-	    const t1 = arr[a * 4 + 1];
-	    const t2 = arr[a * 4 + 2];
-	    const t3 = arr[a * 4 + 3];
-	    arr[a * 4 + 0] = arr[b * 4 + 0];
-	    arr[a * 4 + 1] = arr[b * 4 + 1];
-	    arr[a * 4 + 2] = arr[b * 4 + 2];
-	    arr[a * 4 + 3] = arr[b * 4 + 3];
-	    arr[b * 4 + 0] = t0;
-	    arr[b * 4 + 1] = t1;
-	    arr[b * 4 + 2] = t2;
-	    arr[b * 4 + 3] = t3;
-	}
-
 	async function Setup(width, height) {
 	    const c = await Setup$2(width, height);
 	    if (c == undefined) {
@@ -811,9 +773,9 @@
 	function Create$1(points) {
 	    const colors = new Float32Array(points * 4);
 	    for (let i = 0; i < points; i++) {
-	        colors[i * 4 + 0] = 0.2 + 0.5 * Math.random();
-	        colors[i * 4 + 1] = 0.2 + 0.5 * Math.random();
-	        colors[i * 4 + 2] = 0.2 + 0.5 * Math.random();
+	        colors[i * 4 + 0] = 0.2 + 0.5 * i / points;
+	        colors[i * 4 + 1] = 0.2 + 0.5 * i / points;
+	        colors[i * 4 + 2] = 0.2 + 0.5 * i / points;
 	    }
 	    return CreateBuffer(colors, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE);
 	}
@@ -868,53 +830,50 @@
 
 	const formIdOffset = 1;
 	const computeIdOffset = 33;
+	const renderFlag = GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE;
+	const computeFlag = GPUBufferUsage.STORAGE;
 	async function main(socket) {
-	    const queue = [];
-	    const extraQueue = [];
 	    socket.onmessage = async (ev) => {
-	        if (typeof ev.data == 'string') {
-	            console.log('got: ' + ev.data);
-	        }
-	        else {
-	            const data = await ev.data.arrayBuffer();
-	            if (data.byteLength == 0) {
-	                alert('socket data transfer error');
-	            }
-	            switch (queue.shift()) {
-	                case 'sphere':
-	                case 'cube':
-	                case 'map':
-	                case 'bunny':
-	                case 'statue':
-	                    length = extraQueue.shift();
-	                    cloud.destroy();
-	                    colors.destroy();
-	                    colors = Create$1(length);
-	                    if (nearest != undefined) {
-	                        nearest.destroy();
-	                        nearest = undefined;
-	                    }
-	                    if (normals != undefined) {
-	                        normals.destroy();
-	                        normals = undefined;
-	                    }
-	                    if (curvature != undefined) {
-	                        curvature.destroy();
-	                        curvature = undefined;
-	                    }
-	                    cloud = CreateBuffer(new Float32Array(data), GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE);
-	                    mode.value = 'points';
-	                    color.value = 'color';
-	                    break;
-	                case 'nearestIter':
-	                    const nData = new Uint32Array(data);
-	                    if (nearest != undefined) {
-	                        nearest.destroy();
-	                    }
-	                    nearest = CreateBuffer(nData, GPUBufferUsage.STORAGE);
-	                    k = extraQueue.shift();
-	                    mode.value = 'connections';
-	            }
+	        let data = await ev.data.arrayBuffer();
+	        console.log('message: ', data.byteLength);
+	        const info = new Int32Array(data)[0];
+	        data = data.slice(4);
+	        switch (info) {
+	            case 1:
+	                cloud.destroy();
+	                colors.destroy();
+	                if (nearest != undefined) {
+	                    nearest.destroy();
+	                    nearest = undefined;
+	                }
+	                if (normals != undefined) {
+	                    normals.destroy();
+	                    normals = undefined;
+	                }
+	                if (curvature != undefined) {
+	                    curvature.destroy();
+	                    curvature = undefined;
+	                }
+	                length = new Int32Array(data)[0];
+	                data = data.slice(4);
+	                if (length * 16 != data.byteLength) {
+	                    alert('wrong length');
+	                    console.log(length, data.byteLength);
+	                }
+	                cloud = CreateBuffer(new Float32Array(data), renderFlag);
+	                colors = Create$1(length);
+	                mode.value = 'points';
+	                color.value = 'color';
+	                break;
+	            case 2:
+	                if (nearest != undefined) {
+	                    nearest.destroy();
+	                }
+	                k = new Int32Array(data)[0];
+	                data = data.slice(4);
+	                nearest = CreateBuffer(new Uint32Array(data), computeFlag);
+	                mode.value = 'connections';
+	                break;
 	        }
 	    };
 	    const mode = document.getElementById('mode');
@@ -979,8 +938,6 @@
 	        new Int32Array(data)[0] = id;
 	        new Int32Array(data)[1] = size;
 	        socket.send(data);
-	        queue.push(name);
-	        extraQueue.push(size);
 	    };
 	    window.ShowText = (text) => {
 	        const hint = document.createElement('div');
@@ -994,35 +951,30 @@
 	    window.StartCompute = async (name) => {
 	        switch (name) {
 	            case 'kNearestIter':
+	            case 'kNearestList':
+	            case 'kNearestIterSorted':
+	            case 'kNearestListSorted':
 	                const test = document.getElementById('k');
 	                const t_k = parseInt(test.value);
 	                const data = new ArrayBuffer(8);
-	                new Int32Array(data)[0] = computeIdOffset + 0;
-	                new Int32Array(data)[1] = t_k;
-	                socket.send(data);
-	                queue.push('nearestIter');
-	                extraQueue.push(t_k);
-	                break;
-	            case 'kNearestList':
-	            case 'kNearestListSorted':
-	            case 'kNearestIterSorted':
-	                if (nearest != undefined) {
-	                    nearest.destroy();
-	                }
-	                const kDiv = document.getElementById('k');
-	                k = parseInt(kDiv.value);
-	                nearest = CreateEmptyBuffer(length * k * 4, GPUBufferUsage.STORAGE);
+	                let id;
 	                switch (name) {
+	                    case 'kNearestIter':
+	                        id = 0;
+	                        break;
 	                    case 'kNearestList':
-	                        Compute(name, length, [[k], []], [cloud, nearest]);
+	                        id = 1;
+	                        break;
+	                    case 'kNearestIterSorted':
+	                        id = 2;
 	                        break;
 	                    case 'kNearestListSorted':
-	                    case 'kNearestIterSorted':
-	                        await Sort(cloud, length);
-	                        Compute(name, length, [[k], []], [cloud, nearest]);
+	                        id = 3;
 	                        break;
 	                }
-	                mode.value = 'connections';
+	                new Int32Array(data)[0] = computeIdOffset + id;
+	                new Int32Array(data)[1] = t_k;
+	                socket.send(data);
 	                break;
 	            case 'triangulateAll':
 	                k = K;
@@ -1207,6 +1159,7 @@
 	            cam.RotateGlobalY(-ev.movementX / 200);
 	        }
 	    };
+	    window.CreateForm('sphere');
 	    let last = await new Promise(requestAnimationFrame);
 	    const run = true;
 	    const radDiv = document.getElementById('radius');

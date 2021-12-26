@@ -42,7 +42,7 @@
 				},
 				"dependsOn": [
 					"rollup",
-					"live",
+					"server",
 				]
 			},
 			{
@@ -60,7 +60,7 @@
 				"problemMatcher": [],
 			},
 			{
-				"label": "live",
+				"label": "server",
 				"options": {
 					"cwd": "${workspaceFolder:all}"
 				},
