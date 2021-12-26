@@ -6,7 +6,11 @@
 		},
 		{
 			"path": "./src",
-			"name": "src"
+			"name": "client"
+		},
+		{
+			"path": "./server",
+			"name": "server"
 		},
 		{
 			"path": "./render",
@@ -57,7 +61,15 @@
 			},
 			{
 				"label": "live",
-				"command": "${command:extension.liveServer.goOnline}"
+				"options": {
+					"cwd": "${workspaceFolder:all}"
+				},
+				"type": "shell",
+				"command": "python",
+				"args": [
+					"server/main.py",
+				],
+				"problemMatcher": [],
 			},
 		]
 	}

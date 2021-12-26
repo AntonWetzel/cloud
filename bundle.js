@@ -808,7 +808,7 @@
 	    return c;
 	}
 
-	function Create$5(points) {
+	function Create$1(points) {
 	    const colors = new Float32Array(points * 4);
 	    for (let i = 0; i < points; i++) {
 	        colors[i * 4 + 0] = 0.2 + 0.5 * Math.random();
@@ -818,49 +818,7 @@
 	    return CreateBuffer(colors, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE);
 	}
 
-	function Create$4(points, noise = 0.001) {
-	    const vertices = new Float32Array(points * 4);
-	    for (let i = 0; i < points; i++) {
-	        switch (Math.floor(Math.random() * 6)) {
-	            case 0:
-	                vertices[i * 4 + 0] = Math.random() * 2 - 1;
-	                vertices[i * 4 + 1] = Math.random() * 2 - 1;
-	                vertices[i * 4 + 2] = -1;
-	                break;
-	            case 1:
-	                vertices[i * 4 + 0] = Math.random() * 2 - 1;
-	                vertices[i * 4 + 1] = Math.random() * 2 - 1;
-	                vertices[i * 4 + 2] = 1;
-	                break;
-	            case 2:
-	                vertices[i * 4 + 0] = Math.random() * 2 - 1;
-	                vertices[i * 4 + 1] = -1;
-	                vertices[i * 4 + 2] = Math.random() * 2 - 1;
-	                break;
-	            case 3:
-	                vertices[i * 4 + 0] = Math.random() * 2 - 1;
-	                vertices[i * 4 + 1] = 1;
-	                vertices[i * 4 + 2] = Math.random() * 2 - 1;
-	                break;
-	            case 4:
-	                vertices[i * 4 + 0] = -1;
-	                vertices[i * 4 + 1] = Math.random() * 2 - 1;
-	                vertices[i * 4 + 2] = Math.random() * 2 - 1;
-	                break;
-	            case 5:
-	                vertices[i * 4 + 0] = 1;
-	                vertices[i * 4 + 1] = Math.random() * 2 - 1;
-	                vertices[i * 4 + 2] = Math.random() * 2 - 1;
-	                break;
-	        }
-	        vertices[i * 4 + 0] += noise * Math.random();
-	        vertices[i * 4 + 1] += noise * Math.random();
-	        vertices[i * 4 + 2] += noise * Math.random();
-	    }
-	    return CreateBuffer(vertices, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE);
-	}
-
-	function Create$3(amount) {
+	function Create(amount) {
 	    const positions = new Float32Array((amount * 4 + 3) * 8);
 	    const colors = new Float32Array((amount * 4 + 3) * 8);
 	    const addLine = (idx, start, end, color, endColor = undefined) => {
@@ -908,657 +866,57 @@
 	    };
 	}
 
-	function LZF(inData, outLength) {
-	    const inLength = inData.length;
-	    const outData = new Uint8Array(outLength);
-	    let inPtr = 0;
-	    let outPtr = 0;
-	    do {
-	        let ctrl = inData[inPtr++];
-	        if (ctrl < 1 << 5) {
-	            ctrl++;
-	            if (outPtr + ctrl > outLength)
-	                throw new Error('Output buffer is not large enough');
-	            if (inPtr + ctrl > inLength)
-	                throw new Error('Invalid compressed data');
-	            do {
-	                outData[outPtr++] = inData[inPtr++];
-	            } while (--ctrl);
+	const formIdOffset = 1;
+	const computeIdOffset = 33;
+	async function main(socket) {
+	    const queue = [];
+	    const extraQueue = [];
+	    socket.onmessage = async (ev) => {
+	        if (typeof ev.data == 'string') {
+	            console.log('got: ' + ev.data);
 	        }
 	        else {
-	            let len = ctrl >> 5;
-	            let ref = outPtr - ((ctrl & 0x1f) << 8) - 1;
-	            if (inPtr >= inLength)
-	                throw new Error('Invalid compressed data');
-	            if (len === 7) {
-	                len += inData[inPtr++];
-	                if (inPtr >= inLength)
-	                    throw new Error('Invalid compressed data');
+	            const data = await ev.data.arrayBuffer();
+	            if (data.byteLength == 0) {
+	                alert('socket data transfer error');
 	            }
-	            ref -= inData[inPtr++];
-	            if (outPtr + len + 2 > outLength)
-	                throw new Error('Output buffer is not large enough');
-	            if (ref < 0)
-	                throw new Error('Invalid compressed data');
-	            if (ref >= outPtr)
-	                throw new Error('Invalid compressed data');
-	            do {
-	                outData[outPtr++] = outData[ref++];
-	            } while (--len + 2);
-	        }
-	    } while (inPtr < inLength);
-	    return outData;
-	}
-
-	const littleEndian = true;
-	function Create$2(data) {
-	    const header = parseHeader(data);
-	    if (header == null) {
-	        return undefined;
-	    }
-	    const offset = header.offset;
-	    let position = undefined;
-	    if (offset.x !== undefined && offset.y !== undefined && offset.z !== undefined) {
-	        position = new Float32Array(header.points * 4);
-	    }
-	    let color = undefined;
-	    let color_offset = undefined;
-	    if (offset.rgb !== undefined || offset.rgba !== undefined) {
-	        color = new Float32Array(header.points * 4);
-	        color_offset = offset.rgb === undefined ? offset.rgba : offset.rgb;
-	    }
-	    if (header.data === 'ascii') {
-	        const charArrayView = new Uint8Array(data);
-	        let dataString = '';
-	        for (let j = header.headerLen; j < data.byteLength; j++) {
-	            dataString += String.fromCharCode(charArrayView[j]);
-	        }
-	        const lines = dataString.split('\n');
-	        let i3 = 0;
-	        for (let i = 0; i < lines.length; i++, i3 += 4) {
-	            const line = lines[i].split(' ');
-	            if (position !== undefined) {
-	                position[i3 + 0] = parseFloat(line[offset.x]);
-	                position[i3 + 1] = parseFloat(line[offset.y]);
-	                position[i3 + 2] = parseFloat(line[offset.z]);
-	            }
-	            if (color !== undefined) {
-	                let c = undefined;
-	                if (offset.rgba !== undefined) {
-	                    c = new Uint32Array([parseInt(line[offset.rgba])]);
-	                }
-	                else if (offset.rgb !== undefined) {
-	                    c = new Float32Array([parseFloat(line[offset.rgb])]);
-	                }
-	                const dataview = new Uint8Array(c.buffer, 0);
-	                color[i3 + 2] = dataview[0] / 255.0;
-	                color[i3 + 1] = dataview[1] / 255.0;
-	                color[i3 + 0] = dataview[2] / 255.0;
+	            switch (queue.shift()) {
+	                case 'sphere':
+	                case 'cube':
+	                case 'map':
+	                case 'bunny':
+	                case 'statue':
+	                    length = extraQueue.shift();
+	                    cloud.destroy();
+	                    colors.destroy();
+	                    colors = Create$1(length);
+	                    if (nearest != undefined) {
+	                        nearest.destroy();
+	                        nearest = undefined;
+	                    }
+	                    if (normals != undefined) {
+	                        normals.destroy();
+	                        normals = undefined;
+	                    }
+	                    if (curvature != undefined) {
+	                        curvature.destroy();
+	                        curvature = undefined;
+	                    }
+	                    cloud = CreateBuffer(new Float32Array(data), GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE);
+	                    mode.value = 'points';
+	                    color.value = 'color';
+	                    break;
+	                case 'nearestIter':
+	                    const nData = new Uint32Array(data);
+	                    if (nearest != undefined) {
+	                        nearest.destroy();
+	                    }
+	                    nearest = CreateBuffer(nData, GPUBufferUsage.STORAGE);
+	                    k = extraQueue.shift();
+	                    mode.value = 'connections';
 	            }
 	        }
-	    }
-	    else if (header.data === 'binary') {
-	        let row = 0;
-	        const dataArrayView = new DataView(data, header.headerLen);
-	        for (let p = 0; p < header.points; row += header.rowSize, p++) {
-	            if (position !== undefined) {
-	                position[p * 4 + 0] = dataArrayView.getFloat32(row + offset.x, littleEndian);
-	                position[p * 4 + 1] = dataArrayView.getFloat32(row + offset.y, littleEndian);
-	                position[p * 4 + 2] = dataArrayView.getFloat32(row + offset.z, littleEndian);
-	            }
-	            if (color !== undefined) {
-	                color[p * 4 + 2] = dataArrayView.getUint8(row + color_offset + 0) / 255.0;
-	                color[p * 4 + 1] = dataArrayView.getUint8(row + color_offset + 1) / 255.0;
-	                color[p * 4 + 0] = dataArrayView.getUint8(row + color_offset + 2) / 255.0;
-	            }
-	        }
-	    }
-	    else if (header.data === 'binary_compressed') {
-	        const sizes = new Uint32Array(data.slice(header.headerLen, header.headerLen + 8));
-	        const compressedSize = sizes[0];
-	        const decompressedSize = sizes[1];
-	        const decompressed = LZF(new Uint8Array(data, header.headerLen + 8, compressedSize), decompressedSize);
-	        const dataArrayView = new DataView(decompressed.buffer);
-	        for (let p = 0; p < header.points; p++) {
-	            if (position !== undefined) {
-	                position[p * 4 + 0] = dataArrayView.getFloat32(offset.x + p * 4, littleEndian);
-	                position[p * 4 + 1] = dataArrayView.getFloat32(offset.y + p * 4, littleEndian);
-	                position[p * 4 + 2] = dataArrayView.getFloat32(offset.z + p * 4, littleEndian);
-	            }
-	            if (color !== undefined) {
-	                color[p * 4 + 2] = dataArrayView.getUint8(color_offset + p * 4 + 0) / 255.0;
-	                color[p * 4 + 1] = dataArrayView.getUint8(color_offset + p * 4 + 1) / 255.0;
-	                color[p * 4 + 0] = dataArrayView.getUint8(color_offset + p * 4 + 2) / 255.0;
-	            }
-	        }
-	    }
-	    if (position == undefined) {
-	        return undefined;
-	    }
-	    let x = 0;
-	    let y = 0;
-	    let z = 0;
-	    for (let i = 0; i < position.length; i += 4) {
-	        x += position[i + 0];
-	        y += position[i + 1];
-	        z += position[i + 2];
-	    }
-	    x /= position.length / 4;
-	    y /= position.length / 4;
-	    z /= position.length / 4;
-	    for (let i = 0; i < position.length; i += 4) {
-	        position[i + 0] -= x;
-	        position[i + 1] -= y;
-	        position[i + 2] -= z;
-	    }
-	    console.log('Size:', position.length / 4);
-	    return [
-	        CreateBuffer(position, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE),
-	        header.points,
-	    ];
-	}
-	function parseHeader(binaryData) {
-	    let headerText = '';
-	    const charArray = new Uint8Array(binaryData);
-	    let i = 0;
-	    const max = charArray.length;
-	    while (i < max && headerText.search(/[\r\n]DATA\s(\S*)\s/i) === -1) {
-	        headerText += String.fromCharCode(charArray[i++]);
-	    }
-	    const result1 = headerText.search(/[\r\n]DATA\s(\S*)\s/i);
-	    const result2 = /[\r\n]DATA\s(\S*)\s/i.exec(headerText.substr(result1 - 1));
-	    if (result1 == undefined || result2 == undefined) {
-	        return null;
-	    }
-	    const header = {};
-	    header.data = result2[1];
-	    header.headerLen = result2[0].length + result1;
-	    header.str = headerText.substr(0, header.headerLen);
-	    header.str = header.str.replace(/#.*/gi, '');
-	    const version = /VERSION (.*)/i.exec(header.str);
-	    if (version !== null) {
-	        header.version = parseFloat(version[1]);
-	    }
-	    const fields = /FIELDS (.*)/i.exec(header.str);
-	    if (fields !== null) {
-	        header.fields = fields[1].split(' ');
-	    }
-	    const size = /SIZE (.*)/i.exec(header.str);
-	    if (size !== null) {
-	        header.size = size[1].split(' ').map(function (x) {
-	            return parseInt(x, 10);
-	        });
-	    }
-	    const type = /TYPE (.*)/i.exec(header.str);
-	    if (type !== null) {
-	        header.type = type[1].split(' ');
-	    }
-	    const count = /COUNT (.*)/i.exec(header.str);
-	    if (count !== null) {
-	        header.count = count[1].split(' ').map(function (x) {
-	            return parseInt(x, 10);
-	        });
-	    }
-	    const width = /WIDTH (.*)/i.exec(header.str);
-	    if (width !== null) {
-	        header.width = parseInt(width[1]);
-	    }
-	    const height = /HEIGHT (.*)/i.exec(header.str);
-	    if (height !== null) {
-	        header.height = parseInt(height[1]);
-	    }
-	    const viewpoint = /VIEWPOINT (.*)/i.exec(header.str);
-	    if (viewpoint !== null) {
-	        header.viewpoint = viewpoint[1];
-	    }
-	    const points = /POINTS (.*)/i.exec(header.str);
-	    if (points !== null) {
-	        header.points = parseInt(points[1], 10);
-	    }
-	    if (header.points === null) {
-	        header.points = header.width * header.height;
-	    }
-	    if (header.count == undefined) {
-	        header.count = [];
-	        for (i = 0; i < header.fields.length; i++) {
-	            header.count.push(1);
-	        }
-	    }
-	    header.offset = {};
-	    let sizeSum = 0;
-	    for (let j = 0; j < header.fields.length; j++) {
-	        if (header.data === 'ascii') {
-	            header.offset[header.fields[j]] = j;
-	        }
-	        else if (header.data === 'binary') {
-	            header.offset[header.fields[j]] = sizeSum;
-	            sizeSum += header.size[j];
-	        }
-	        else if (header.data === 'binary_compressed') {
-	            header.offset[header.fields[j]] = sizeSum;
-	            sizeSum += header.size[j] * header.points;
-	        }
-	    }
-	    header.rowSize = sizeSum;
-	    return header;
-	}
-
-	function Create$1(points) {
-	    const vertices = new Float32Array(points * 4);
-	    for (let i = 0; i < points; i++) {
-	        const long = Math.acos(Math.random() * 2 - 1);
-	        const lat = Math.random() * 2 * Math.PI;
-	        vertices[i * 4 + 0] = Math.sin(lat) * Math.sin(long);
-	        vertices[i * 4 + 1] = Math.cos(long);
-	        vertices[i * 4 + 2] = Math.cos(lat) * Math.sin(long);
-	    }
-	    return CreateBuffer(vertices, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE);
-	}
-
-	const F2 = 0.5 * (Math.sqrt(3.0) - 1.0);
-	const G2 = (3.0 - Math.sqrt(3.0)) / 6.0;
-	const F3 = 1.0 / 3.0;
-	const G3 = 1.0 / 6.0;
-	const F4 = (Math.sqrt(5.0) - 1.0) / 4.0;
-	const G4 = (5.0 - Math.sqrt(5.0)) / 20.0;
-	const grad3 = new Float32Array([1, 1, 0,
-	    -1, 1, 0,
-	    1, -1, 0,
-	    -1, -1, 0,
-	    1, 0, 1,
-	    -1, 0, 1,
-	    1, 0, -1,
-	    -1, 0, -1,
-	    0, 1, 1,
-	    0, -1, 1,
-	    0, 1, -1,
-	    0, -1, -1]);
-	const grad4 = new Float32Array([0, 1, 1, 1, 0, 1, 1, -1, 0, 1, -1, 1, 0, 1, -1, -1,
-	    0, -1, 1, 1, 0, -1, 1, -1, 0, -1, -1, 1, 0, -1, -1, -1,
-	    1, 0, 1, 1, 1, 0, 1, -1, 1, 0, -1, 1, 1, 0, -1, -1,
-	    -1, 0, 1, 1, -1, 0, 1, -1, -1, 0, -1, 1, -1, 0, -1, -1,
-	    1, 1, 0, 1, 1, 1, 0, -1, 1, -1, 0, 1, 1, -1, 0, -1,
-	    -1, 1, 0, 1, -1, 1, 0, -1, -1, -1, 0, 1, -1, -1, 0, -1,
-	    1, 1, 1, 0, 1, 1, -1, 0, 1, -1, 1, 0, 1, -1, -1, 0,
-	    -1, 1, 1, 0, -1, 1, -1, 0, -1, -1, 1, 0, -1, -1, -1, 0]);
-	class SimplexNoise {
-	    p;
-	    perm;
-	    permMod12;
-	    constructor(randomOrSeed = Math.random) {
-	        const random = typeof randomOrSeed == 'function' ? randomOrSeed : alea(randomOrSeed);
-	        this.p = buildPermutationTable(random);
-	        this.perm = new Uint8Array(512);
-	        this.permMod12 = new Uint8Array(512);
-	        for (let i = 0; i < 512; i++) {
-	            this.perm[i] = this.p[i & 255];
-	            this.permMod12[i] = this.perm[i] % 12;
-	        }
-	    }
-	    noise2D(x, y) {
-	        const permMod12 = this.permMod12;
-	        const perm = this.perm;
-	        let n0 = 0;
-	        let n1 = 0;
-	        let n2 = 0;
-	        const s = (x + y) * F2;
-	        const i = Math.floor(x + s);
-	        const j = Math.floor(y + s);
-	        const t = (i + j) * G2;
-	        const X0 = i - t;
-	        const Y0 = j - t;
-	        const x0 = x - X0;
-	        const y0 = y - Y0;
-	        let i1, j1;
-	        if (x0 > y0) {
-	            i1 = 1;
-	            j1 = 0;
-	        }
-	        else {
-	            i1 = 0;
-	            j1 = 1;
-	        }
-	        const x1 = x0 - i1 + G2;
-	        const y1 = y0 - j1 + G2;
-	        const x2 = x0 - 1.0 + 2.0 * G2;
-	        const y2 = y0 - 1.0 + 2.0 * G2;
-	        const ii = i & 255;
-	        const jj = j & 255;
-	        let t0 = 0.5 - x0 * x0 - y0 * y0;
-	        if (t0 >= 0) {
-	            const gi0 = permMod12[ii + perm[jj]] * 3;
-	            t0 *= t0;
-	            n0 = t0 * t0 * (grad3[gi0] * x0 + grad3[gi0 + 1] * y0);
-	        }
-	        let t1 = 0.5 - x1 * x1 - y1 * y1;
-	        if (t1 >= 0) {
-	            const gi1 = permMod12[ii + i1 + perm[jj + j1]] * 3;
-	            t1 *= t1;
-	            n1 = t1 * t1 * (grad3[gi1] * x1 + grad3[gi1 + 1] * y1);
-	        }
-	        let t2 = 0.5 - x2 * x2 - y2 * y2;
-	        if (t2 >= 0) {
-	            const gi2 = permMod12[ii + 1 + perm[jj + 1]] * 3;
-	            t2 *= t2;
-	            n2 = t2 * t2 * (grad3[gi2] * x2 + grad3[gi2 + 1] * y2);
-	        }
-	        return 70.0 * (n0 + n1 + n2);
-	    }
-	    noise3D(x, y, z) {
-	        const permMod12 = this.permMod12;
-	        const perm = this.perm;
-	        let n0, n1, n2, n3;
-	        const s = (x + y + z) * F3;
-	        const i = Math.floor(x + s);
-	        const j = Math.floor(y + s);
-	        const k = Math.floor(z + s);
-	        const t = (i + j + k) * G3;
-	        const X0 = i - t;
-	        const Y0 = j - t;
-	        const Z0 = k - t;
-	        const x0 = x - X0;
-	        const y0 = y - Y0;
-	        const z0 = z - Z0;
-	        let i1, j1, k1;
-	        let i2, j2, k2;
-	        if (x0 >= y0) {
-	            if (y0 >= z0) {
-	                i1 = 1;
-	                j1 = 0;
-	                k1 = 0;
-	                i2 = 1;
-	                j2 = 1;
-	                k2 = 0;
-	            }
-	            else if (x0 >= z0) {
-	                i1 = 1;
-	                j1 = 0;
-	                k1 = 0;
-	                i2 = 1;
-	                j2 = 0;
-	                k2 = 1;
-	            }
-	            else {
-	                i1 = 0;
-	                j1 = 0;
-	                k1 = 1;
-	                i2 = 1;
-	                j2 = 0;
-	                k2 = 1;
-	            }
-	        }
-	        else {
-	            if (y0 < z0) {
-	                i1 = 0;
-	                j1 = 0;
-	                k1 = 1;
-	                i2 = 0;
-	                j2 = 1;
-	                k2 = 1;
-	            }
-	            else if (x0 < z0) {
-	                i1 = 0;
-	                j1 = 1;
-	                k1 = 0;
-	                i2 = 0;
-	                j2 = 1;
-	                k2 = 1;
-	            }
-	            else {
-	                i1 = 0;
-	                j1 = 1;
-	                k1 = 0;
-	                i2 = 1;
-	                j2 = 1;
-	                k2 = 0;
-	            }
-	        }
-	        const x1 = x0 - i1 + G3;
-	        const y1 = y0 - j1 + G3;
-	        const z1 = z0 - k1 + G3;
-	        const x2 = x0 - i2 + 2.0 * G3;
-	        const y2 = y0 - j2 + 2.0 * G3;
-	        const z2 = z0 - k2 + 2.0 * G3;
-	        const x3 = x0 - 1.0 + 3.0 * G3;
-	        const y3 = y0 - 1.0 + 3.0 * G3;
-	        const z3 = z0 - 1.0 + 3.0 * G3;
-	        const ii = i & 255;
-	        const jj = j & 255;
-	        const kk = k & 255;
-	        let t0 = 0.6 - x0 * x0 - y0 * y0 - z0 * z0;
-	        if (t0 < 0)
-	            n0 = 0.0;
-	        else {
-	            const gi0 = permMod12[ii + perm[jj + perm[kk]]] * 3;
-	            t0 *= t0;
-	            n0 = t0 * t0 * (grad3[gi0] * x0 + grad3[gi0 + 1] * y0 + grad3[gi0 + 2] * z0);
-	        }
-	        let t1 = 0.6 - x1 * x1 - y1 * y1 - z1 * z1;
-	        if (t1 < 0)
-	            n1 = 0.0;
-	        else {
-	            const gi1 = permMod12[ii + i1 + perm[jj + j1 + perm[kk + k1]]] * 3;
-	            t1 *= t1;
-	            n1 = t1 * t1 * (grad3[gi1] * x1 + grad3[gi1 + 1] * y1 + grad3[gi1 + 2] * z1);
-	        }
-	        let t2 = 0.6 - x2 * x2 - y2 * y2 - z2 * z2;
-	        if (t2 < 0)
-	            n2 = 0.0;
-	        else {
-	            const gi2 = permMod12[ii + i2 + perm[jj + j2 + perm[kk + k2]]] * 3;
-	            t2 *= t2;
-	            n2 = t2 * t2 * (grad3[gi2] * x2 + grad3[gi2 + 1] * y2 + grad3[gi2 + 2] * z2);
-	        }
-	        let t3 = 0.6 - x3 * x3 - y3 * y3 - z3 * z3;
-	        if (t3 < 0)
-	            n3 = 0.0;
-	        else {
-	            const gi3 = permMod12[ii + 1 + perm[jj + 1 + perm[kk + 1]]] * 3;
-	            t3 *= t3;
-	            n3 = t3 * t3 * (grad3[gi3] * x3 + grad3[gi3 + 1] * y3 + grad3[gi3 + 2] * z3);
-	        }
-	        return 32.0 * (n0 + n1 + n2 + n3);
-	    }
-	    noise4D(x, y, z, w) {
-	        const perm = this.perm;
-	        let n0, n1, n2, n3, n4;
-	        const s = (x + y + z + w) * F4;
-	        const i = Math.floor(x + s);
-	        const j = Math.floor(y + s);
-	        const k = Math.floor(z + s);
-	        const l = Math.floor(w + s);
-	        const t = (i + j + k + l) * G4;
-	        const X0 = i - t;
-	        const Y0 = j - t;
-	        const Z0 = k - t;
-	        const W0 = l - t;
-	        const x0 = x - X0;
-	        const y0 = y - Y0;
-	        const z0 = z - Z0;
-	        const w0 = w - W0;
-	        let rankx = 0;
-	        let ranky = 0;
-	        let rankz = 0;
-	        let rankw = 0;
-	        if (x0 > y0)
-	            rankx++;
-	        else
-	            ranky++;
-	        if (x0 > z0)
-	            rankx++;
-	        else
-	            rankz++;
-	        if (x0 > w0)
-	            rankx++;
-	        else
-	            rankw++;
-	        if (y0 > z0)
-	            ranky++;
-	        else
-	            rankz++;
-	        if (y0 > w0)
-	            ranky++;
-	        else
-	            rankw++;
-	        if (z0 > w0)
-	            rankz++;
-	        else
-	            rankw++;
-	        const i1 = rankx >= 3 ? 1 : 0;
-	        const j1 = ranky >= 3 ? 1 : 0;
-	        const k1 = rankz >= 3 ? 1 : 0;
-	        const l1 = rankw >= 3 ? 1 : 0;
-	        const i2 = rankx >= 2 ? 1 : 0;
-	        const j2 = ranky >= 2 ? 1 : 0;
-	        const k2 = rankz >= 2 ? 1 : 0;
-	        const l2 = rankw >= 2 ? 1 : 0;
-	        const i3 = rankx >= 1 ? 1 : 0;
-	        const j3 = ranky >= 1 ? 1 : 0;
-	        const k3 = rankz >= 1 ? 1 : 0;
-	        const l3 = rankw >= 1 ? 1 : 0;
-	        const x1 = x0 - i1 + G4;
-	        const y1 = y0 - j1 + G4;
-	        const z1 = z0 - k1 + G4;
-	        const w1 = w0 - l1 + G4;
-	        const x2 = x0 - i2 + 2.0 * G4;
-	        const y2 = y0 - j2 + 2.0 * G4;
-	        const z2 = z0 - k2 + 2.0 * G4;
-	        const w2 = w0 - l2 + 2.0 * G4;
-	        const x3 = x0 - i3 + 3.0 * G4;
-	        const y3 = y0 - j3 + 3.0 * G4;
-	        const z3 = z0 - k3 + 3.0 * G4;
-	        const w3 = w0 - l3 + 3.0 * G4;
-	        const x4 = x0 - 1.0 + 4.0 * G4;
-	        const y4 = y0 - 1.0 + 4.0 * G4;
-	        const z4 = z0 - 1.0 + 4.0 * G4;
-	        const w4 = w0 - 1.0 + 4.0 * G4;
-	        const ii = i & 255;
-	        const jj = j & 255;
-	        const kk = k & 255;
-	        const ll = l & 255;
-	        let t0 = 0.6 - x0 * x0 - y0 * y0 - z0 * z0 - w0 * w0;
-	        if (t0 < 0)
-	            n0 = 0.0;
-	        else {
-	            const gi0 = (perm[ii + perm[jj + perm[kk + perm[ll]]]] % 32) * 4;
-	            t0 *= t0;
-	            n0 = t0 * t0 * (grad4[gi0] * x0 + grad4[gi0 + 1] * y0 + grad4[gi0 + 2] * z0 + grad4[gi0 + 3] * w0);
-	        }
-	        let t1 = 0.6 - x1 * x1 - y1 * y1 - z1 * z1 - w1 * w1;
-	        if (t1 < 0)
-	            n1 = 0.0;
-	        else {
-	            const gi1 = (perm[ii + i1 + perm[jj + j1 + perm[kk + k1 + perm[ll + l1]]]] % 32) * 4;
-	            t1 *= t1;
-	            n1 = t1 * t1 * (grad4[gi1] * x1 + grad4[gi1 + 1] * y1 + grad4[gi1 + 2] * z1 + grad4[gi1 + 3] * w1);
-	        }
-	        let t2 = 0.6 - x2 * x2 - y2 * y2 - z2 * z2 - w2 * w2;
-	        if (t2 < 0)
-	            n2 = 0.0;
-	        else {
-	            const gi2 = (perm[ii + i2 + perm[jj + j2 + perm[kk + k2 + perm[ll + l2]]]] % 32) * 4;
-	            t2 *= t2;
-	            n2 = t2 * t2 * (grad4[gi2] * x2 + grad4[gi2 + 1] * y2 + grad4[gi2 + 2] * z2 + grad4[gi2 + 3] * w2);
-	        }
-	        let t3 = 0.6 - x3 * x3 - y3 * y3 - z3 * z3 - w3 * w3;
-	        if (t3 < 0)
-	            n3 = 0.0;
-	        else {
-	            const gi3 = (perm[ii + i3 + perm[jj + j3 + perm[kk + k3 + perm[ll + l3]]]] % 32) * 4;
-	            t3 *= t3;
-	            n3 = t3 * t3 * (grad4[gi3] * x3 + grad4[gi3 + 1] * y3 + grad4[gi3 + 2] * z3 + grad4[gi3 + 3] * w3);
-	        }
-	        let t4 = 0.6 - x4 * x4 - y4 * y4 - z4 * z4 - w4 * w4;
-	        if (t4 < 0)
-	            n4 = 0.0;
-	        else {
-	            const gi4 = (perm[ii + 1 + perm[jj + 1 + perm[kk + 1 + perm[ll + 1]]]] % 32) * 4;
-	            t4 *= t4;
-	            n4 = t4 * t4 * (grad4[gi4] * x4 + grad4[gi4 + 1] * y4 + grad4[gi4 + 2] * z4 + grad4[gi4 + 3] * w4);
-	        }
-	        return 27.0 * (n0 + n1 + n2 + n3 + n4);
-	    }
-	}
-	function buildPermutationTable(random) {
-	    const p = new Uint8Array(256);
-	    for (let i = 0; i < 256; i++) {
-	        p[i] = i;
-	    }
-	    for (let i = 0; i < 255; i++) {
-	        const r = i + ~~(random() * (256 - i));
-	        const aux = p[i];
-	        p[i] = p[r];
-	        p[r] = aux;
-	    }
-	    return p;
-	}
-	function alea(seed) {
-	    let s0 = 0;
-	    let s1 = 0;
-	    let s2 = 0;
-	    let c = 1;
-	    const mash = masher();
-	    s0 = mash(' ');
-	    s1 = mash(' ');
-	    s2 = mash(' ');
-	    s0 -= mash(seed);
-	    if (s0 < 0) {
-	        s0 += 1;
-	    }
-	    s1 -= mash(seed);
-	    if (s1 < 0) {
-	        s1 += 1;
-	    }
-	    s2 -= mash(seed);
-	    if (s2 < 0) {
-	        s2 += 1;
-	    }
-	    return function () {
-	        const t = 2091639 * s0 + c * 2.3283064365386963e-10;
-	        s0 = s1;
-	        s1 = s2;
-	        return s2 = t - (c = t | 0);
 	    };
-	}
-	function masher() {
-	    let n = 0xefc8249d;
-	    return function (data) {
-	        data = data.toString();
-	        for (let i = 0; i < data.length; i++) {
-	            n += data.charCodeAt(i);
-	            let h = 0.02519603282416938 * n;
-	            n = h >>> 0;
-	            h -= n;
-	            h *= n;
-	            n = h >>> 0;
-	            h -= n;
-	            n += h * 0x100000000;
-	        }
-	        return (n >>> 0) * 2.3283064365386963e-10;
-	    };
-	}
-
-	function Create(points) {
-	    const count = Math.floor(Math.sqrt(points));
-	    const vertices = new Float32Array(count * count * 4);
-	    const noise = new SimplexNoise();
-	    for (let i = 0; i < count; i++) {
-	        for (let j = 0; j < count; j++) {
-	            vertices[(i * count + j) * 4 + 0] = i / count - 0.5;
-	            vertices[(i * count + j) * 4 + 1] = noise.noise2D(i * 0.01, j * 0.01) / count * 25;
-	            vertices[(i * count + j) * 4 + 2] = j / count - 0.5;
-	            if (Math.random() <= 0.03) {
-	                vertices[(i * count + j) * 4 + 1] += (0.5 + Math.random()) / count * 5;
-	            }
-	        }
-	    }
-	    return [
-	        CreateBuffer(vertices, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE),
-	        count * count
-	    ];
-	}
-
-	document.body.onload = async () => {
 	    const mode = document.getElementById('mode');
 	    const color = document.getElementById('color');
 	    const gridCheckbox = document.getElementById('grid');
@@ -1586,93 +944,43 @@
 	    const increase = new Position();
 	    increase.Scale(5, 5, 5);
 	    const normal = new Position();
-	    const grid = Create$3(10);
-	    let k = 64;
-	    let length = 50_000;
-	    let cloud = Create$1(length);
-	    let colors = Create$5(length);
+	    const grid = Create(10);
+	    let k = 0;
+	    let length = 0;
+	    let cloud = CreateEmptyBuffer(0, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE);
+	    let colors = CreateEmptyBuffer(0, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE);
 	    let nearest = undefined;
 	    let normals = undefined;
 	    let curvature = undefined;
-	    let valid = true;
-	    window.CreateForm = async (name) => {
-	        const size = document.getElementById('size');
-	        length = parseInt(size.value);
-	        cloud.destroy();
-	        colors.destroy();
-	        valid = false;
+	    window.CreateForm = (name) => {
+	        const sizeDiv = document.getElementById('size');
+	        const data = new ArrayBuffer(8);
+	        let id;
+	        let size = parseInt(sizeDiv.value);
 	        switch (name) {
 	            case 'sphere':
-	                cloud = Create$1(length);
-	                valid = true;
+	                id = formIdOffset + 0;
 	                break;
 	            case 'cube':
-	                cloud = Create$4(length);
-	                valid = true;
+	                id = formIdOffset + 1;
 	                break;
 	            case 'map':
-	                [cloud, length] = Create(length);
-	                valid = true;
+	                id = formIdOffset + 2;
 	                break;
 	            case 'bunny':
-	            case 'statue':
-	                let url = '';
-	                switch (name) {
-	                    case 'bunny':
-	                        url = 'https://raw.githubusercontent.com/PointCloudLibrary/pcl/master/test/bunny.pcd';
-	                        break;
-	                    case 'statue':
-	                        url = 'https://raw.githubusercontent.com/PointCloudLibrary/pcl/master/test/rops_cloud.pcd';
-	                        break;
-	                }
-	                const response = await fetch(url);
-	                const content = await (await response.blob()).arrayBuffer();
-	                const result = Create$2(content);
-	                if (result != undefined) {
-	                    [cloud, length] = result;
-	                    valid = true;
-	                }
-	                else {
-	                    alert('pcd error');
-	                }
+	                id = formIdOffset + 3;
+	                size = 397;
 	                break;
-	            case 'upload':
-	                const input = document.createElement('input');
-	                input.type = 'file';
-	                input.accept = '.pcd';
-	                input.multiple = false;
-	                input.onchange = async () => {
-	                    if (input.files.length == 0) {
-	                        alert('please select file');
-	                        return;
-	                    }
-	                    const file = input.files[0];
-	                    const result = Create$2(await file.arrayBuffer());
-	                    if (result != undefined) {
-	                        [cloud, length] = result;
-	                        valid = true;
-	                    }
-	                    else {
-	                        alert('pcd error');
-	                    }
-	                };
-	                input.click();
+	            case 'statue':
+	                id = formIdOffset + 4;
+	                size = 32087;
+	                break;
 	        }
-	        colors = Create$5(length);
-	        if (nearest != undefined) {
-	            nearest.destroy();
-	            nearest = undefined;
-	        }
-	        if (normals != undefined) {
-	            normals.destroy();
-	            normals = undefined;
-	        }
-	        if (curvature != undefined) {
-	            curvature.destroy();
-	            curvature = undefined;
-	        }
-	        mode.value = 'points';
-	        color.value = 'color';
+	        new Int32Array(data)[0] = id;
+	        new Int32Array(data)[1] = size;
+	        socket.send(data);
+	        queue.push(name);
+	        extraQueue.push(size);
 	    };
 	    window.ShowText = (text) => {
 	        const hint = document.createElement('div');
@@ -1685,8 +993,17 @@
 	    };
 	    window.StartCompute = async (name) => {
 	        switch (name) {
-	            case 'kNearestList':
 	            case 'kNearestIter':
+	                const test = document.getElementById('k');
+	                const t_k = parseInt(test.value);
+	                const data = new ArrayBuffer(8);
+	                new Int32Array(data)[0] = computeIdOffset + 0;
+	                new Int32Array(data)[1] = t_k;
+	                socket.send(data);
+	                queue.push('nearestIter');
+	                extraQueue.push(t_k);
+	                break;
+	            case 'kNearestList':
 	            case 'kNearestListSorted':
 	            case 'kNearestIterSorted':
 	                if (nearest != undefined) {
@@ -1697,7 +1014,6 @@
 	                nearest = CreateEmptyBuffer(length * k * 4, GPUBufferUsage.STORAGE);
 	                switch (name) {
 	                    case 'kNearestList':
-	                    case 'kNearestIter':
 	                        Compute(name, length, [[k], []], [cloud, nearest]);
 	                        break;
 	                    case 'kNearestListSorted':
@@ -1940,32 +1256,30 @@
 	        if (gridCheckbox.checked) {
 	            Render$3(normal, grid.length, grid.positions, grid.colors);
 	        }
-	        if (valid) {
-	            switch (mode.value) {
-	                case 'points':
+	        switch (mode.value) {
+	            case 'points':
+	                Render$2(increase, rad, length, cloud, c);
+	                break;
+	            case 'connections':
+	                if (nearest == undefined) {
+	                    mode.value = 'points';
 	                    Render$2(increase, rad, length, cloud, c);
-	                    break;
-	                case 'connections':
-	                    if (nearest == undefined) {
-	                        mode.value = 'points';
-	                        Render$2(increase, rad, length, cloud, c);
-	                        alert('connections not calculated');
-	                    }
-	                    else {
-	                        Render$1(increase, cloud, c, nearest, k, length);
-	                    }
-	                    break;
-	                case 'polygons':
-	                    if (nearest == undefined) {
-	                        mode.value = 'points';
-	                        Render$2(increase, rad, length, cloud, c);
-	                        alert('connections not calculated');
-	                    }
-	                    else {
-	                        Render(increase, cloud, c, nearest, k, length);
-	                    }
-	                    break;
-	            }
+	                    alert('connections not calculated');
+	                }
+	                else {
+	                    Render$1(increase, cloud, c, nearest, k, length);
+	                }
+	                break;
+	            case 'polygons':
+	                if (nearest == undefined) {
+	                    mode.value = 'points';
+	                    Render$2(increase, rad, length, cloud, c);
+	                    alert('connections not calculated');
+	                }
+	                else {
+	                    Render(increase, cloud, c, nearest, k, length);
+	                }
+	                break;
 	        }
 	        FinishRender();
 	        last = time;
@@ -1980,6 +1294,15 @@
 	            delete keys['KeyP'];
 	        }
 	    }
+	}
+	document.body.onload = () => {
+	    const socket = new WebSocket('ws://' + location.host + '/ws');
+	    socket.onopen = async () => {
+	        await main(socket);
+	    };
+	    socket.onerror = () => {
+	        alert('socket connection error');
+	    };
 	};
 
 })();

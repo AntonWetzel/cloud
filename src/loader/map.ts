@@ -14,7 +14,6 @@ export function Create(points: number): [ GPUBuffer, number] {
 				vertices[(i*count + j)* 4 + 1] += (0.5 + Math.random()) / count * 5
 			}
 		}
-
 	}
 
 	return [
