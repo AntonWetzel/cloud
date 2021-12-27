@@ -45,7 +45,7 @@ Scale cloud: Mouse wheel`
 		</div>
 		<div class="item">
 			<p>Generate Input</p>
-			<input type="number" title="Size" value="50000" step="1" id="size">
+			<input type="number" title="Size" value="10000" step="1" id="size">
 			<button onclick="CreateForm('sphere')">Sphere</button>
 			<button onclick="CreateForm('cube')">Cube</button>
 			<button onclick="CreateForm('map')">Map</button>
@@ -53,19 +53,19 @@ Scale cloud: Mouse wheel`
 		<div class="item">
 			<p>Load PCD</p>
 			<button onclick="CreateForm('bunny')">Bunny</button>
+			<button onclick="CreateForm('bunnyBig')">Large Bunny</button>
 			<button onclick="CreateForm('statue')">Statue</button>
-			<!--button onclick="CreateForm('upload')">Upload</button-->
 		</div>
 
 		<div class="item">
 			<p>Nearest neighbors</p>
-			<input type="number" title="K" min="1" max="128" value="64" step="1" id="k">
+			<input type="number" title="K" min="1" max="128" value="16" step="1" id="k">
 			<button onclick="StartCompute('kNearestIter')">Iterated</button>
 			<button onclick="StartCompute('kNearestList')">List</button>
 			<button onclick="StartCompute('kNearestIterSorted')">Sort and Iterated</button>
 			<button onclick="StartCompute('kNearestListSorted')">Sort and List</button>
 		</div>
-		<div class="item">
+		<!--div class="item">
 			<p>Triangulate</p>
 			<button onclick="StartCompute('triangulateAll')">With all</button>
 			<button onclick="StartCompute('triangulateNear')">With nearest neighbors</button>
@@ -101,8 +101,12 @@ Scale cloud: Mouse wheel`
 			<button onclick="StartCompute('noise')">Reduce</button>
 			<button onclick="StartCompute('ripple')">Ripple</button>
 			<button onclick="StartCompute('peek')">Peek</button>
-			<button onclick="StartCompute('threshhold')">Threshhold</button>
-		</div>
+			<button onclick="StartCompute('threshhold')">Threshhold</button-->
+	</div>
+	<div class="item">
+		<p>Graph Frequenz Analysis</p>
+		<button onclick="StartCompute('frequenz')">Noise</button>
+	</div>
 	</div>
 </body>
 <script src="./bundle.js"></script>

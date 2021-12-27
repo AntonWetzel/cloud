@@ -1,6 +1,7 @@
 import * as GPU from './gpu/header.js'
 
-import * as Loader from './loader/header.js'
+import * as Color from './color.js'
+import * as Grid from './grid.js'
 
 declare global {
 	interface Window {
@@ -46,7 +47,7 @@ async function main(socket: WebSocket) {
 				console.log(length, data.byteLength)
 			}
 			cloud = GPU.CreateBuffer(new Float32Array(data), renderFlag)
-			colors = Loader.Color(length)
+			colors = Color.Create(length)
 			mode.value = 'points'
 			color.value = 'color'
 			break
@@ -93,7 +94,7 @@ async function main(socket: WebSocket) {
 	const increase = new GPU.Position()
 	increase.Scale(5, 5, 5)
 	const normal = new GPU.Position()
-	const grid = Loader.Grid(10)
+	const grid = Grid.Create(10)
 
 	let k = 0
 	let length = 0
@@ -109,13 +110,14 @@ async function main(socket: WebSocket) {
 
 		const data = new ArrayBuffer(8)
 		let id: number
-		let size = parseInt(sizeDiv.value)
+		const size = parseInt(sizeDiv.value)
 		switch (name) {
 		case 'sphere': id = formIdOffset + 0; break
 		case 'cube': id = formIdOffset + 1; break
 		case 'map': id = formIdOffset + 2; break
-		case 'bunny': id = formIdOffset + 3; size = 397; break //todo better
-		case 'statue': id = formIdOffset + 4; size = 32087; break
+		case 'bunny': id = formIdOffset + 3; break
+		case 'bunnyBig': id = formIdOffset + 4; break 
+		case 'statue': id = formIdOffset + 5; break
 		}
 		new Int32Array(data)[0] = id
 		new Int32Array(data)[1] = size
@@ -130,8 +132,8 @@ async function main(socket: WebSocket) {
 			hint.remove()
 		}, 5000)
 	}
-
-	window.StartCompute = async (name: string) => {
+	let data: ArrayBuffer
+	window.StartCompute = (name: string) => {
 		switch (name) {
 		case 'kNearestIter':
 		case 'kNearestList':
@@ -139,7 +141,7 @@ async function main(socket: WebSocket) {
 		case 'kNearestListSorted':
 			const test = document.getElementById('k') as HTMLInputElement
 			const t_k = parseInt(test.value)
-			const data = new ArrayBuffer(8)
+			data = new ArrayBuffer(8)
 			let id: number
 			switch (name) {
 			case 'kNearestIter': id = 0; break
@@ -151,6 +153,13 @@ async function main(socket: WebSocket) {
 			new Int32Array(data)[1] = t_k
 			socket.send(data)
 			break
+
+		case 'frequenz':
+			data = new ArrayBuffer(4)
+			new Int32Array(data)[0] = computeIdOffset + 4
+			socket.send(data)
+			break
+			/*
 		case 'triangulateAll':
 			k = GPU.TriangulateK
 			if (nearest != undefined) {
@@ -306,6 +315,7 @@ async function main(socket: WebSocket) {
 			curvature.destroy()
 			curvature = threshhold
 			break
+		*/
 		default:
 			alert('wrong name: ' + name)
 		}

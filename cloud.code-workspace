@@ -31,46 +31,33 @@
 		"ltex.language": "en-US",
 		"liveServer.settings.multiRootWorkspaceName": "all",
 	},
-	"tasks": {
-		"version": "2.0.0",
-		"tasks": [
+	"launch": {
+		"configurations": [
 			{
-				"label": "build",
-				"group": {
-					"kind": "build",
-					"isDefault": true
-				},
-				"dependsOn": [
-					"rollup",
+				"name": "server",
+				"type": "python",
+				"request": "launch",
+				"program": "${workspaceFolder:all}\\server\\main.py",
+				"console": "integratedTerminal",
+				"cwd": "${workspaceFolder:all}"
+			},
+			{
+				"command": "npm start",
+				"name": "client",
+				"request": "launch",
+				"type": "node-terminal",
+				"cwd": "${workspaceFolder:all}"
+			},
+		],
+		"compounds": [
+			{
+				"name": "run",
+				"configurations": [
+					"client",
 					"server",
-				]
-			},
-			{
-				"options": {
-					"cwd": "${workspaceFolder:all}"
-				},
-				"label": "rollup",
-				"type": "shell",
-				"command": "npx",
-				"args": [
-					"rollup",
-					"-c",
-					"-w",
 				],
-				"problemMatcher": [],
-			},
-			{
-				"label": "server",
-				"options": {
-					"cwd": "${workspaceFolder:all}"
-				},
-				"type": "shell",
-				"command": "python",
-				"args": [
-					"server/main.py",
-				],
-				"problemMatcher": [],
-			},
+				"stopAll": true,
+			}
 		]
 	}
 }

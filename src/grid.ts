@@ -1,4 +1,4 @@
-import * as GPU from '../gpu/header.js'
+import * as GPU from './gpu/header.js'
 
 export function Create(amount: number): {
 	length: number

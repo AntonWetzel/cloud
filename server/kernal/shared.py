@@ -3,7 +3,7 @@ from numba.core.errors import NumbaDeprecationWarning
 import warnings
 
 warnings.simplefilter('ignore', category=NumbaDeprecationWarning)
-Point = types.Tuple([types.float32, types.float32, types.float32])
+Point = types.UniTuple(types.float32, 3)
 
 
 @cuda.jit(Point(types.float32[:], types.uint32), device=True, inline=True)

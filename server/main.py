@@ -2,7 +2,8 @@ import aiohttp
 from aiohttp import web
 import asyncio
 
-from logic import compute, generate
+from compute import compute
+import generate
 
 generateIdOffset = 1
 computeIdOffset = 33
@@ -27,7 +28,7 @@ async def websocket_handler(request):
 				info -= generateIdOffset
 				print("started generate " + str(info))
 				size = int.from_bytes(data[4:8], "little")
-				await generate(info, { "size": size }, ws)
+				await generate.create(info, { "size": size }, ws)
 				print("executed generate " + str(info))
 			elif computeIdOffset <= info and info <= 50:
 				info -= computeIdOffset
@@ -65,4 +66,5 @@ async def start_server(host="localhost", port=5500):
 if __name__ == "__main__":
 	loop = asyncio.new_event_loop()
 	loop.run_until_complete(start_server())
+	print("start")
 	loop.run_forever()

@@ -2,10 +2,9 @@ from numba import cuda, types, jit
 from numba.core.errors import NumbaDeprecationWarning
 import numpy as np
 import warnings
-from kernals.shared import *
+from .shared import *
 
 warnings.simplefilter('ignore', category=NumbaDeprecationWarning)
-Point = types.Tuple([types.float32, types.float32, types.float32])
 
 
 @cuda.jit(types.void(types.float32[:], types.uint32[:], types.uint32, types.uint32))
@@ -68,45 +67,6 @@ def list(cloud, sur, n, k):
 			sur[offset + idx] = i
 			dist = dist_pow_2(p, get_point(cloud, sur[offset]))
 		i += 1
-
-
-@jit(types.void(types.float32[:], types.int32, types.int32), nopython=True, inline="always")
-def swap(cloud, a, b):
-	t0 = cloud[a * 4 + 0]
-	t1 = cloud[a * 4 + 1]
-	t2 = cloud[a * 4 + 2]
-	t3 = cloud[a * 4 + 3]
-	cloud[a * 4 + 0] = cloud[b * 4 + 0]
-	cloud[a * 4 + 1] = cloud[b * 4 + 1]
-	cloud[a * 4 + 2] = cloud[b * 4 + 2]
-	cloud[a * 4 + 3] = cloud[b * 4 + 3]
-	cloud[b * 4 + 0] = t0
-	cloud[b * 4 + 1] = t1
-	cloud[b * 4 + 2] = t2
-	cloud[b * 4 + 3] = t3
-
-
-@jit(types.void(types.float32[:], types.int32, types.int32), nopython=True)
-def quickSort(cloud, low, high):
-	if low >= high:
-		return
-
-	id = (low + high) // 2
-	swap(cloud, id, high)
-	pivot = cloud[high * 4] # pivot
-	i = (low - 1) # Index of smaller element and indicates the right position of pivot found so far
-	for j in range(low, high):
-		# If current element is smaller than the pivot
-		if (cloud[j * 4] < pivot):
-			i += 1 # increment index of smaller element
-			swap(cloud, i, j)
-	swap(cloud, i + 1, high)
-	pi = (i + 1)
-
-	# Separately sort elements before
-	# partition and after partition
-	quickSort(cloud, low, pi - 1)
-	quickSort(cloud, pi + 1, high)
 
 
 @cuda.jit(types.void(types.float32[:], types.uint32[:], types.uint32, types.uint32))

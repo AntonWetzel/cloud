@@ -18,5 +18,8 @@
     "rollup-plugin-typescript2": "*",
     "tslib": "*",
     "typescript": "*"
+  },
+  "scripts": {
+    "start": "rollup -c -w"
   }
 }

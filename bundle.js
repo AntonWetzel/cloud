@@ -92,20 +92,6 @@
 	    });
 	    return buffer;
 	}
-	async function ReadBuffer(buffer, size) {
-	    const temp = device.createBuffer({
-	        size: size,
-	        usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
-	        mappedAtCreation: false,
-	    });
-	    const copyEncoder = device.createCommandEncoder();
-	    copyEncoder.copyBufferToBuffer(buffer, 0, temp, 0, size);
-	    const copyCommands = copyEncoder.finish();
-	    device.queue.submit([copyCommands]);
-	    await temp.mapAsync(GPUMapMode.READ);
-	    const copyArrayBuffer = temp.getMappedRange();
-	    return copyArrayBuffer;
-	}
 	function NewModule(src) {
 	    const module = device.createShaderModule({
 	        code: src,
@@ -154,27 +140,6 @@
 
 	var threshholdURI = "data:null;base64,W1tibG9ja11dIHN0cnVjdCBCdWZmZXIgewoJZGF0YTogYXJyYXk8dmVjMzxmMzI+PjsKfTsKCltbYmxvY2tdXSBzdHJ1Y3QgSW5kaWNlcyB7CglkYXRhOiBhcnJheTx1MzI+Owp9OwoKW1tibG9ja11dIHN0cnVjdCBQYXJhbWV0ZXIgewoJbGVuZ3RoOiB1MzI7CglrOiB1MzI7Cgl0aHJlc2hob2xkOiBmMzI7Cn07CgpbW2dyb3VwKDApLCBiaW5kaW5nKDApXV0gdmFyPHN0b3JhZ2UsIHJlYWQ+IHBhcmFtZXRlcjogUGFyYW1ldGVyOwpbW2dyb3VwKDApLCBiaW5kaW5nKDEpXV0gdmFyPHN0b3JhZ2UsIHJlYWQ+IGN1cnZhdHVyZTogQnVmZmVyOwpbW2dyb3VwKDApLCBiaW5kaW5nKDIpXV0gdmFyPHN0b3JhZ2UsIHdyaXRlPiBuZXdfY3VydmF0dXJlOiBCdWZmZXI7CgpbW3N0YWdlKGNvbXB1dGUpLCB3b3JrZ3JvdXBfc2l6ZSgyNTYpXV0KZm4gbWFpbihbW2J1aWx0aW4oZ2xvYmFsX2ludm9jYXRpb25faWQpXV0gZ2xvYmFsIDogdmVjMzx1MzI+KSB7CglsZXQgaWQgPSBnbG9iYWwueDsKCWlmIChpZCA+PSBwYXJhbWV0ZXIubGVuZ3RoKSB7CgkJcmV0dXJuOwoJfQoJaWYgKGN1cnZhdHVyZS5kYXRhW2lkXS54ID49IHBhcmFtZXRlci50aHJlc2hob2xkKSB7CgkJbmV3X2N1cnZhdHVyZS5kYXRhW2lkXSA9IHZlYzM8ZjMyPigxLjAsIDAuMCwgMC4wKTsKCX0gZWxzZSB7CgkJbmV3X2N1cnZhdHVyZS5kYXRhW2lkXSA9IHZlYzM8ZjMyPigwLjAsIDAuMCwgMC4wKTsKCX0KfQo=";
 
-	let pipelines = {
-	    cleanDang: undefined,
-	    cleanLong: undefined,
-	    kNearestList: undefined,
-	    kNearestIter: undefined,
-	    kNearestIterSorted: undefined,
-	    kNearestListSorted: undefined,
-	    normalLinear: undefined,
-	    normalTriang: undefined,
-	    curvaturePoints: undefined,
-	    curvatureNormal: undefined,
-	    triangulateAll: undefined,
-	    triangulateNearest: undefined,
-	    reduceLow: undefined,
-	    reduceAnomaly: undefined,
-	    sort: undefined,
-	    noise: undefined,
-	    ripple: undefined,
-	    peek: undefined,
-	    threshhold: undefined,
-	};
 	function Setup$1() {
 	    const helper = (uri) => {
 	        return device.createComputePipeline({
@@ -184,7 +149,7 @@
 	            },
 	        });
 	    };
-	    pipelines = {
+	    ({
 	        cleanDang: helper(cleanDangURI),
 	        cleanLong: helper(cleanLongURI),
 	        kNearestList: helper(kNearestListURI),
@@ -204,50 +169,7 @@
 	        ripple: helper(rippleURI),
 	        peek: helper(peekURI),
 	        threshhold: helper(threshholdURI),
-	    };
-	}
-	function Compute(name, length, parameter, buffers, result = false) {
-	    const paramU32 = new Uint32Array(1 + parameter[0].length + parameter[1].length);
-	    const paramF32 = new Float32Array(paramU32.buffer);
-	    paramU32[0] = length;
-	    for (let i = 0; i < parameter[0].length; i++) {
-	        paramU32[i + 1] = parameter[0][i];
-	    }
-	    for (let i = 0; i < parameter[1].length; i++) {
-	        paramF32[parameter[0].length + i + 1] = parameter[1][i];
-	    }
-	    const buffer = CreateBuffer(paramU32, GPUBufferUsage.STORAGE);
-	    const x = [];
-	    x.push({
-	        binding: 0,
-	        resource: { buffer: buffer },
 	    });
-	    for (let i = 0; i < buffers.length; i++) {
-	        x.push({
-	            binding: i + 1,
-	            resource: { buffer: buffers[i] }
-	        });
-	    }
-	    const pipeline = pipelines[name];
-	    const group = device.createBindGroup({
-	        layout: pipeline.getBindGroupLayout(0),
-	        entries: x,
-	    });
-	    const encoder = device.createCommandEncoder();
-	    const compute = encoder.beginComputePass({});
-	    compute.setPipeline(pipeline);
-	    compute.setBindGroup(0, group);
-	    compute.dispatch(Math.ceil(length / 256));
-	    compute.endPass();
-	    const commands = encoder.finish();
-	    device.queue.submit([commands]);
-	    if (result) {
-	        return buffer;
-	    }
-	    else {
-	        buffer.destroy();
-	        return undefined;
-	    }
 	}
 
 	class Matrix {
@@ -698,7 +620,6 @@
 	var srcURI = "data:null;base64,W1tibG9ja11dIHN0cnVjdCBDYW1lcmEgewoJcHJvamVjdGlvbjogbWF0NHg0PGYzMj47Cgl2aWV3OiBtYXQ0eDQ8ZjMyPjsKfTsKCltbYmxvY2tdXSBzdHJ1Y3QgUGFyYW1ldGVyIHsKCW1vZGVsOiBtYXQ0eDQ8ZjMyPjsKCWs6IHUzMjsKfTsKCltbYmxvY2tdXSBzdHJ1Y3QgQnVmZmVyIHsKCWRhdGE6IGFycmF5PHZlYzM8ZjMyPj47Cn07CgpbW2Jsb2NrXV0gc3RydWN0IEluZGljZXMgewoJZGF0YTogYXJyYXk8dTMyPjsKfTsKCltbZ3JvdXAoMCksIGJpbmRpbmcoMCldXSB2YXI8dW5pZm9ybT4gY2FtZXJhOiBDYW1lcmE7CltbZ3JvdXAoMCksIGJpbmRpbmcoMSldXSB2YXI8dW5pZm9ybT4gcGFyYW1ldGVyOiBQYXJhbWV0ZXI7CltbZ3JvdXAoMCksIGJpbmRpbmcoMildXSB2YXI8c3RvcmFnZSwgcmVhZD4gcG9zaXRpb25zOiBCdWZmZXI7CltbZ3JvdXAoMCksIGJpbmRpbmcoMyldXSB2YXI8c3RvcmFnZSwgcmVhZD4gY29sb3JzOiBCdWZmZXI7CltbZ3JvdXAoMCksIGJpbmRpbmcoNCldXSB2YXI8c3RvcmFnZSwgcmVhZD4gaW5kaWNlczogSW5kaWNlczsKCnN0cnVjdCBUcmFuc2ZlciB7CglbW2J1aWx0aW4ocG9zaXRpb24pXV0gcG9zaXRpb24gOiB2ZWM0PGYzMj47CglbW2xvY2F0aW9uKDApXV0gY29sb3I6IHZlYzM8ZjMyPjsKfTsKCltbc3RhZ2UodmVydGV4KV1dCmZuIHZlcnRleE1haW4oCglbW2J1aWx0aW4odmVydGV4X2luZGV4KV1dIGlkOiB1MzIsCikgLT4gVHJhbnNmZXIgewoJdmFyIGluZGV4X2lkOiB1MzI7CglsZXQgY2VudGVyID0gaWQgLyAoM3UgKiBwYXJhbWV0ZXIuayk7Cglzd2l0Y2ggKGlkJTN1KSB7CgkJY2FzZSAwdTogewoJCQlpbmRleF9pZCA9IGNlbnRlcjsKCQkJYnJlYWs7CgkJfQoJCWNhc2UgMXU6IHsKCQkJaW5kZXhfaWQgPSBpbmRpY2VzLmRhdGFbaWQvM3VdOwoJCQlicmVhazsKCQl9CgkJZGVmYXVsdDogewoJCQlpbmRleF9pZCA9IGluZGljZXMuZGF0YVtpZC8zdSArIDF1XTsKCQkJaWYgKGluZGV4X2lkID09IGNlbnRlciB8fCAoaWQgKyAxdSklKHBhcmFtZXRlci5rICogM3UpID09IDB1KSB7IC8vbG9vcCBhcm91bmQgdG8gdGhlIGZpcnN0IHZlcnRleCBpbiB0aGUgY2lyY2xlCgkJCQlpbmRleF9pZCA9IGluZGljZXMuZGF0YVtjZW50ZXIqcGFyYW1ldGVyLmtdOwoJCQl9CgkJCWJyZWFrOwoJCX0KCX0KCgl2YXIgb3V0cHV0IDogVHJhbnNmZXI7CglvdXRwdXQucG9zaXRpb24gPSBjYW1lcmEucHJvamVjdGlvbiAqIGNhbWVyYS52aWV3ICogcGFyYW1ldGVyLm1vZGVsICogdmVjNDxmMzI+KHBvc2l0aW9ucy5kYXRhW2luZGV4X2lkXSwgMS4wKTsKCW91dHB1dC5jb2xvciA9IGFicyhjb2xvcnMuZGF0YVtjZW50ZXJdKTsKCXJldHVybiBvdXRwdXQ7Cn0KCltbc3RhZ2UoZnJhZ21lbnQpXV0KZm4gZnJhZ21lbnRNYWluKGRhdGE6IFRyYW5zZmVyKSAtPiBbW2xvY2F0aW9uKDApXV0gdmVjNDxmMzI+IHsKCXJldHVybiB2ZWM0PGYzMj4oZGF0YS5jb2xvciwgMS4wKTsKfQo=";
 
 	let pipeline = undefined;
-	const K = 16;
 	function Render(position, positions, colors, nearest, k, length) {
 	    if (pipeline == undefined) {
 	        const module = NewModule(ConvertURI(srcURI));
@@ -915,7 +836,7 @@
 	        const sizeDiv = document.getElementById('size');
 	        const data = new ArrayBuffer(8);
 	        let id;
-	        let size = parseInt(sizeDiv.value);
+	        const size = parseInt(sizeDiv.value);
 	        switch (name) {
 	            case 'sphere':
 	                id = formIdOffset + 0;
@@ -928,11 +849,12 @@
 	                break;
 	            case 'bunny':
 	                id = formIdOffset + 3;
-	                size = 397;
+	                break;
+	            case 'bunnyBig':
+	                id = formIdOffset + 4;
 	                break;
 	            case 'statue':
-	                id = formIdOffset + 4;
-	                size = 32087;
+	                id = formIdOffset + 5;
 	                break;
 	        }
 	        new Int32Array(data)[0] = id;
@@ -948,7 +870,8 @@
 	            hint.remove();
 	        }, 5000);
 	    };
-	    window.StartCompute = async (name) => {
+	    let data;
+	    window.StartCompute = (name) => {
 	        switch (name) {
 	            case 'kNearestIter':
 	            case 'kNearestList':
@@ -956,7 +879,7 @@
 	            case 'kNearestListSorted':
 	                const test = document.getElementById('k');
 	                const t_k = parseInt(test.value);
-	                const data = new ArrayBuffer(8);
+	                data = new ArrayBuffer(8);
 	                let id;
 	                switch (name) {
 	                    case 'kNearestIter':
@@ -976,161 +899,10 @@
 	                new Int32Array(data)[1] = t_k;
 	                socket.send(data);
 	                break;
-	            case 'triangulateAll':
-	                k = K;
-	                if (nearest != undefined) {
-	                    nearest.destroy();
-	                }
-	                nearest = CreateEmptyBuffer(length * k * 4, GPUBufferUsage.STORAGE);
-	                Compute('triangulateAll', length, [[], []], [cloud, nearest]);
-	                mode.value = 'connections';
-	                break;
-	            case 'triangulateNear':
-	                if (nearest == undefined) {
-	                    alert('please calculate nearest first');
-	                }
-	                else {
-	                    const copy = CreateEmptyBuffer(length * K * 4, GPUBufferUsage.STORAGE);
-	                    Compute('triangulateNearest', length, [[k], []], [cloud, nearest, copy]);
-	                    nearest.destroy();
-	                    nearest = copy;
-	                    k = K;
-	                    mode.value = 'connections';
-	                    break;
-	                }
-	                break;
-	            case 'cleanDang':
-	            case 'cleanLong':
-	                if (nearest == undefined) {
-	                    alert('please calculate the connections first');
-	                    break;
-	                }
-	                const newNearest = CreateEmptyBuffer(length * k * 4, GPUBufferUsage.STORAGE);
-	                switch (name) {
-	                    case 'cleanDang':
-	                        Compute('cleanDang', length, [[k], []], [nearest, newNearest]);
-	                        break;
-	                    case 'cleanLong':
-	                        Compute('cleanLong', length, [[k], []], [cloud, nearest, newNearest]);
-	                        break;
-	                }
-	                nearest.destroy();
-	                nearest = newNearest;
-	                mode.value = 'connections';
-	                break;
-	            case 'normalPlane':
-	            case 'normalTriang':
-	                if (nearest == undefined) {
-	                    alert('please calculate the connections first');
-	                    break;
-	                }
-	                if (normals == undefined) {
-	                    normals = CreateEmptyBuffer(length * 16, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE);
-	                }
-	                switch (name) {
-	                    case 'normalPlane':
-	                        Compute('normalLinear', length, [[k], []], [cloud, nearest, normals]);
-	                        break;
-	                    case 'normalTriang':
-	                        Compute('normalTriang', length, [[k], []], [cloud, nearest, normals]);
-	                        break;
-	                }
-	                color.value = 'normal';
-	                break;
-	            case 'curvaturePoints':
-	            case 'curvatureNormal':
-	                if (normals == undefined) {
-	                    alert('please calculate the normals first');
-	                    break;
-	                }
-	                if (curvature == undefined) {
-	                    curvature = CreateEmptyBuffer(length * 16, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC);
-	                }
-	                switch (name) {
-	                    case 'curvatureNormal':
-	                        Compute('curvatureNormal', length, [[k], []], [cloud, nearest, normals, curvature]);
-	                        break;
-	                    case 'curvaturePoints':
-	                        Compute('curvaturePoints', length, [[k], []], [cloud, nearest, normals, curvature]);
-	                        break;
-	                }
-	                color.value = 'curve';
-	                break;
-	            case 'filterCurve':
-	            case 'filterAnomaly':
-	                if (curvature == undefined) {
-	                    alert('please calculate curvature first');
-	                    break;
-	                }
-	                const tDiv = document.getElementById('threshhold');
-	                const t = parseFloat(tDiv.value);
-	                const newCloud = CreateEmptyBuffer(length * 16, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE);
-	                const newColor = CreateEmptyBuffer(length * 16, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE);
-	                let com;
-	                switch (name) {
-	                    case 'filterCurve':
-	                        com = 'reduceLow';
-	                        break;
-	                    case 'filterAnomaly':
-	                        com = 'reduceAnomaly';
-	                        break;
-	                }
-	                const result = Compute(com, length, [[0], [t]], [cloud, colors, curvature, newCloud, newColor], true);
-	                length = new Uint32Array(await ReadBuffer(result, 3 * 4))[1];
-	                console.log('length:', length);
-	                result.destroy();
-	                cloud.destroy();
-	                colors.destroy();
-	                nearest.destroy();
-	                normals.destroy();
-	                curvature.destroy();
-	                cloud = newCloud;
-	                colors = newColor;
-	                nearest = undefined;
-	                normals = undefined;
-	                curvature = undefined;
-	                color.value = 'color';
-	                mode.value = 'points';
-	                break;
-	            case 'noise':
-	                if (nearest == undefined) {
-	                    alert('please calculate nearest first');
-	                    break;
-	                }
-	                const copy = CreateEmptyBuffer(length * 16, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE);
-	                Compute('noise', length, [[k], []], [cloud, nearest, copy]);
-	                cloud.destroy();
-	                cloud = copy;
-	                break;
-	            case 'ripple':
-	                if (curvature == undefined) {
-	                    alert('please calculate the curvature first');
-	                    break;
-	                }
-	                const derivative = CreateEmptyBuffer(length * 16, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE);
-	                Compute('ripple', length, [[k], [5]], [nearest, curvature, derivative]);
-	                curvature.destroy();
-	                curvature = derivative;
-	                break;
-	            case 'peek':
-	                if (curvature == undefined) {
-	                    alert('please calculate the curvature first');
-	                    break;
-	                }
-	                const newCurve = CreateEmptyBuffer(length * 16, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE);
-	                Compute('peek', length, [[k], []], [nearest, curvature, newCurve]);
-	                curvature.destroy();
-	                curvature = newCurve;
-	                break;
-	            case 'threshhold':
-	                if (curvature == undefined) {
-	                    alert('please calculate the curvature first');
-	                    break;
-	                }
-	                const threshhold = CreateEmptyBuffer(length * 16, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE);
-	                Compute('threshhold', length, [[k], [0.2]], [curvature, threshhold]);
-	                curvature.destroy();
-	                curvature = threshhold;
+	            case 'frequenz':
+	                data = new ArrayBuffer(4);
+	                new Int32Array(data)[0] = computeIdOffset + 4;
+	                socket.send(data);
 	                break;
 	            default:
 	                alert('wrong name: ' + name);
