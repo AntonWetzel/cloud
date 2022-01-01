@@ -41,7 +41,7 @@ Scale cloud: Mouse wheel`
 			</div>
 			<div id="rDis">Radius: 0.015</div>
 			<input type="range" title="Radius" min="0.005" max="0.1" value="0.015" step="0.005" id="radius"
-				onchange="document.getElementById('rDis').innerText='Radius: ' + this.value">
+				oninput="document.getElementById('rDis').innerText='Radius: ' + this.value">
 		</div>
 		<div class="item">
 			<p>Generate Input</p>
@@ -102,6 +102,13 @@ Scale cloud: Mouse wheel`
 			<button onclick="StartCompute('ripple')">Ripple</button>
 			<button onclick="StartCompute('peek')">Peek</button>
 			<button onclick="StartCompute('threshhold')">Threshhold</button-->
+	</div>
+	<div class="item">
+		<p>Manipulation</p>
+		<div id="noiseDisplay">Noise: 0.1</div>
+		<input type="range" title="Noise" min="0.0" max="1.0" value="0.1" step="0.01" id="noise"
+			oninput="document.getElementById('noiseDisplay').innerText='Noise: ' + this.value">
+		<button onclick="StartCompute('noise')">Add Noise</button>
 	</div>
 	<div class="item">
 		<p>Graph Frequenz Analysis</p>

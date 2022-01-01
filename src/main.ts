@@ -159,6 +159,13 @@ async function main(socket: WebSocket) {
 			new Int32Array(data)[0] = computeIdOffset + 4
 			socket.send(data)
 			break
+		case 'noise':
+		
+			data = new ArrayBuffer(8)
+			new Int32Array(data)[0] = computeIdOffset + 5
+			new Float32Array(data)[1] = parseFloat((document.getElementById('noise') as HTMLInputElement).value)
+			socket.send(data)
+			break
 			/*
 		case 'triangulateAll':
 			k = GPU.TriangulateK

@@ -13,7 +13,7 @@ Work in progress
 	- numpy
 	- scipy with scipy.sparse
 	- numba with numba.cuda
-
+	- OpenSimplex
 ### Setup
 >npm install
 
@@ -23,3 +23,4 @@ Work in progress
 - console:
 	> python server/main.py\
 	> npx rollup -c -w
+ 

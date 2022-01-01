@@ -1,14 +1,11 @@
 from numba import cuda, types, jit
 from numba.core.errors import NumbaDeprecationWarning
 import numpy as np
-import warnings
 from .shared import *
-
-warnings.simplefilter('ignore', category=NumbaDeprecationWarning)
 
 
 @cuda.jit(types.void(types.float32[:], types.uint32[:], types.uint32, types.uint32))
-def iter(cloud, sur, n, k):
+def nearest_iter(cloud, sur, n, k):
 	id = cuda.grid(1)
 	if id >= n:
 		return
@@ -29,7 +26,7 @@ def iter(cloud, sur, n, k):
 
 
 @cuda.jit(types.void(types.float32[:], types.uint32[:], types.uint32, types.uint32))
-def list(cloud, sur, n, k):
+def nearest_list(cloud, sur, n, k):
 	id = cuda.grid(1)
 	if id >= n:
 		return
@@ -70,7 +67,7 @@ def list(cloud, sur, n, k):
 
 
 @cuda.jit(types.void(types.float32[:], types.uint32[:], types.uint32, types.uint32))
-def iter_sorted(cloud, sur, n, k):
+def nearest_iter_sorted(cloud, sur, n, k):
 	id = cuda.grid(1)
 	if id >= n:
 		return
@@ -132,7 +129,7 @@ def iter_sorted(cloud, sur, n, k):
 
 
 @cuda.jit(types.void(types.float32[:], types.uint32[:], types.uint32, types.uint32))
-def list_sorted(cloud, sur, n, k):
+def nearest_list_sorted(cloud, sur, n, k):
 	id = cuda.grid(1)
 	if id >= n:
 		return

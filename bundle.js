@@ -694,9 +694,9 @@
 	function Create$1(points) {
 	    const colors = new Float32Array(points * 4);
 	    for (let i = 0; i < points; i++) {
-	        colors[i * 4 + 0] = 0.2 + 0.5 * i / points;
-	        colors[i * 4 + 1] = 0.2 + 0.5 * i / points;
-	        colors[i * 4 + 2] = 0.2 + 0.5 * i / points;
+	        colors[i * 4 + 0] = 0.2;
+	        colors[i * 4 + 1] = 0.3;
+	        colors[i * 4 + 2] = 0.4;
 	    }
 	    return CreateBuffer(colors, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE);
 	}
@@ -902,6 +902,12 @@
 	            case 'frequenz':
 	                data = new ArrayBuffer(4);
 	                new Int32Array(data)[0] = computeIdOffset + 4;
+	                socket.send(data);
+	                break;
+	            case 'noise':
+	                data = new ArrayBuffer(8);
+	                new Int32Array(data)[0] = computeIdOffset + 5;
+	                new Float32Array(data)[1] = parseFloat(document.getElementById('noise').value);
 	                socket.send(data);
 	                break;
 	            default:

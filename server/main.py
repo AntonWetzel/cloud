@@ -2,8 +2,7 @@ import aiohttp
 from aiohttp import web
 import asyncio
 
-from compute import compute
-import generate
+import handler
 
 generateIdOffset = 1
 computeIdOffset = 33
@@ -18,6 +17,7 @@ async def websocket_handler(request):
 	ws = web.WebSocketResponse()
 	await ws.prepare(request)
 
+	handle = handler.Handler(ws)
 	async for msg in ws:
 		if msg.type == aiohttp.WSMsgType.ERROR:
 			print('ws connection closed with exception %s' % ws.exception())
@@ -28,12 +28,12 @@ async def websocket_handler(request):
 				info -= generateIdOffset
 				print("started generate " + str(info))
 				size = int.from_bytes(data[4:8], "little")
-				await generate.create(info, { "size": size }, ws)
+				await handle.create(info, size)
 				print("executed generate " + str(info))
 			elif computeIdOffset <= info and info <= 50:
 				info -= computeIdOffset
 				print("started compute " + str(info))
-				await compute(info, data[4:], ws)
+				await handle.compute(info, data[4:])
 				print("executed compute " + str(info))
 			else:
 				print("wrong info code: ", info)

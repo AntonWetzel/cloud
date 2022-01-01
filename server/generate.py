@@ -4,33 +4,6 @@ from typing import Tuple
 import numpy as np
 from opensimplex import OpenSimplex
 import requests
-from typing import Dict
-from aiohttp.web_ws import WebSocketResponse
-
-from compute import update_cloud
-
-
-async def create(id: int, parameter: Dict, ws: WebSocketResponse):
-	size = parameter["size"]
-	if id == 0:
-		cloud = sphere(size)
-	elif id == 1:
-		cloud = cube(size)
-	elif id == 2:
-		cloud = map(size)
-	elif id == 3:
-		link = "https://raw.githubusercontent.com/PointCloudLibrary/pcl/master/test/bunny.pcd"
-		(cloud, size) = extern(link, 3)
-	elif id == 4:
-		link = "https://raw.githubusercontent.com/joachimtapp/bachelorProject/master/bunny.pcd"
-		(cloud, size) = extern(link, 5)
-	elif id == 5:
-		link = "https://raw.githubusercontent.com/PointCloudLibrary/pcl/master/test/rops_cloud.pcd"
-		(cloud, size) = extern(link, 3)
-	else:
-		print("generate error: id '" + id + "' wrong")
-	cloud = cloud.reshape(size * 4)
-	await update_cloud(cloud, size, ws)
 
 
 def sphere(size: int) -> np.ndarray:
@@ -115,12 +88,16 @@ def extern(url: str, data_per_point) -> Tuple[np.ndarray, int]:
 			break
 		else:
 			i += 1
-	c = 0
-	while i < len(words) and c < size:
-		points[c, 0] = words[i + 0]
-		points[c, 1] = words[i + 1]
-		points[c, 2] = words[i + 2]
+	avg = [0, 0, 0]
+	for c in range(size):
+		for j in range(3):
+			points[c, j] = float(words[i + j])
+			avg[j] += points[c, j]
 		points[c, 3] = 0
-		c += 1
 		i += data_per_point
+	for j in range(3):
+		avg[j] /= size
+	for c in range(size):
+		for j in range(3):
+			points[c, j] -= avg[j]
 	return (points, size)
