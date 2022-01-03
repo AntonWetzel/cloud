@@ -47,9 +47,23 @@ def high_frequenzy(cloud: np.ndarray, sur: np.ndarray, n: int, k: int) -> np.nda
 
 	_, vectors = eigen.eigsh(lapl, c, which='LM')
 	print("\tgenerated eigenvectors", time.time() - t1)
-	m = vectors @ vectors.transpose() @ cloud.reshape(n, 4)
+	test = vectors @ vectors.transpose()
+	m = test @ cloud.reshape(n, 4)
+	imp = np.zeros(n, dtype=np.float32)
 	for i in range(n):
-		m[i, 0] = math.sqrt(m[i, 0] * m[i, 0] + m[i, 1] * m[i, 1] + m[i, 2] * m[i, 2]) * 10
+		for j in range(n):
+			imp[i] += test[j, i]
+	min = np.Infinity
+	max = -np.Infinity
+	for i in range(n):
+		if min > imp[i]:
+			min = imp[i]
+		if max < imp[i]:
+			max = imp[i]
+	print(min, max)
+	l = max - min
+	for i in range(n):
+		m[i, 0] = (imp[i] - min) / l
 		m[i, 1] = 0
 		m[i, 2] = 0
 		m[i, 3] = 0

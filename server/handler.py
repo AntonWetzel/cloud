@@ -86,43 +86,50 @@ class Handler:
 			await self.stream.async_done()
 			await self.send_surrounding()
 		elif id == 4:
+			if self.size == 0:
+				print("cloud needed for surround")
+				return
+			self.k = compute.triangulate_max
+			self.d_surround = cuda.device_array(self.size * self.k, dtype=np.uint32, stream=self.stream)
+			compute.triangulate_all[blockspergrid, thread_per_block,
+				self.stream](self.d_cloud, self.d_surround, self.size)
+			self.surround = self.d_surround.copy_to_host(stream=self.stream)
+			await self.stream.async_done()
+			await self.send_surrounding()
+		elif id == 5:
+			if self.k == 0:
+				print("surrounding needed for triangulation with surrounding")
+				return
+			new_k = compute.triangulate_max
+			new_d_surround = cuda.device_array(self.size * new_k, dtype=np.uint32, stream=self.stream)
+			compute.triangulate_with_sur[blockspergrid, thread_per_block,
+				self.stream](self.d_cloud, self.d_surround, new_d_surround, self.size, self.k)
+			self.d_surround = new_d_surround
+			self.k = new_k
+			self.surround = self.d_surround.copy_to_host(stream=self.stream)
+			await self.stream.async_done()
+			await self.send_surrounding()
+		elif id == 6:
+			[amount] = struct.unpack('<f', data[0:4])
+			print("amount:", amount)
+			compute.noise(self.cloud, amount, self.size)
+			await self.update_cloud(self.cloud, self.size, True)
+		elif id == 7:
 			if self.k == 0:
 				print("surround needed for laplace")
 				return
 			cloud = compute.frequenzy(self.cloud, self.surround, self.size, self.k)
 			await self.update_cloud(cloud, self.size, self.ws)
-		elif id == 5:
+		elif id == 8:
 			if self.k == 0:
 				print("surround needed for laplace")
 				return
 			self.curvature = compute.high_frequenzy(self.cloud, self.surround, self.size, self.k)
 			self.d_curvature = cuda.to_device(self.curvature, stream=self.stream)
 			await self.send_curvature()
-		elif id == 6:
-			[amount] = struct.unpack('<f', data[0:4])
-			print("amount:", amount)
-			cloud = compute.noise(self.cloud, amount, self.size, self.k)
-			await self.update_cloud(cloud, self.size, True)
 		else:
 			print("compute error: id '" + str(id) + "' wrong")
 
 	async def create(self, id: int, size: int):
-		if id == 0:
-			cloud = generate.sphere(size)
-		elif id == 1:
-			cloud = generate.cube(size)
-		elif id == 2:
-			cloud = generate.map(size)
-		elif id == 3:
-			link = "https://raw.githubusercontent.com/PointCloudLibrary/pcl/master/test/bunny.pcd"
-			(cloud, size) = generate.extern(link, 3)
-		elif id == 4:
-			link = "https://raw.githubusercontent.com/joachimtapp/bachelorProject/master/bunny.pcd"
-			(cloud, size) = generate.extern(link, 5)
-		elif id == 5:
-			link = "https://raw.githubusercontent.com/PointCloudLibrary/pcl/master/test/rops_cloud.pcd"
-			(cloud, size) = generate.extern(link, 3)
-		else:
-			print("generate error: id '" + id + "' wrong")
-		cloud = cloud.reshape(size * 4)
+		size, cloud = generate.create(id, size)
 		await self.update_cloud(cloud, size, True)

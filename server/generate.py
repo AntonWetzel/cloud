@@ -4,6 +4,59 @@ from typing import Tuple
 import numpy as np
 from opensimplex import OpenSimplex
 import requests
+from numba import jit, types
+import time
+
+
+@jit(types.void(types.float32[:], types.int32), nopython=True)
+def norm(cloud, n):
+	avg_x = 0.0
+	avg_y = 0.0
+	avg_z = 0.0
+	for i in range(n):
+		avg_x += cloud[i * 4 + 0]
+		avg_y += cloud[i * 4 + 1]
+		avg_z += cloud[i * 4 + 2]
+	avg_x /= n
+	avg_y /= n
+	avg_z /= n
+	for i in range(n):
+		cloud[i * 4 + 0] -= avg_x
+		cloud[i * 4 + 1] -= avg_y
+		cloud[i * 4 + 2] -= avg_z
+	var = 0
+	for i in range(n):
+		var += cloud[i * 4 + 0] * cloud[i * 4 + 0]
+		var += cloud[i * 4 + 1] * cloud[i * 4 + 1]
+		var += cloud[i * 4 + 1] * cloud[i * 4 + 2]
+	norm = 1 / math.sqrt(var / n)
+	for i in range(n):
+		cloud[i * 4 + 0] *= norm
+		cloud[i * 4 + 1] *= norm
+		cloud[i * 4 + 2] *= norm
+
+
+def create(id: int, size: int):
+	if id == 0:
+		cloud = sphere(size)
+	elif id == 1:
+		cloud = cube(size)
+	elif id == 2:
+		cloud = map(size)
+	elif id == 3:
+		link = "https://raw.githubusercontent.com/PointCloudLibrary/pcl/master/test/bunny.pcd"
+		(cloud, size) = extern(link, 3)
+	elif id == 4:
+		link = "https://raw.githubusercontent.com/joachimtapp/bachelorProject/master/bunny.pcd"
+		(cloud, size) = extern(link, 5)
+	elif id == 5:
+		link = "https://raw.githubusercontent.com/PointCloudLibrary/pcl/master/test/rops_cloud.pcd"
+		(cloud, size) = extern(link, 3)
+	else:
+		print("generate error: id '" + id + "' wrong")
+	cloud = cloud.reshape(size * 4)
+	norm(cloud, size)
+	return (size, cloud)
 
 
 def sphere(size: int) -> np.ndarray:
@@ -88,16 +141,9 @@ def extern(url: str, data_per_point) -> Tuple[np.ndarray, int]:
 			break
 		else:
 			i += 1
-	avg = [0, 0, 0]
 	for c in range(size):
 		for j in range(3):
 			points[c, j] = float(words[i + j])
-			avg[j] += points[c, j]
 		points[c, 3] = 0
 		i += data_per_point
-	for j in range(3):
-		avg[j] /= size
-	for c in range(size):
-		for j in range(3):
-			points[c, j] -= avg[j]
 	return (points, size)

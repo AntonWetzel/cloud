@@ -148,25 +148,22 @@ async function main(socket: WebSocket) {
 			const test = document.getElementById('k') as HTMLInputElement
 			const t_k = parseInt(test.value)
 			data = new ArrayBuffer(8)
-			let id: number
 			switch (name) {
-			case 'kNearestIter': id = 0; break
-			case 'kNearestList': id = 1; break
-			case 'kNearestIterSorted': id = 2; break
-			case 'kNearestListSorted': id = 3; break
+			case 'kNearestIter': new Int32Array(data)[0] = computeIdOffset + 0; break
+			case 'kNearestList':new Int32Array(data)[0] = computeIdOffset + 1; break
+			case 'kNearestIterSorted':new Int32Array(data)[0] = computeIdOffset + 2; break
+			case 'kNearestListSorted':new Int32Array(data)[0] = computeIdOffset + 3; break
 			}
-			new Int32Array(data)[0] = computeIdOffset + id
 			new Int32Array(data)[1] = t_k
 			socket.send(data)
 			break
-		case 'frequenz':
+		case 'triangulateAll':
+		case 'triangulateNear':
 			data = new ArrayBuffer(4)
-			new Int32Array(data)[0] = computeIdOffset + 4
-			socket.send(data)
-			break
-		case 'highFrequenz':
-			data = new ArrayBuffer(4)
-			new Int32Array(data)[0] = computeIdOffset + 5
+			switch (name) {
+			case 'triangulateAll': new Int32Array(data)[0] = computeIdOffset + 4; break
+			case 'triangulateNear':new Int32Array(data)[0] = computeIdOffset + 5; break
+			}
 			socket.send(data)
 			break
 		case 'noise':
@@ -175,29 +172,17 @@ async function main(socket: WebSocket) {
 			new Float32Array(data)[1] = parseFloat((document.getElementById('noise') as HTMLInputElement).value)
 			socket.send(data)
 			break
-			/*
-		case 'triangulateAll':
-			k = GPU.TriangulateK
-			if (nearest != undefined) {
-				nearest.destroy()
-			}
-			nearest = GPU.CreateEmptyBuffer(length * k * 4, GPUBufferUsage.STORAGE)
-			GPU.Compute('triangulateAll', length, [[], []], [cloud, nearest])
-			mode.value = 'connections'
+		case 'frequenz':
+			data = new ArrayBuffer(4)
+			new Int32Array(data)[0] = computeIdOffset + 7
+			socket.send(data)
 			break
-		case 'triangulateNear':
-			if (nearest == undefined) {
-				alert('please calculate nearest first')
-			} else {
-				const copy = GPU.CreateEmptyBuffer(length * GPU.TriangulateK * 4, GPUBufferUsage.STORAGE)
-				GPU.Compute('triangulateNearest', length, [[k], []], [cloud, nearest, copy])
-				nearest.destroy()
-				nearest = copy
-				k = GPU.TriangulateK
-				mode.value = 'connections'
-				break
-			}
+		case 'highFrequenz':
+			data = new ArrayBuffer(4)
+			new Int32Array(data)[0] = computeIdOffset + 8
+			socket.send(data)
 			break
+		/*
 		case 'cleanDang':
 		case 'cleanLong':
 			if (nearest == undefined) {

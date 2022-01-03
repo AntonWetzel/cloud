@@ -11,9 +11,9 @@ import time
 from random import random
 
 
-def noise(cloud: np.ndarray, amount: float, n: int, k: int) -> np.ndarray:
+@jit(types.void(types.float32[:], types.float32, types.int32), nopython=True)
+def noise(cloud: np.ndarray, amount: float, n: int):
 	for i in range(n):
 		cloud[i * 4 + 0] += (random() * 2 - 1) * amount
 		cloud[i * 4 + 1] += (random() * 2 - 1) * amount
 		cloud[i * 4 + 2] += (random() * 2 - 1) * amount
-	return cloud

@@ -886,39 +886,50 @@
 	                const test = document.getElementById('k');
 	                const t_k = parseInt(test.value);
 	                data = new ArrayBuffer(8);
-	                let id;
 	                switch (name) {
 	                    case 'kNearestIter':
-	                        id = 0;
+	                        new Int32Array(data)[0] = computeIdOffset + 0;
 	                        break;
 	                    case 'kNearestList':
-	                        id = 1;
+	                        new Int32Array(data)[0] = computeIdOffset + 1;
 	                        break;
 	                    case 'kNearestIterSorted':
-	                        id = 2;
+	                        new Int32Array(data)[0] = computeIdOffset + 2;
 	                        break;
 	                    case 'kNearestListSorted':
-	                        id = 3;
+	                        new Int32Array(data)[0] = computeIdOffset + 3;
 	                        break;
 	                }
-	                new Int32Array(data)[0] = computeIdOffset + id;
 	                new Int32Array(data)[1] = t_k;
 	                socket.send(data);
 	                break;
-	            case 'frequenz':
+	            case 'triangulateAll':
+	            case 'triangulateNear':
 	                data = new ArrayBuffer(4);
-	                new Int32Array(data)[0] = computeIdOffset + 4;
-	                socket.send(data);
-	                break;
-	            case 'highFrequenz':
-	                data = new ArrayBuffer(4);
-	                new Int32Array(data)[0] = computeIdOffset + 5;
+	                switch (name) {
+	                    case 'triangulateAll':
+	                        new Int32Array(data)[0] = computeIdOffset + 4;
+	                        break;
+	                    case 'triangulateNear':
+	                        new Int32Array(data)[0] = computeIdOffset + 5;
+	                        break;
+	                }
 	                socket.send(data);
 	                break;
 	            case 'noise':
 	                data = new ArrayBuffer(8);
 	                new Int32Array(data)[0] = computeIdOffset + 6;
 	                new Float32Array(data)[1] = parseFloat(document.getElementById('noise').value);
+	                socket.send(data);
+	                break;
+	            case 'frequenz':
+	                data = new ArrayBuffer(4);
+	                new Int32Array(data)[0] = computeIdOffset + 7;
+	                socket.send(data);
+	                break;
+	            case 'highFrequenz':
+	                data = new ArrayBuffer(4);
+	                new Int32Array(data)[0] = computeIdOffset + 8;
 	                socket.send(data);
 	                break;
 	            default:
