@@ -795,6 +795,12 @@
 	                nearest = CreateBuffer(new Uint32Array(data), computeFlag);
 	                mode.value = 'connections';
 	                break;
+	            case 3:
+	                if (curvature != undefined) {
+	                    curvature.destroy();
+	                }
+	                curvature = CreateBuffer(new Float32Array(data), renderFlag);
+	                color.value = 'curve';
 	        }
 	    };
 	    const mode = document.getElementById('mode');
@@ -904,9 +910,14 @@
 	                new Int32Array(data)[0] = computeIdOffset + 4;
 	                socket.send(data);
 	                break;
+	            case 'highFrequenz':
+	                data = new ArrayBuffer(4);
+	                new Int32Array(data)[0] = computeIdOffset + 5;
+	                socket.send(data);
+	                break;
 	            case 'noise':
 	                data = new ArrayBuffer(8);
-	                new Int32Array(data)[0] = computeIdOffset + 5;
+	                new Int32Array(data)[0] = computeIdOffset + 6;
 	                new Float32Array(data)[1] = parseFloat(document.getElementById('noise').value);
 	                socket.send(data);
 	                break;

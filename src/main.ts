@@ -60,6 +60,12 @@ async function main(socket: WebSocket) {
 			nearest = GPU.CreateBuffer(new Uint32Array(data), computeFlag)
 			mode.value = 'connections'
 			break
+		case 3:
+			if (curvature != undefined) {
+				curvature.destroy()
+			}
+			curvature = GPU.CreateBuffer(new Float32Array(data), renderFlag)
+			color.value = 'curve'
 		}
 	}
 
@@ -153,16 +159,19 @@ async function main(socket: WebSocket) {
 			new Int32Array(data)[1] = t_k
 			socket.send(data)
 			break
-
 		case 'frequenz':
 			data = new ArrayBuffer(4)
 			new Int32Array(data)[0] = computeIdOffset + 4
 			socket.send(data)
 			break
-		case 'noise':
-		
-			data = new ArrayBuffer(8)
+		case 'highFrequenz':
+			data = new ArrayBuffer(4)
 			new Int32Array(data)[0] = computeIdOffset + 5
+			socket.send(data)
+			break
+		case 'noise':
+			data = new ArrayBuffer(8)
+			new Int32Array(data)[0] = computeIdOffset + 6
 			new Float32Array(data)[1] = parseFloat((document.getElementById('noise') as HTMLInputElement).value)
 			socket.send(data)
 			break

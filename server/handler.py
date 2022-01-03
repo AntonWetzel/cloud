@@ -25,6 +25,10 @@ class Handler:
 		self.k: int = 0
 		self.surround: np.ndarray
 		self.d_surround: DeviceNDArray
+
+		self.curvature: np.ndarray
+		self.d_curvature: np.ndarray
+
 		self.ws = ws
 
 	async def update_cloud(self, cloud: np.ndarray, size: int, reset_sur: bool = False):
@@ -37,6 +41,9 @@ class Handler:
 
 	async def send_surrounding(self):
 		await self.ws.send_bytes(number_to_bytes(2) + number_to_bytes(self.k) + self.surround.tobytes())
+
+	async def send_curvature(self):
+		await self.ws.send_bytes(number_to_bytes(3) + self.curvature.tobytes())
 
 	async def compute(self, id: int, data: bytes):
 
@@ -85,6 +92,13 @@ class Handler:
 			cloud = compute.frequenzy(self.cloud, self.surround, self.size, self.k)
 			await self.update_cloud(cloud, self.size, self.ws)
 		elif id == 5:
+			if self.k == 0:
+				print("surround needed for laplace")
+				return
+			self.curvature = compute.high_frequenzy(self.cloud, self.surround, self.size, self.k)
+			self.d_curvature = cuda.to_device(self.curvature, stream=self.stream)
+			await self.send_curvature()
+		elif id == 6:
 			[amount] = struct.unpack('<f', data[0:4])
 			print("amount:", amount)
 			cloud = compute.noise(self.cloud, amount, self.size, self.k)

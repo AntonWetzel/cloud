@@ -76,50 +76,21 @@ def nearest_iter_sorted(cloud, sur, n, k):
 	last = 0
 	for c in range(k):
 		best: int
-		dist = 999999.0
-		mode = 0
-		down = 1
-		up = 1
-		while True:
-			if mode == 0:
-				if down > id:
-					i = id + up
-					up += 1
-					mode = 3
-				else:
-					i = id - down
-					down += 1
-					mode = 1
-			elif mode == 1:
-				if id + up >= n:
-					i = id - down
-					down += 1
-					mode = 2
-				else:
-					i = id + up
-					up += 1
-					mode = 0
-			elif mode == 2:
-				if (down > id):
-					break
-				i = id - down
-				down += 1
-			else:
-				if (id + up >= n):
-					break
-				i = id + up
-				up += 1
+		dist = np.Infinity
+		for i in range(id - 1, -1, -1):
 			o = get_point(cloud, i)
 			x_d = o[0] - p[0]
 			if (x_d * x_d) > dist:
-				if (mode == 0):
-					mode = 3
-					continue
-				elif (mode == 1):
-					mode = 2
-					continue
-				else:
-					break
+				break
+			d = dist_pow_2(p, o)
+			if last < d and d < dist:
+				best = i
+				dist = d
+		for i in range(id + 1, n):
+			o = get_point(cloud, i)
+			x_d = o[0] - p[0]
+			if (x_d * x_d) > dist:
+				break
 			d = dist_pow_2(p, o)
 			if last < d and d < dist:
 				best = i
@@ -135,41 +106,17 @@ def nearest_list_sorted(cloud, sur, n, k):
 		return
 	offset = id * k
 	p = get_point(cloud, id)
-	down = 1
-	up = 1
-	mode = 0
+
+	if id < n / 2:
+		dir = 1
+		low = id - 1
+		high = id + k + 1
+	else:
+		dir = -1
+		low = id - 1 - k
+		high = id + 1
 	for c in range(k):
-		i: int
-		if mode == 0:
-			if down > id:
-				i = id + up
-				up += 1
-				mode = 3
-			else:
-				i = id - down
-				down += 1
-				mode = 1
-		elif mode == 1:
-			if id + up >= n:
-				i = id - down
-				down += 1
-				mode = 2
-			else:
-				i = id + up
-				up += 1
-				mode = 0
-		elif mode == 2:
-			if down > id:
-				break
-			else:
-				i = id - down
-				down += 1
-		else:
-			if id + up <= n:
-				break
-			else:
-				i = id + up
-				up += 1
+		i = id + (1 + c) * dir
 		o = get_point(cloud, i)
 		d = dist_pow_2(p, o)
 		idx = 0
@@ -180,51 +127,29 @@ def nearest_list_sorted(cloud, sur, n, k):
 		for x in range(c, idx, -1):
 			sur[offset + x] = sur[offset + x - 1]
 		sur[offset + idx] = i
-		i += 1
-
 	dist = dist_pow_2(p, get_point(cloud, sur[offset]))
-	while True:
-		if mode == 0:
-			if down > id:
-				i = id + up
-				up += 1
-				mode = 3
-			else:
-				i = id - down
-				down += 1
-				mode = 1
-		elif mode == 1:
-			if id + up >= n:
-				i = id - down
-				down += 1
-				mode = 2
-			else:
-				i = id + up
-				up += 1
-				mode = 0
-		elif mode == 2:
-			if down > id:
-				break
-			else:
-				i = id - down
-				down += 1
-		else:
-			if id + up <= n:
-				break
-			else:
-				i = id + up
-				up += 1
+
+	for i in range(low, -1, -1):
 		o = get_point(cloud, i)
 		x_d = o[0] - p[0]
 		if (x_d * x_d) > dist:
-			if (mode == 0):
-				mode = 3
-				continue
-			elif (mode == 1):
-				mode = 2
-				continue
-			else:
-				break
+			break
+		d = dist_pow_2(p, o)
+		if d < dist:
+			idx = 0
+			while idx + 1 < k:
+				next = sur[offset + idx + 1]
+				if dist_pow_2(p, get_point(cloud, next)) < d:
+					break
+				sur[offset + idx] = next
+				idx += 1
+			sur[offset + idx] = i
+			dist = dist_pow_2(p, get_point(cloud, sur[offset]))
+	for i in range(high, n):
+		o = get_point(cloud, i)
+		x_d = o[0] - p[0]
+		if (x_d * x_d) > dist:
+			break
 		d = dist_pow_2(p, o)
 		if d < dist:
 			idx = 0
