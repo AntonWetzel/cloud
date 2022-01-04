@@ -800,11 +800,35 @@
 	}
 	customElements.define('global-input', GlobalInput);
 
-	const formIdOffset = 1;
-	const computeIdOffset = 33;
-	const renderFlag = GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE;
-	const computeFlag = GPUBufferUsage.STORAGE;
-	async function main(socket) {
+	const socket = new WebSocket('ws://' + location.host + '/ws');
+	socket.onerror = () => {
+	    alert('socket connection error');
+	};
+	socket.onopen = async () => {
+	    const display = document.getElementById('display');
+	    const canvas = await Setup(display.clientWidth, display.clientHeight);
+	    display.innerHTML = '';
+	    display.append(canvas);
+	    const formIdOffset = 1;
+	    const computeIdOffset = 33;
+	    const renderFlag = GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE;
+	    const computeFlag = GPUBufferUsage.STORAGE;
+	    const mode = document.getElementById('mode');
+	    const color = document.getElementById('color');
+	    const gridCheckbox = document.getElementById('grid');
+	    const cam = new Camera(Math.PI / 4);
+	    cam.Translate(0, 5, 30);
+	    const increase = new Position();
+	    increase.Scale(5, 5, 5);
+	    const normal = new Position();
+	    const grid = Create(10);
+	    let k = 0;
+	    let length = 0;
+	    let cloud = CreateEmptyBuffer(0, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE);
+	    let colors = CreateEmptyBuffer(0, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE);
+	    let nearest = undefined;
+	    let curvature = undefined;
+	    const keys = {};
 	    socket.onmessage = async (ev) => {
 	        let data = await ev.data.arrayBuffer();
 	        console.log('message: ', data.byteLength);
@@ -817,10 +841,6 @@
 	                if (nearest != undefined) {
 	                    nearest.destroy();
 	                    nearest = undefined;
-	                }
-	                if (normals != undefined) {
-	                    normals.destroy();
-	                    normals = undefined;
 	                }
 	                if (curvature != undefined) {
 	                    curvature.destroy();
@@ -854,41 +874,6 @@
 	                color.value = 'curve';
 	        }
 	    };
-	    const mode = document.getElementById('mode');
-	    const color = document.getElementById('color');
-	    const gridCheckbox = document.getElementById('grid');
-	    const display = document.getElementById('display');
-	    const canvas = await Setup(display.clientWidth, display.clientHeight);
-	    if (canvas == undefined) {
-	        display.remove();
-	        const error = document.createElement('div');
-	        error.className = 'error';
-	        const topLine = document.createElement('div');
-	        topLine.className = 'large';
-	        topLine.innerHTML = 'WebGPU not available';
-	        error.append(topLine);
-	        const botLine = document.createElement('div');
-	        botLine.className = 'normal';
-	        botLine.innerHTML =
-	            'Only tested with <a href="https://www.google.com/chrome">Google Chrome</a>';
-	        error.append(botLine);
-	        document.body.append(error);
-	        return;
-	    }
-	    display.append(canvas);
-	    const cam = new Camera(Math.PI / 4);
-	    cam.Translate(0, 5, 30);
-	    const increase = new Position();
-	    increase.Scale(5, 5, 5);
-	    const normal = new Position();
-	    const grid = Create(10);
-	    let k = 0;
-	    let length = 0;
-	    let cloud = CreateEmptyBuffer(0, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE);
-	    let colors = CreateEmptyBuffer(0, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE);
-	    let nearest = undefined;
-	    let normals = undefined;
-	    let curvature = undefined;
 	    window.CreateForm = (name) => {
 	        const data = new ArrayBuffer(8);
 	        let id;
@@ -926,14 +911,13 @@
 	            hint.remove();
 	        }, 5000);
 	    };
-	    let data;
 	    window.StartCompute = (name) => {
+	        let data;
 	        switch (name) {
 	            case 'kNearestIter':
 	            case 'kNearestList':
 	            case 'kNearestIterSorted':
 	            case 'kNearestListSorted':
-	                const t_k = window.k;
 	                data = new ArrayBuffer(8);
 	                switch (name) {
 	                    case 'kNearestIter':
@@ -949,7 +933,7 @@
 	                        new Int32Array(data)[0] = computeIdOffset + 3;
 	                        break;
 	                }
-	                new Int32Array(data)[1] = t_k;
+	                new Int32Array(data)[1] = window.k;
 	                socket.send(data);
 	                break;
 	            case 'triangulateAll':
@@ -996,7 +980,6 @@
 	        Resize(display.clientWidth, display.clientHeight);
 	        cam.UpdateSize();
 	    };
-	    const keys = {};
 	    document.body.onkeydown = (ev) => {
 	        keys[ev.code] = true;
 	    };
@@ -1033,13 +1016,10 @@
 	                c = colors;
 	                break;
 	            case 'normal':
-	                if (normals == undefined) {
+	                {
 	                    c = colors;
 	                    color.value = 'color';
 	                    alert('normals not calculated');
-	                }
-	                else {
-	                    c = normals;
 	                }
 	                break;
 	            case 'curve':
@@ -1085,24 +1065,7 @@
 	        }
 	        FinishRender();
 	        last = time;
-	        if (keys['KeyP'] != undefined) {
-	            const name = prompt('Please enter file name', 'cloud');
-	            if (name != null && name.length > 0) {
-	                const link = document.createElement('a');
-	                link.download = name + '.png';
-	                link.href = canvas.toDataURL();
-	                link.click();
-	            }
-	            delete keys['KeyP'];
-	        }
 	    }
-	}
-	const socket = new WebSocket('ws://' + location.host + '/ws');
-	socket.onopen = async () => {
-	    await main(socket);
-	};
-	socket.onerror = () => {
-	    alert('socket connection error');
 	};
 
 })();

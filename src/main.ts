@@ -4,6 +4,7 @@ import * as Color from './color.js'
 import * as Grid from './grid.js'
 import './globalInput.js'
 
+
 declare global {
 	interface Window {
 		CreateForm: (name: string) => void
@@ -17,180 +18,168 @@ declare global {
 	}
 }
 
-const formIdOffset = 1
-const computeIdOffset = 33
-const renderFlag = GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE
-const computeFlag = GPUBufferUsage.STORAGE
-
-
 const socket = new WebSocket('ws://' + location.host + '/ws')
 
-const mode = document.getElementById('mode') as HTMLSelectElement
-const color = document.getElementById('color') as HTMLSelectElement
-const gridCheckbox = document.getElementById('grid') as HTMLInputElement
+socket.onerror = () => {
+	alert('socket connection error')
+}	
 
-const display = document.getElementById('display') as HTMLDivElement
-const canvas = await GPU.Setup(display.clientWidth, display.clientHeight)
-if (canvas == undefined) {
-	display.remove()
-	const error = document.createElement('div')
-	error.className = 'error'
-	const topLine = document.createElement('div')
-	topLine.className = 'large'
-	topLine.innerHTML = 'WebGPU not available'
-	error.append(topLine)
-	const botLine = document.createElement('div')
-	botLine.className = 'normal'
-	botLine.innerHTML =
-		'Only tested with <a href="https://www.google.com/chrome">Google Chrome</a>'
-	error.append(botLine)
-	document.body.append(error)
-}
+socket.onopen = async () => {
 
-display.append(canvas)
+	const display = document.getElementById('display') as HTMLDivElement
+	const canvas = await GPU.Setup(display.clientWidth, display.clientHeight)
+	display.innerHTML = ''
+	display.append(canvas)
 
-const cam = new GPU.Camera(Math.PI / 4)
-cam.Translate(0, 5, 30)
+	const formIdOffset = 1
+	const computeIdOffset = 33
+	const renderFlag = GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE
+	const computeFlag = GPUBufferUsage.STORAGE
 
-const increase = new GPU.Position()
-increase.Scale(5, 5, 5)
-const normal = new GPU.Position()
-const grid = Grid.Create(10)
+	const mode = document.getElementById('mode') as HTMLSelectElement
+	const color = document.getElementById('color') as HTMLSelectElement
+	const gridCheckbox = document.getElementById('grid') as HTMLInputElement
 
-let k = 0
-let length = 0
+	const cam = new GPU.Camera(Math.PI / 4)
+	cam.Translate(0, 5, 30)
 
-let cloud = GPU.CreateEmptyBuffer(0, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE)
-let colors = GPU.CreateEmptyBuffer(0, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE)
-let nearest : GPUBuffer = undefined
-let normals: GPUBuffer = undefined
-let curvature: GPUBuffer = undefined
+	const increase = new GPU.Position()
+	increase.Scale(5, 5, 5)
+	const normal = new GPU.Position()
+	const grid = Grid.Create(10)
 
-async function messageHandle(ev: MessageEvent<Blob>) {
-	let data = await ev.data.arrayBuffer()
-	console.log('message: ', data.byteLength)
-	const info = new Int32Array(data)[0]
-	data = data.slice(4)
-	switch (info) {
-	case 1:
-		cloud.destroy()
-		colors.destroy()
-		if (nearest != undefined) {
-			nearest.destroy()
-			nearest = undefined
-		}
-		if (normals != undefined) {
-			normals.destroy()
-			normals = undefined
-		}
-		if (curvature != undefined) {
-			curvature.destroy()
-			curvature =undefined
-		}
-		length = new Int32Array(data)[0]
+	let k = 0
+	let length = 0
+
+	let cloud = GPU.CreateEmptyBuffer(0, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE)
+	let colors = GPU.CreateEmptyBuffer(0, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE)
+	let nearest : GPUBuffer = undefined
+	let normals: GPUBuffer = undefined
+	let curvature: GPUBuffer = undefined
+	const keys: { [key: string]: true | undefined } = {}
+
+	socket.onmessage =async (ev: MessageEvent<Blob>) =>{
+		let data = await ev.data.arrayBuffer()
+		console.log('message: ', data.byteLength)
+		const info = new Int32Array(data)[0]
 		data = data.slice(4)
-		if (length * 16 != data.byteLength) {
-			alert('wrong length')
-			console.log(length, data.byteLength)
+		switch (info) {
+		case 1:
+			cloud.destroy()
+			colors.destroy()
+			if (nearest != undefined) {
+				nearest.destroy()
+				nearest = undefined
+			}
+			if (normals != undefined) {
+				normals.destroy()
+				normals = undefined
+			}
+			if (curvature != undefined) {
+				curvature.destroy()
+				curvature =undefined
+			}
+			length = new Int32Array(data)[0]
+			data = data.slice(4)
+			if (length * 16 != data.byteLength) {
+				alert('wrong length')
+				console.log(length, data.byteLength)
+			}
+			cloud = GPU.CreateBuffer(new Float32Array(data), renderFlag)
+			colors = Color.Create(length)
+			mode.value = 'points'
+			color.value = 'color'
+			break
+		case 2:
+			if (nearest != undefined) {
+				nearest.destroy()
+			}
+			k = new Int32Array(data)[0]
+			data = data.slice(4)
+			nearest = GPU.CreateBuffer(new Uint32Array(data), computeFlag)
+			mode.value = 'connections'
+			break
+		case 3:
+			if (curvature != undefined) {
+				curvature.destroy()
+			}
+			curvature = GPU.CreateBuffer(new Float32Array(data), renderFlag)
+			color.value = 'curve'
 		}
-		cloud = GPU.CreateBuffer(new Float32Array(data), renderFlag)
-		colors = Color.Create(length)
-		mode.value = 'points'
-		color.value = 'color'
-		break
-	case 2:
-		if (nearest != undefined) {
-			nearest.destroy()
-		}
-		k = new Int32Array(data)[0]
-		data = data.slice(4)
-		nearest = GPU.CreateBuffer(new Uint32Array(data), computeFlag)
-		mode.value = 'connections'
-		break
-	case 3:
-		if (curvature != undefined) {
-			curvature.destroy()
-		}
-		curvature = GPU.CreateBuffer(new Float32Array(data), renderFlag)
-		color.value = 'curve'
 	}
-}
 
+	window.CreateForm =  (name: string) => {
 
-
-
-window.CreateForm =  (name: string) => {
-
-	const data = new ArrayBuffer(8)
-	let id: number
-	const size = window.size
-	switch (name) {
-	case 'sphere': id = formIdOffset + 0; break
-	case 'cube': id = formIdOffset + 1; break
-	case 'map': id = formIdOffset + 2; break
-	case 'bunny': id = formIdOffset + 3; break
-	case 'bunnyBig': id = formIdOffset + 4; break 
-	case 'statue': id = formIdOffset + 5; break
+		const data = new ArrayBuffer(8)
+		let id: number
+		const size = window.size
+		switch (name) {
+		case 'sphere': id = formIdOffset + 0; break
+		case 'cube': id = formIdOffset + 1; break
+		case 'map': id = formIdOffset + 2; break
+		case 'bunny': id = formIdOffset + 3; break
+		case 'bunnyBig': id = formIdOffset + 4; break 
+		case 'statue': id = formIdOffset + 5; break
+		}
+		new Int32Array(data)[0] = id
+		new Int32Array(data)[1] = size
+		socket.send(data)
 	}
-	new Int32Array(data)[0] = id
-	new Int32Array(data)[1] = size
-	socket.send(data)
-}
 
-window.ShowText = (text: string) => {
-	const hint = document.createElement('div')
-	hint.textContent = text
-	hint.className = 'hint'
-	document.body.append(hint)
-	setTimeout(() => {
-		hint.remove()
-	}, 5000)
-}
+	window.ShowText = (text: string) => {
+		const hint = document.createElement('div')
+		hint.textContent = text
+		hint.className = 'hint'
+		document.body.append(hint)
+		setTimeout(() => {
+			hint.remove()
+		}, 5000)
+	}
 
-window.StartCompute = (name: string) => {
-	let data: ArrayBuffer
-	switch (name) {
-	case 'kNearestIter':
-	case 'kNearestList':
-	case 'kNearestIterSorted':
-	case 'kNearestListSorted':
-		data = new ArrayBuffer(8)
+	window.StartCompute = (name: string) => {
+		let data: ArrayBuffer
 		switch (name) {
-		case 'kNearestIter': new Int32Array(data)[0] = computeIdOffset + 0; break
-		case 'kNearestList':new Int32Array(data)[0] = computeIdOffset + 1; break
-		case 'kNearestIterSorted':new Int32Array(data)[0] = computeIdOffset + 2; break
-		case 'kNearestListSorted':new Int32Array(data)[0] = computeIdOffset + 3; break
-		}
-		new Int32Array(data)[1] = window.k
-		socket.send(data)
-		break
-	case 'triangulateAll':
-	case 'triangulateNear':
-		data = new ArrayBuffer(4)
-		switch (name) {
-		case 'triangulateAll': new Int32Array(data)[0] = computeIdOffset + 4; break
-		case 'triangulateNear':new Int32Array(data)[0] = computeIdOffset + 5; break
-		}
-		socket.send(data)
-		break
-	case 'noise':
-		data = new ArrayBuffer(8)
-		new Int32Array(data)[0] = computeIdOffset + 6
-		new Float32Array(data)[1] = window.noise
-		socket.send(data)
-		break
-	case 'frequenz':
-		data = new ArrayBuffer(8)
-		new Int32Array(data)[0] = computeIdOffset + 7
-		new Int32Array(data)[1] = window.frequencies
-		socket.send(data)
-		break
-	case 'highFrequenz':
-		data = new ArrayBuffer(4)
-		new Int32Array(data)[0] = computeIdOffset + 8
-		socket.send(data)
-		break
-	/*
+		case 'kNearestIter':
+		case 'kNearestList':
+		case 'kNearestIterSorted':
+		case 'kNearestListSorted':
+			data = new ArrayBuffer(8)
+			switch (name) {
+			case 'kNearestIter': new Int32Array(data)[0] = computeIdOffset + 0; break
+			case 'kNearestList':new Int32Array(data)[0] = computeIdOffset + 1; break
+			case 'kNearestIterSorted':new Int32Array(data)[0] = computeIdOffset + 2; break
+			case 'kNearestListSorted':new Int32Array(data)[0] = computeIdOffset + 3; break
+			}
+			new Int32Array(data)[1] = window.k
+			socket.send(data)
+			break
+		case 'triangulateAll':
+		case 'triangulateNear':
+			data = new ArrayBuffer(4)
+			switch (name) {
+			case 'triangulateAll': new Int32Array(data)[0] = computeIdOffset + 4; break
+			case 'triangulateNear':new Int32Array(data)[0] = computeIdOffset + 5; break
+			}
+			socket.send(data)
+			break
+		case 'noise':
+			data = new ArrayBuffer(8)
+			new Int32Array(data)[0] = computeIdOffset + 6
+			new Float32Array(data)[1] = window.noise
+			socket.send(data)
+			break
+		case 'frequenz':
+			data = new ArrayBuffer(8)
+			new Int32Array(data)[0] = computeIdOffset + 7
+			new Int32Array(data)[1] = window.frequencies
+			socket.send(data)
+			break
+		case 'highFrequenz':
+			data = new ArrayBuffer(4)
+			new Int32Array(data)[0] = computeIdOffset + 8
+			socket.send(data)
+			break
+		/*
 	case 'cleanDang':
 	case 'cleanLong':
 		if (nearest == undefined) {
@@ -325,46 +314,43 @@ window.StartCompute = (name: string) => {
 		curvature = threshhold
 		break
 	*/
-	default:
-		alert('wrong name: ' + name)
+		default:
+			alert('wrong name: ' + name)
+		}
 	}
-}
 
-display.onwheel = (ev) => {
-	const scale = 1 + ev.deltaY / 1000
-	increase.Scale(scale, scale, scale)
-	ev.preventDefault()
-	ev.stopImmediatePropagation()
-}
-
-document.body.onresize = () => {
-	GPU.Resize(display.clientWidth, display.clientHeight)
-	cam.UpdateSize()
-}
-
-const keys: { [key: string]: true | undefined } = {}
-document.body.onkeydown = (ev) => {
-	keys[ev.code] = true
-}
-
-document.body.onkeyup = (ev) => {
-	delete keys[ev.code]
-}
-
-display.onmousemove = (ev) => {
-	if ((ev.buttons & 1) != 0) {
-		cam.RotateX(-ev.movementY / 200)
-		cam.RotateGlobalY(-ev.movementX / 200)
+	display.onwheel = (ev) => {
+		const scale = 1 + ev.deltaY / 1000
+		increase.Scale(scale, scale, scale)
+		ev.preventDefault()
+		ev.stopImmediatePropagation()
 	}
-}
 
-socket.onopen = async () => {
-	socket.onmessage = messageHandle
+	document.body.onresize = () => {
+		GPU.Resize(display.clientWidth, display.clientHeight)
+		cam.UpdateSize()
+	}
+
+	document.body.onkeydown = (ev) => {
+		keys[ev.code] = true
+	}
+
+	document.body.onkeyup = (ev) => {
+		delete keys[ev.code]
+	}
+
+	display.onmousemove = (ev) => {
+		if ((ev.buttons & 1) != 0) {
+			cam.RotateX(-ev.movementY / 200)
+			cam.RotateGlobalY(-ev.movementX / 200)
+		}
+	}
+
 	window.CreateForm('sphere')
 
 	let last = await new Promise(requestAnimationFrame)
 	const run = true
-	while(run) {
+	while (run) {
 		const time = await new Promise(requestAnimationFrame)
 		const delta = time - last
 		if (delta < 50) {
@@ -434,18 +420,5 @@ socket.onopen = async () => {
 		}
 		GPU.FinishRender()
 		last = time
-		if (keys['KeyP'] != undefined) {
-			const name = prompt('Please enter file name', 'cloud')
-			if (name != null && name.length > 0) {
-				const link = document.createElement('a')
-				link.download =  name + '.png'
-				link.href = canvas.toDataURL()
-				link.click()
-			}
-			delete keys['KeyP']
-		}
 	}
 }
-socket.onerror = () => {
-	alert('socket connection error')
-}	

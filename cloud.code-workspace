@@ -29,7 +29,6 @@
 			"editor.suggest.insertMode": "replace",
 		},
 		"ltex.language": "en-US",
-		"liveServer.settings.multiRootWorkspaceName": "all",
 	},
 	"launch": {
 		"configurations": [
