@@ -115,10 +115,11 @@ class Handler:
 			compute.noise(self.cloud, amount, self.size)
 			await self.update_cloud(self.cloud, self.size, True)
 		elif id == 7:
+			count = int.from_bytes(data[0:4], "little")
 			if self.k == 0:
 				print("surround needed for laplace")
 				return
-			cloud = compute.frequenzy(self.cloud, self.surround, self.size, self.k)
+			cloud = compute.frequenzy(self.cloud, self.surround, self.size, self.k, count)
 			await self.update_cloud(cloud, self.size, self.ws)
 		elif id == 8:
 			if self.k == 0:

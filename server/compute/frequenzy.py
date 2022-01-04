@@ -5,7 +5,7 @@ import time
 import math
 
 
-def frequenzy(cloud: np.ndarray, sur: np.ndarray, n: int, k: int) -> np.ndarray:
+def frequenzy(cloud: np.ndarray, sur: np.ndarray, n: int, k: int, c: int) -> np.ndarray:
 	t = time.time()
 	lapl = np.zeros((n, n), dtype=np.float32)
 
@@ -18,7 +18,6 @@ def frequenzy(cloud: np.ndarray, sur: np.ndarray, n: int, k: int) -> np.ndarray:
 			lapl[x, i] += 1
 
 	lapl = sparse.lil_matrix(lapl)
-	c = 50
 	t1 = time.time()
 	print("\tgenerated laplace matrix", t1 - t)
 

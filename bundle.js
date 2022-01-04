@@ -749,6 +749,57 @@
 	    };
 	}
 
+	class GlobalInput extends HTMLElement {
+	    constructor() {
+	        super();
+	        const name = this.getAttribute('name');
+	        const min = this.getAttribute('min');
+	        const max = this.getAttribute('max');
+	        const value = this.getAttribute('value');
+	        const step = this.getAttribute('step');
+	        const variable = this.getAttribute('variable');
+	        const shadow = this.attachShadow({ mode: 'open' });
+	        const body = document.createElement('div');
+	        body.style.display = 'flex';
+	        body.title = name;
+	        shadow.appendChild(body);
+	        const text = document.createElement('div');
+	        text.style.textAlign = 'left';
+	        text.innerText = name + ': ';
+	        text.style.flexGrow = '0';
+	        body.appendChild(text);
+	        const val = document.createElement('input');
+	        val.type = 'number';
+	        val.style.textAlign = 'right';
+	        val.style.margin = '0px 10px 0px 10px';
+	        val.value = value;
+	        val.min = min;
+	        val.max = max;
+	        val.step = step;
+	        val.innerText = value;
+	        val.style.flexGrow = '0';
+	        body.appendChild(val);
+	        const input = document.createElement('input');
+	        input.type = 'range';
+	        input.value = value;
+	        input.min = min;
+	        input.max = max;
+	        input.step = step;
+	        input.style.flexGrow = '1';
+	        body.appendChild(input);
+	        val.oninput = () => {
+	            window[variable] = val.valueAsNumber;
+	            input.value = val.value;
+	        };
+	        input.oninput = () => {
+	            window[variable] = input.valueAsNumber;
+	            val.value = input.value;
+	        };
+	        window[variable] = val.valueAsNumber;
+	    }
+	}
+	customElements.define('global-input', GlobalInput);
+
 	const formIdOffset = 1;
 	const computeIdOffset = 33;
 	const renderFlag = GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE;
@@ -839,10 +890,9 @@
 	    let normals = undefined;
 	    let curvature = undefined;
 	    window.CreateForm = (name) => {
-	        const sizeDiv = document.getElementById('size');
 	        const data = new ArrayBuffer(8);
 	        let id;
-	        const size = parseInt(sizeDiv.value);
+	        const size = window.size;
 	        switch (name) {
 	            case 'sphere':
 	                id = formIdOffset + 0;
@@ -883,8 +933,7 @@
 	            case 'kNearestList':
 	            case 'kNearestIterSorted':
 	            case 'kNearestListSorted':
-	                const test = document.getElementById('k');
-	                const t_k = parseInt(test.value);
+	                const t_k = window.k;
 	                data = new ArrayBuffer(8);
 	                switch (name) {
 	                    case 'kNearestIter':
@@ -919,12 +968,13 @@
 	            case 'noise':
 	                data = new ArrayBuffer(8);
 	                new Int32Array(data)[0] = computeIdOffset + 6;
-	                new Float32Array(data)[1] = parseFloat(document.getElementById('noise').value);
+	                new Float32Array(data)[1] = window.noise;
 	                socket.send(data);
 	                break;
 	            case 'frequenz':
-	                data = new ArrayBuffer(4);
+	                data = new ArrayBuffer(8);
 	                new Int32Array(data)[0] = computeIdOffset + 7;
+	                new Int32Array(data)[1] = window.frequencies;
 	                socket.send(data);
 	                break;
 	            case 'highFrequenz':
@@ -962,7 +1012,6 @@
 	    window.CreateForm('sphere');
 	    let last = await new Promise(requestAnimationFrame);
 	    const run = true;
-	    const radDiv = document.getElementById('radius');
 	    while (run) {
 	        const time = await new Promise(requestAnimationFrame);
 	        const delta = time - last;
@@ -1004,7 +1053,7 @@
 	                }
 	                break;
 	        }
-	        const rad = parseFloat(radDiv.value);
+	        const rad = window.radius;
 	        StartRender(cam);
 	        if (gridCheckbox.checked) {
 	            Render$3(normal, grid.length, grid.positions, grid.colors);
@@ -1048,14 +1097,12 @@
 	        }
 	    }
 	}
-	document.body.onload = () => {
-	    const socket = new WebSocket('ws://' + location.host + '/ws');
-	    socket.onopen = async () => {
-	        await main(socket);
-	    };
-	    socket.onerror = () => {
-	        alert('socket connection error');
-	    };
+	const socket = new WebSocket('ws://' + location.host + '/ws');
+	socket.onopen = async () => {
+	    await main(socket);
+	};
+	socket.onerror = () => {
+	    alert('socket connection error');
 	};
 
 })();

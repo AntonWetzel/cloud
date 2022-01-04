@@ -14,6 +14,8 @@
 	<!-- 127.0.0.1:5500 -->
 	<meta http-equiv="origin-trial"
 		content="ArgO2VmUKm1uc5LCCVwKHQWZWnhProzbU8hxu4DsmS4BNYKBmnvZIOOA1oGdX/yxxTdLXzpKxrndmuKGDjcFKQkAAABJeyJvcmlnaW4iOiJodHRwOi8vMTI3LjAuMC4xOjU1MDAiLCJmZWF0dXJlIjoiV2ViR1BVIiwiZXhwaXJ5IjoxNjQzMTU1MTk5fQ==">
+	<script defer src="./bundle.js"></script>
+
 </head>
 
 <body>
@@ -39,13 +41,12 @@ Scale cloud: Mouse wheel`
 				<label for="grid">Grid</label>
 				<input type="checkbox" id="grid" checked=true>
 			</div>
-			<div id="rDis">Radius: 0.015</div>
-			<input type="range" title="Radius" min="0.005" max="0.1" value="0.015" step="0.005" id="radius"
-				oninput="document.getElementById('rDis').innerText='Radius: ' + this.value">
+			<global-input name="Radius" value="0.015" min="0.005" max="0.1" step="0.005" variable="radius">
+			</global-input>
 		</div>
 		<div class="item">
 			<p>Generate Input</p>
-			<input type="number" title="Size" value="10000" step="1" id="size">
+			<global-input name="Size" value="10000" min="100" max="1000000" step="1" variable="size" int></global-input>
 			<button onclick="CreateForm('sphere')">Sphere</button>
 			<button onclick="CreateForm('cube')">Cube</button>
 			<button onclick="CreateForm('map')">Map</button>
@@ -56,10 +57,14 @@ Scale cloud: Mouse wheel`
 			<button onclick="CreateForm('bunnyBig')">Large Bunny</button>
 			<button onclick="CreateForm('statue')">Statue</button>
 		</div>
-
+		<div class="item">
+			<p>Manipulation</p>
+			<global-input name="Noise" value="0.1" min="0.1" max="1.0" step="0.1" variable="noise"></global-input>
+			<button onclick="StartCompute('noise')">Add Noise</button>
+		</div>
 		<div class="item">
 			<p>Nearest neighbors</p>
-			<input type="number" title="K" min="1" max="128" value="16" step="1" id="k">
+			<global-input name="K" value="16" min="1" max="64" step="1" variable="k" int></global-input>
 			<button onclick="StartCompute('kNearestIter')">Iterated</button>
 			<button onclick="StartCompute('kNearestList')">List</button>
 			<button onclick="StartCompute('kNearestIterSorted')">Sort and Iterated</button>
@@ -102,21 +107,14 @@ Scale cloud: Mouse wheel`
 			<button onclick="StartCompute('ripple')">Ripple</button>
 			<button onclick="StartCompute('peek')">Peek</button>
 			<button onclick="StartCompute('threshhold')">Threshhold</button-->
-	</div>
-	<div class="item">
-		<p>Manipulation</p>
-		<div id="noiseDisplay">Noise: 0.1</div>
-		<input type="range" title="Noise" min="0.0" max="1.0" value="0.1" step="0.01" id="noise"
-			oninput="document.getElementById('noiseDisplay').innerText='Noise: ' + this.value">
-		<button onclick="StartCompute('noise')">Add Noise</button>
-	</div>
-	<div class="item">
-		<p>Graph Frequenz Analysis</p>
-		<button onclick="StartCompute('frequenz')">Low</button>
-		<button onclick="StartCompute('highFrequenz')">High</button>
-	</div>
+		<div class="item">
+			<p>Graph Frequenz Analysis</p>
+			<global-input name="Frequencies" value="64" min="1" max="256" step="1" variable="frequencies" int>
+			</global-input>
+			<button onclick="StartCompute('frequenz')">Low</button>
+			<button onclick="StartCompute('highFrequenz')">High</button>
+		</div>
 	</div>
 </body>
-<script src="./bundle.js"></script>
 
-</html>
+</html>w

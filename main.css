@@ -11,7 +11,6 @@ body {
 body {
 	display: flex;
 	flex-direction: column;
-	gap: 10px;
 }
 
 .hint {
@@ -46,27 +45,23 @@ body {
 
 
 #display {
-	min-width: 100px;
-	height: 100%;
 	overflow: hidden;
+	flex-grow: 1;
 }
 
 #control {
 	flex-grow: 0;
-	flex-basis: 1px;
-	height: 100%;
 	background-color: black;
 	display: flex;
 	justify-content: space-evenly;
 	flex-wrap: wrap;
-	gap: 10px;
 } 
 
 p {
 	margin: 10px 10px 2px 10px;
 	font-size: large;
 }
-button, input, select {
+button, input, select, global-input {
 	margin: 2px 10px;
 }
 
@@ -81,4 +76,5 @@ canvas {
 	display: flex;
 	flex-direction: column;
 	flex-grow: 1;
+	border: 3px solid black;
 }
