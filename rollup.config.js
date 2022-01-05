@@ -3,7 +3,7 @@ import url from '@rollup/plugin-url'
 import includePaths from 'rollup-plugin-includepaths'
 
 export default {
-	input: './src/main.ts',
+	input: './client/main.ts',
 	output: {
 		file: './bundle.js',
 		format: 'iife',

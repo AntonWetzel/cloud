@@ -119,6 +119,17 @@ Scale cloud: Mouse wheel`
 			</global-input>
 			<button onclick="StartCompute('smooth')">Smooth</button>
 		</div>
+		<div class="item">
+			<p>Curvature</p>
+			</global-input>
+			<button onclick="StartCompute('curvature')">Curvature</button>
+		</div>
+		<div class="item">
+			<p>Threshhold</p>
+			<global-input name="Threshhold" value="0.1" min="0.05" max="1.0" step="0.005" variable="threshhold">
+			</global-input>
+			<button onclick="StartCompute('threshhold')">Threshhold</button>
+		</div>
 	</div>
 </body>
 

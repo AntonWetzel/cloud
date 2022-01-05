@@ -16,6 +16,7 @@ declare global {
 		noise: number
 		frequencies: number
 		iterations: number
+		threshhold: number
 	}
 }
 
@@ -106,6 +107,7 @@ socket.onopen = async () => {
 			}
 			curvature = GPU.CreateBuffer(new Float32Array(data), renderFlag)
 			color.value = 'curve'
+			break
 		}
 	}
 
@@ -179,6 +181,17 @@ socket.onopen = async () => {
 			data = new ArrayBuffer(8)
 			new Int32Array(data)[0] = computeIdOffset + 8
 			new Int32Array(data)[1] = window.iterations
+			socket.send(data)
+			break
+		case 'curvature':
+			data = new ArrayBuffer(4)
+			new Int32Array(data)[0] = computeIdOffset + 9
+			socket.send(data)
+			break
+		case 'threshhold':
+			data = new ArrayBuffer(8)
+			new Int32Array(data)[0] = computeIdOffset + 10
+			new Float32Array(data)[1] = window.threshhold
 			socket.send(data)
 			break
 		/*

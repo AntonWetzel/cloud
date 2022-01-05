@@ -31,28 +31,40 @@ struct Transfer {
 fn vertexMain(
 	[[builtin(vertex_index)]] id: u32,
 ) -> Transfer {
-	var index_id: u32;
 	let center = id / (3u * parameter.k);
+	let middle_pos = positions.data[center];
+	var position: vec3<f32>;
 	switch (id%3u) {
 		case 0u: {
-			index_id = center;
+			position = middle_pos;
 			break;
 		}
 		case 1u: {
-			index_id = indices.data[id/3u];
+			let index_id = indices.data[id/3u];
+			let p = positions.data[index_id];
+			if (p.x >= middle_pos.x) {
+				position = p;
+			} else {
+				position = middle_pos;
+			}
 			break;
 		}
 		default: {
-			index_id = indices.data[id/3u + 1u];
+			var index_id = indices.data[id/3u + 1u];
 			if (index_id == center || (id + 1u)%(parameter.k * 3u) == 0u) { //loop around to the first vertex in the circle
 				index_id = indices.data[center*parameter.k];
+			}
+			let p = positions.data[index_id];
+			if (p.x >= middle_pos.x) {
+				position = p;
+			} else {
+				position = middle_pos;
 			}
 			break;
 		}
 	}
-
 	var output : Transfer;
-	output.position = camera.projection * camera.view * parameter.model * vec4<f32>(positions.data[index_id], 1.0);
+	output.position = camera.projection * camera.view * parameter.model * vec4<f32>(position, 1.0);
 	output.color = abs(colors.data[center]);
 	return output;
 }

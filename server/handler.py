@@ -26,23 +26,25 @@ class Handler:
 		self.surround: np.ndarray
 		self.d_surround: DeviceNDArray
 
+		self.curve = False
 		self.curvature: np.ndarray
 		self.d_curvature: np.ndarray
 
 		self.ws = ws
 
-	async def update_cloud(self, cloud: np.ndarray, size: int, reset_sur: bool = False):
+	async def update_cloud(self, cloud: np.ndarray, size: int):
 		self.cloud = cloud
 		self.size = size
 		self.d_cloud = cuda.to_device(cloud, stream=self.stream)
-		if reset_sur:
-			self.k = 0
+		self.k = 0
+		self.curve = False
 		await self.ws.send_bytes(number_to_bytes(1) + number_to_bytes(size) + cloud.tobytes())
 
 	async def send_surrounding(self):
 		await self.ws.send_bytes(number_to_bytes(2) + number_to_bytes(self.k) + self.surround.tobytes())
 
 	async def send_curvature(self):
+		self.curve = True
 		await self.ws.send_bytes(number_to_bytes(3) + self.curvature.tobytes())
 
 	async def compute(self, id: int, data: bytes):
@@ -69,13 +71,14 @@ class Handler:
 			if self.size == 0:
 				print("cloud needed for surround")
 				return
-			self.k = int.from_bytes(data[0:4], "little")
-			self.d_surround = cuda.device_array(self.size * self.k, dtype=np.uint32, stream=self.stream)
+			k = int.from_bytes(data[0:4], "little")
 			cloud = self.cloud.reshape(self.size, 4)
 			ind = np.lexsort((cloud[:, 2], cloud[:, 1], cloud[:, 0]))
 			cloud = cloud[ind]
 			cloud = cloud.reshape(self.size * 4)
 			await self.update_cloud(cloud, self.size)
+			self.k = k
+			self.d_surround = cuda.device_array(self.size * self.k, dtype=np.uint32, stream=self.stream)
 			if id == 2:
 				compute.nearest_iter_sorted[blockspergrid, thread_per_block,
 					self.stream](self.d_cloud, self.d_surround, self.size, self.k)
@@ -134,9 +137,30 @@ class Handler:
 			new_cloud = clouds[0].copy_to_host(stream=self.stream)
 			await self.stream.async_done()
 			await self.update_cloud(new_cloud, self.size)
+		elif id == 9:
+			if self.k == 0:
+				print("surround needed for edge")
+				return
+			self.d_curvature = cuda.device_array(self.size * 4, dtype=np.float32, stream=self.stream)
+			compute.edge[blockspergrid, thread_per_block,
+				self.stream](self.d_cloud, self.d_surround, self.d_curvature, self.size, self.k)
+			self.curvature = self.d_curvature.copy_to_host(stream=self.stream)
+			await self.stream.async_done()
+			await self.send_curvature()
+		elif id == 10:
+			if self.curve == False:
+				print("curve needed for threshhold")
+				return
+			[threshhold] = struct.unpack('<f', data[0:4])
+			self.d_curvature = cuda.device_array(self.size * 4, dtype=np.float32, stream=self.stream)
+			compute.threshhold[blockspergrid, thread_per_block,
+				self.stream](self.d_curvature, threshhold, self.size)
+			self.curvature = self.d_curvature.copy_to_host(stream=self.stream)
+			await self.stream.async_done()
+			await self.send_curvature()
 		else:
 			print("compute error: id '" + str(id) + "' wrong")
 
 	async def create(self, id: int, size: int):
 		size, cloud = generate.create(id, size)
-		await self.update_cloud(cloud, size, True)
+		await self.update_cloud(cloud, size)

@@ -31,13 +31,13 @@ async def websocket_handler(request):
 				print("started generate " + str(info))
 				size = int.from_bytes(data[4:8], "little")
 				await handle.create(info, size)
-				print("executed generate " + str(info) + " in " + str(time.time() - t) + "seconds")
+				print("executed generate " + str(info) + " in " + str(time.time() - t) + " seconds")
 			elif computeIdOffset <= info and info <= 50:
 				t = time.time()
 				info -= computeIdOffset
 				print("started compute " + str(info))
 				await handle.compute(info, data[4:])
-				print("executed compute " + str(info) + " in " + str(time.time() - t) + "seconds")
+				print("executed compute " + str(info) + " in " + str(time.time() - t) + " seconds")
 			else:
 				print("wrong info code: ", info)
 	return ws
@@ -71,5 +71,5 @@ if __name__ == "__main__":
 	port = 5500
 	loop = asyncio.new_event_loop()
 	loop.run_until_complete(start_server(host, port))
-	print("start at: http://" + host + ":" + str(port))
+	print("running at: http://" + host + ":" + str(port))
 	loop.run_forever()
