@@ -1,6 +1,7 @@
 import aiohttp
 from aiohttp import web
 import asyncio
+import time
 
 import handler
 
@@ -25,16 +26,18 @@ async def websocket_handler(request):
 			data: bytes = msg.data
 			info = int.from_bytes(data[0:4], "little")
 			if generateIdOffset <= info and info < computeIdOffset:
+				t = time.time()
 				info -= generateIdOffset
 				print("started generate " + str(info))
 				size = int.from_bytes(data[4:8], "little")
 				await handle.create(info, size)
-				print("executed generate " + str(info))
+				print("executed generate " + str(info) + " in " + str(time.time() - t) + "seconds")
 			elif computeIdOffset <= info and info <= 50:
+				t = time.time()
 				info -= computeIdOffset
 				print("started compute " + str(info))
 				await handle.compute(info, data[4:])
-				print("executed compute " + str(info))
+				print("executed compute " + str(info) + " in " + str(time.time() - t) + "seconds")
 			else:
 				print("wrong info code: ", info)
 	return ws
@@ -45,18 +48,18 @@ def create_runner():
 	app.add_routes(
 		[
 		web.get('/ws', websocket_handler),
-		web.get('/', lambda _: handle("./index.html", "text/html")),
-		web.get('/index', lambda _: handle("./index.html", "text/html")),
-		web.get('/index.html', lambda _: handle("./index.html", "text/html")),
-		web.get('/main.css', lambda _: handle("./main.css", "text/css")),
-		web.get('/favicon.svg', lambda _: handle("./index.html", "image/svg+xml")),
+		web.get('/', lambda _: handle("./client/index.html", "text/html")),
+		web.get('/index', lambda _: handle("./client/index.html", "text/html")),
+		web.get('/index.html', lambda _: handle("./client/index.html", "text/html")),
+		web.get('/main.css', lambda _: handle("./client/main.css", "text/css")),
+		web.get('/favicon.svg', lambda _: handle("./favicon.svg", "image/svg+xml")),
 		web.get('/bundle.js', lambda _: handle("./bundle.js", "application/javascript")),
 		]
 	)
 	return web.AppRunner(app)
 
 
-async def start_server(host="localhost", port=5500):
+async def start_server(host: str, port: int):
 	runner = create_runner()
 	await runner.setup()
 	site = web.TCPSite(runner, host, port)
@@ -64,7 +67,9 @@ async def start_server(host="localhost", port=5500):
 
 
 if __name__ == "__main__":
+	host = "127.0.0.1"
+	port = 5500
 	loop = asyncio.new_event_loop()
-	loop.run_until_complete(start_server())
-	print("start")
+	loop.run_until_complete(start_server(host, port))
+	print("start at: http://" + host + ":" + str(port))
 	loop.run_forever()

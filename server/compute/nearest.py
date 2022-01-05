@@ -1,5 +1,4 @@
-from numba import cuda, types, jit
-from numba.core.errors import NumbaDeprecationWarning
+from numba import cuda, types
 import numpy as np
 from .shared import *
 

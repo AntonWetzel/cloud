@@ -961,9 +961,10 @@
 	                new Int32Array(data)[1] = window.frequencies;
 	                socket.send(data);
 	                break;
-	            case 'highFrequenz':
-	                data = new ArrayBuffer(4);
+	            case 'smooth':
+	                data = new ArrayBuffer(8);
 	                new Int32Array(data)[0] = computeIdOffset + 8;
+	                new Int32Array(data)[1] = window.iterations;
 	                socket.send(data);
 	                break;
 	            default:

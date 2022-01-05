@@ -111,10 +111,15 @@ Scale cloud: Mouse wheel`
 			<p>Graph Frequenz Analysis</p>
 			<global-input name="Frequencies" value="64" min="1" max="256" step="1" variable="frequencies" int>
 			</global-input>
-			<button onclick="StartCompute('frequenz')">Low</button>
-			<button onclick="StartCompute('highFrequenz')">High</button>
+			<button onclick="StartCompute('frequenz')">Low-Pass</button>
+		</div>
+		<div class="item">
+			<p>Smooth</p>
+			<global-input name="Iterations" value="16" min="1" max="64" step="1" variable="iterations" int>
+			</global-input>
+			<button onclick="StartCompute('smooth')">Smooth</button>
 		</div>
 	</div>
 </body>
 
-</html>w
+</html>

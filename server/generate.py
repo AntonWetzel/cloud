@@ -113,7 +113,7 @@ def map(size: int) -> np.ndarray:
 	for i in range(count):
 		for j in range(count):
 			points[c, 0] = i / count - 0.5
-			points[c, 1] = noise.noise2d(i * 0.01, j * 0.01) / count * 25
+			points[c, 1] = noise.noise2(i * 0.01, j * 0.01) / count * 25
 			if (random() <= 0.03):
 				points[c, 1] += (0.5 + random()) / count * 5
 			points[c, 2] = j / count - 0.5

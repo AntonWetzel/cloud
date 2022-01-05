@@ -111,7 +111,6 @@ class Handler:
 			await self.send_surrounding()
 		elif id == 6:
 			[amount] = struct.unpack('<f', data[0:4])
-			print("amount:", amount)
 			compute.noise(self.cloud, amount, self.size)
 			await self.update_cloud(self.cloud, self.size, True)
 		elif id == 7:
@@ -123,11 +122,18 @@ class Handler:
 			await self.update_cloud(cloud, self.size, self.ws)
 		elif id == 8:
 			if self.k == 0:
-				print("surround needed for laplace")
+				print("surround needed for smoothing")
 				return
-			self.curvature = compute.high_frequenzy(self.cloud, self.surround, self.size, self.k)
-			self.d_curvature = cuda.to_device(self.curvature, stream=self.stream)
-			await self.send_curvature()
+			count = int.from_bytes(data[0:4], "little")
+			clouds = [self.d_cloud, cuda.device_array(self.size * 4, dtype=np.float32, stream=self.stream)]
+			for count in range(10):
+				compute.smooth[blockspergrid, thread_per_block,
+					self.stream](clouds[0], self.d_surround, clouds[1], self.size, self.k)
+				clouds[0], clouds[1] = clouds[1], clouds[0]
+			self.d_cloud = clouds[0]
+			new_cloud = clouds[0].copy_to_host(stream=self.stream)
+			await self.stream.async_done()
+			await self.update_cloud(new_cloud, self.size)
 		else:
 			print("compute error: id '" + str(id) + "' wrong")
 

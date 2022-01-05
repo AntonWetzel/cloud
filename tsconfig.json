@@ -9,8 +9,7 @@
       "node_modules/@webgpu/types",
       "node_modules/mathjs/types",
     ],
-    "outDir": "./out",
-    "rootDir": "./src",
+    "rootDir": "client",
     "removeComments": true,
   }
 }
