@@ -1006,6 +1006,19 @@
 	                break;
 	        }
 	        FinishRender();
+	        if (keys['KeyP'] != undefined) {
+	            const a = document.createElement('a');
+	            a.href = canvas.toDataURL('image/png');
+	            const name = prompt('download name');
+	            if (name.length == 0) {
+	                a.download = 'cloud.png';
+	            }
+	            else {
+	                a.download = name;
+	            }
+	            a.click();
+	            delete keys['KeyP'];
+	        }
 	        last = time;
 	    }
 	};

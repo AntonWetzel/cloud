@@ -1,6 +1,7 @@
 import struct
 from aiohttp.web_ws import WebSocketResponse
 from numba import cuda
+from numba.cuda.api import stream
 from numba.cuda.cudadrv.devicearray import DeviceNDArray
 from numba.cuda.cudadrv.driver import Stream
 import numpy as np
@@ -32,13 +33,10 @@ class Handler:
 
 		self.ws = ws
 
-	async def update_cloud(self, cloud: np.ndarray, size: int):
-		self.cloud = cloud
-		self.size = size
-		self.d_cloud = cuda.to_device(cloud, stream=self.stream)
+	async def send_cloud(self):
 		self.k = 0
 		self.curve = False
-		await self.ws.send_bytes(number_to_bytes(1) + number_to_bytes(size) + cloud.tobytes())
+		await self.ws.send_bytes(number_to_bytes(1) + number_to_bytes(self.size) + self.cloud.tobytes())
 
 	async def send_surrounding(self):
 		await self.ws.send_bytes(number_to_bytes(2) + number_to_bytes(self.k) + self.surround.tobytes())
@@ -75,8 +73,9 @@ class Handler:
 			cloud = self.cloud.reshape(self.size, 4)
 			ind = np.lexsort((cloud[:, 2], cloud[:, 1], cloud[:, 0]))
 			cloud = cloud[ind]
-			cloud = cloud.reshape(self.size * 4)
-			await self.update_cloud(cloud, self.size)
+			self.cloud = cloud.reshape(self.size * 4)
+			self.d_cloud = cuda.to_device(self.cloud, stream=self.stream)
+			await self.send_cloud()
 			self.k = k
 			self.d_surround = cuda.device_array(self.size * self.k, dtype=np.uint32, stream=self.stream)
 			if id == 2:
@@ -115,14 +114,16 @@ class Handler:
 		elif id == 6:
 			[amount] = struct.unpack('<f', data[0:4])
 			compute.noise(self.cloud, amount, self.size)
-			await self.update_cloud(self.cloud, self.size, True)
+			self.d_cloud = cuda.to_device(self.cloud, stream=self.stream)
+			await self.send_cloud()
 		elif id == 7:
 			count = int.from_bytes(data[0:4], "little")
 			if self.k == 0:
 				print("surround needed for laplace")
 				return
-			cloud = compute.frequenzy(self.cloud, self.surround, self.size, self.k, count)
-			await self.update_cloud(cloud, self.size, self.ws)
+			self.cloud = compute.frequenzy(self.cloud, self.surround, self.size, self.k, count)
+			self.d_cloud = cuda.to_device(self.cloud, stream=self.stream)
+			await self.send_cloud()
 		elif id == 8:
 			if self.k == 0:
 				print("surround needed for smoothing")
@@ -134,9 +135,9 @@ class Handler:
 					self.stream](clouds[0], self.d_surround, clouds[1], self.size, self.k)
 				clouds[0], clouds[1] = clouds[1], clouds[0]
 			self.d_cloud = clouds[0]
-			new_cloud = clouds[0].copy_to_host(stream=self.stream)
+			self.cloud = clouds[0].copy_to_host(stream=self.stream)
 			await self.stream.async_done()
-			await self.update_cloud(new_cloud, self.size)
+			await self.send_cloud()
 		elif id == 9:
 			if self.k == 0:
 				print("surround needed for edge")
@@ -162,5 +163,6 @@ class Handler:
 			print("compute error: id '" + str(id) + "' wrong")
 
 	async def create(self, id: int, size: int):
-		size, cloud = generate.create(id, size)
-		await self.update_cloud(cloud, size)
+		self.size, self.cloud = generate.create(id, size)
+		self.d_cloud = cuda.to_device(self.cloud, stream=self.stream)
+		await self.send_cloud()
