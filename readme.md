@@ -5,13 +5,10 @@ Work in progress
 
 ## Setup
 - install [anaconda](https://www.anaconda.com/products/individual)
-- open root directory
-- install environment
+- clone and open repository
+	- > git clone https://github.com/antonWetzel/cloud.git
+- install and activate environment
 	- > conda env create -f environment.yml
-
-
-## Run
-- activate environment
 	- > conda activate cloud
 - start server
 	- command line
@@ -23,7 +20,6 @@ Work in progress
 - open **localhost:5500** or **127.0.0.1:5500** (tested with Google Chrome)
 
 ## Develop
-- 
 - install [node](https://nodejs.org/en/)
 - open root directory
 - install dependencies
