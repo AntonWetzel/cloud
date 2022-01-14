@@ -108,6 +108,13 @@ socket.onopen = async () => {
 			curvature = GPU.CreateBuffer(new Float32Array(data), renderFlag)
 			color.value = 'curve'
 			break
+		case 4:
+			if (normals != undefined) {
+				normals.destroy()
+			}
+			normals = GPU.CreateBuffer(new Float32Array(data), renderFlag)
+			color.value = 'normal'
+			break
 		}
 	}
 
@@ -183,17 +190,28 @@ socket.onopen = async () => {
 			new Int32Array(data)[1] = window.iterations
 			socket.send(data)
 			break
-		case 'curvature':
+		case 'normal':
 			data = new ArrayBuffer(4)
 			new Int32Array(data)[0] = computeIdOffset + 9
 			socket.send(data)
 			break
+		case 'curvatureOffset':
+			data = new ArrayBuffer(4)
+			new Int32Array(data)[0] = computeIdOffset + 10
+			socket.send(data)
+			break
+		case 'curvatureNormal':
+			data = new ArrayBuffer(4)
+			new Int32Array(data)[0] = computeIdOffset + 11
+			socket.send(data)
+			break
 		case 'threshhold':
 			data = new ArrayBuffer(8)
-			new Int32Array(data)[0] = computeIdOffset + 10
+			new Int32Array(data)[0] = computeIdOffset + 12
 			new Float32Array(data)[1] = window.threshhold
 			socket.send(data)
 			break
+
 		/*
 	case 'cleanDang':
 	case 'cleanLong':

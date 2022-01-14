@@ -75,38 +75,7 @@ Scale cloud: Mouse wheel`
 			<button onclick="StartCompute('triangulateAll')">With all</button>
 			<button onclick="StartCompute('triangulateNear')">With nearest neighbors</button>
 		</div>
-		<!---div class="item">
-			<p>Clean up</p>
-			<button onclick="StartCompute('cleanDang')">Dangling connections</button>
-			<button onclick="StartCompute('cleanLong')">Long connections</button>
-		</div>
-		<div class="item">
-			<p>Calculate normal</p>
-			<button onclick="StartCompute('normalPlane')">Plane equation</button>
-			<button onclick="StartCompute('normalTriang')">Average triangle normal</button>
-		</div>
-		<div class="item">
-			<p>Calculate curvature</p>
-			<button onclick="StartCompute('curvaturePoints')">Angle to points</button>
-			<button onclick="StartCompute('curvatureNormal')">Change in normal</button>
-		</div>
-		<div class="item">
-			<p>Filter points</p>
-			<div id="tDis">Threshhold: 0.1</div>
-			<input type="range" title="Threshhold" min="0.0" max="1.0" value="0.1" step="0.01" id="threshhold"
-				onchange="document.getElementById('tDis').innerText='Threshhold: ' + this.value">
-			<button onclick="StartCompute('filterCurve')">Low curvature</button>
-			<button onclick="StartCompute('filterAnomaly')">Anomaly</button>
-		</div>
-		<div class="item">
-			<p>Noise</p>
-			<div id="nDis">Weight: 0.5</div>
-			<input type="range" title="Weight" min="0.0" max="1.0" value="0.5" step="0.01" id="noise"
-				onchange="document.getElementById('nDis').innerText='Weight: ' + this.value">
-			<button onclick="StartCompute('noise')">Reduce</button>
-			<button onclick="StartCompute('ripple')">Ripple</button>
-			<button onclick="StartCompute('peek')">Peek</button>
-			<button onclick="StartCompute('threshhold')">Threshhold</button-->
+
 		<div class="item">
 			<p>Graph Frequenz Analysis</p>
 			<global-input name="Frequencies" value="64" min="1" max="256" step="1" variable="frequencies" int>
@@ -120,9 +89,14 @@ Scale cloud: Mouse wheel`
 			<button onclick="StartCompute('smooth')">Smooth</button>
 		</div>
 		<div class="item">
+			<p>Calculate normal</p>
+			<button onclick="StartCompute('normal')">With triangulation</button>
+		</div>
+		<div class="item">
 			<p>Curvature</p>
 			</global-input>
-			<button onclick="StartCompute('curvature')">Curvature</button>
+			<button onclick="StartCompute('curvatureOffset')">Offset</button>
+			<button onclick="StartCompute('curvatureNormal')">With normal</button>
 		</div>
 		<div class="item">
 			<p>Threshhold</p>

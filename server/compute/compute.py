@@ -4,3 +4,4 @@ from .noise import *
 from .triangulate import *
 from .smooth import *
 from .edge import *
+from .normal import *

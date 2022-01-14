@@ -27,23 +27,32 @@ class Handler:
 		self.surround: np.ndarray
 		self.d_surround: DeviceNDArray
 
-		self.curve = False
+		self.has_normal = False
+		self.normal: np.ndarray
+		self.d_normal: DeviceNDArray
+
+		self.has_curve = False
 		self.curvature: np.ndarray
-		self.d_curvature: np.ndarray
+		self.d_curvature: DeviceNDArray
 
 		self.ws = ws
 
 	async def send_cloud(self):
 		self.k = 0
-		self.curve = False
+		self.has_curve = False
+		self.has_normal = False
 		await self.ws.send_bytes(number_to_bytes(1) + number_to_bytes(self.size) + self.cloud.tobytes())
 
 	async def send_surrounding(self):
 		await self.ws.send_bytes(number_to_bytes(2) + number_to_bytes(self.k) + self.surround.tobytes())
 
 	async def send_curvature(self):
-		self.curve = True
+		self.has_curve = True
 		await self.ws.send_bytes(number_to_bytes(3) + self.curvature.tobytes())
+
+	async def send_normals(self):
+		self.has_normal = True
+		await self.ws.send_bytes(number_to_bytes(4) + self.normal.tobytes())
 
 	async def compute(self, id: int, data: bytes):
 
@@ -140,6 +149,16 @@ class Handler:
 			await self.send_cloud()
 		elif id == 9:
 			if self.k == 0:
+				print("surround needed for normal")
+				return
+			self.d_normal = cuda.device_array(self.size * 4, dtype=np.float32, stream=self.stream)
+			compute.normal[blockspergrid, thread_per_block,
+				self.stream](self.d_cloud, self.d_surround, self.d_normal, self.size, self.k)
+			self.normal = self.d_normal.copy_to_host(stream=self.stream)
+			await self.stream.async_done()
+			await self.send_normals()
+		elif id == 10:
+			if self.k == 0:
 				print("surround needed for edge")
 				return
 			self.d_curvature = cuda.device_array(self.size * 4, dtype=np.float32, stream=self.stream)
@@ -148,8 +167,19 @@ class Handler:
 			self.curvature = self.d_curvature.copy_to_host(stream=self.stream)
 			await self.stream.async_done()
 			await self.send_curvature()
-		elif id == 10:
-			if self.curve == False:
+		elif id == 11:
+			if self.has_normal == False:
+				print("normal needed for edge with normal")
+				return
+			self.d_curvature = cuda.device_array(self.size * 4, dtype=np.float32, stream=self.stream)
+			compute.edge_with_normal[blockspergrid, thread_per_block, self.stream](
+				self.d_cloud, self.d_surround, self.d_normal, self.d_curvature, self.size, self.k
+			)
+			self.curvature = self.d_curvature.copy_to_host(stream=self.stream)
+			await self.stream.async_done()
+			await self.send_curvature()
+		elif id == 12:
+			if self.has_curve == False:
 				print("curve needed for threshhold")
 				return
 			[threshhold] = struct.unpack('<f', data[0:4])
@@ -159,6 +189,7 @@ class Handler:
 			self.curvature = self.d_curvature.copy_to_host(stream=self.stream)
 			await self.stream.async_done()
 			await self.send_curvature()
+
 		else:
 			print("compute error: id '" + str(id) + "' wrong")
 

@@ -32,7 +32,32 @@ def threshhold(curve, threshhold, n):
 	id = cuda.grid(1)
 	if id >= n:
 		return
-	if curve[id * 4] > threshhold:
-		curve[id * 4] = 1
-	else:
-		curve[id * 4] = 0
+	curve[id * 4 + 0] = 1 if (curve[id * 4] > threshhold) else 0
+	curve[id * 4 + 1] = 0
+	curve[id * 4 + 2] = 0
+	curve[id * 4 + 3] = 0
+
+
+@cuda.jit(
+	types.void(
+	types.float32[:], types.uint32[:], types.float32[:], types.float32[:], types.uint32, types.uint32
+	)
+)
+def edge_with_normal(cloud, sur, normal, edge, n, k):
+	id = cuda.grid(1)
+	if id >= n:
+		return
+	offset = id * k
+	p = get_point(cloud, id)
+	n = normalize(get_point(normal, id))
+	off = 0.0
+	for i in range(k):
+		other = sur[offset + i]
+		if other == id:
+			break
+		off += abs(dot(normalize(sub(p, get_point(cloud, other))), n))
+	off /= i
+	edge[id * 4 + 0] = off
+	edge[id * 4 + 1] = 0
+	edge[id * 4 + 2] = 0
+	edge[id * 4 + 3] = 0

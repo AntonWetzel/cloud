@@ -756,6 +756,7 @@
 	    let cloud = CreateEmptyBuffer(0, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE);
 	    let colors = CreateEmptyBuffer(0, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE);
 	    let nearest = undefined;
+	    let normals = undefined;
 	    let curvature = undefined;
 	    const keys = {};
 	    socket.onmessage = async (ev) => {
@@ -770,6 +771,10 @@
 	                if (nearest != undefined) {
 	                    nearest.destroy();
 	                    nearest = undefined;
+	                }
+	                if (normals != undefined) {
+	                    normals.destroy();
+	                    normals = undefined;
 	                }
 	                if (curvature != undefined) {
 	                    curvature.destroy();
@@ -801,6 +806,13 @@
 	                }
 	                curvature = CreateBuffer(new Float32Array(data), renderFlag);
 	                color.value = 'curve';
+	                break;
+	            case 4:
+	                if (normals != undefined) {
+	                    normals.destroy();
+	                }
+	                normals = CreateBuffer(new Float32Array(data), renderFlag);
+	                color.value = 'normal';
 	                break;
 	        }
 	    };
@@ -897,14 +909,24 @@
 	                new Int32Array(data)[1] = window.iterations;
 	                socket.send(data);
 	                break;
-	            case 'curvature':
+	            case 'normal':
 	                data = new ArrayBuffer(4);
 	                new Int32Array(data)[0] = computeIdOffset + 9;
 	                socket.send(data);
 	                break;
+	            case 'curvatureOffset':
+	                data = new ArrayBuffer(4);
+	                new Int32Array(data)[0] = computeIdOffset + 10;
+	                socket.send(data);
+	                break;
+	            case 'curvatureNormal':
+	                data = new ArrayBuffer(4);
+	                new Int32Array(data)[0] = computeIdOffset + 11;
+	                socket.send(data);
+	                break;
 	            case 'threshhold':
 	                data = new ArrayBuffer(8);
-	                new Int32Array(data)[0] = computeIdOffset + 10;
+	                new Int32Array(data)[0] = computeIdOffset + 12;
 	                new Float32Array(data)[1] = window.threshhold;
 	                socket.send(data);
 	                break;
@@ -958,10 +980,13 @@
 	                c = colors;
 	                break;
 	            case 'normal':
-	                {
+	                if (normals == undefined) {
 	                    c = colors;
 	                    color.value = 'color';
 	                    alert('normals not calculated');
+	                }
+	                else {
+	                    c = normals;
 	                }
 	                break;
 	            case 'curve':
