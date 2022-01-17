@@ -183,13 +183,24 @@ class Handler:
 				print("curve needed for threshhold")
 				return
 			[threshhold] = struct.unpack('<f', data[0:4])
-			self.d_curvature = cuda.device_array(self.size * 4, dtype=np.float32, stream=self.stream)
+			new_d_curvature = cuda.device_array(self.size * 4, dtype=np.float32, stream=self.stream)
 			compute.threshhold[blockspergrid, thread_per_block,
-				self.stream](self.d_curvature, threshhold, self.size)
+				self.stream](self.d_curvature, new_d_curvature, threshhold, self.size)
+			self.d_curvature = new_d_curvature
 			self.curvature = self.d_curvature.copy_to_host(stream=self.stream)
 			await self.stream.async_done()
 			await self.send_curvature()
-
+		elif id == 13:
+			if self.has_curve == False:
+				print("curve needed for peek")
+				return
+			new_d_curvature = cuda.device_array(self.size * 4, dtype=np.float32, stream=self.stream)
+			compute.peek[blockspergrid, thread_per_block,
+				self.stream](self.d_curvature, self.d_surround, new_d_curvature, self.size, self.k)
+			self.d_curvature = new_d_curvature
+			self.curvature = self.d_curvature.copy_to_host(stream=self.stream)
+			await self.stream.async_done()
+			await self.send_curvature()
 		else:
 			print("compute error: id '" + str(id) + "' wrong")
 

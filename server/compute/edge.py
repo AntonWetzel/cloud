@@ -27,15 +27,15 @@ def edge(cloud, sur, edge, n, k):
 	edge[id * 4 + 3] = 0
 
 
-@cuda.jit(types.void(types.float32[:], types.float32, types.uint32))
-def threshhold(curve, threshhold, n):
+@cuda.jit(types.void(types.float32[:], types.float32[:], types.float32, types.uint32))
+def threshhold(curve, new_curve, threshhold, n):
 	id = cuda.grid(1)
 	if id >= n:
 		return
-	curve[id * 4 + 0] = 1 if (curve[id * 4] > threshhold) else 0
-	curve[id * 4 + 1] = 0
-	curve[id * 4 + 2] = 0
-	curve[id * 4 + 3] = 0
+	new_curve[id * 4 + 0] = 1 if (curve[id * 4] >= threshhold) else 0
+	new_curve[id * 4 + 1] = 0
+	new_curve[id * 4 + 2] = 0
+	new_curve[id * 4 + 3] = 0
 
 
 @cuda.jit(
@@ -49,15 +49,35 @@ def edge_with_normal(cloud, sur, normal, edge, n, k):
 		return
 	offset = id * k
 	p = get_point(cloud, id)
-	n = normalize(get_point(normal, id))
+	nor = get_point(normal, id)
 	off = 0.0
 	for i in range(k):
 		other = sur[offset + i]
 		if other == id:
 			break
-		off += abs(dot(normalize(sub(p, get_point(cloud, other))), n))
+		off += abs(normalize(dot(sub(p, get_point(cloud, other))), nor))
 	off /= i
 	edge[id * 4 + 0] = off
 	edge[id * 4 + 1] = 0
 	edge[id * 4 + 2] = 0
 	edge[id * 4 + 3] = 0
+
+
+@cuda.jit(types.void(types.float32[:], types.int32[:], types.float32[:], types.uint32, types.uint32))
+def peek(curve, sur, new_curve, n, k):
+	id = cuda.grid(1)
+	if id >= n:
+		return
+	c = 0
+	threshhold = curve[id * 4]
+	offset = id * k
+	for i in range(k):
+		other = sur[offset + i]
+		if other == id:
+			break
+		if curve[other * 4] >= threshhold:
+			c += 1
+	new_curve[id * 4 + 0] = threshhold if (c <= 2) else 0
+	new_curve[id * 4 + 1] = 0
+	new_curve[id * 4 + 2] = 0
+	new_curve[id * 4 + 3] = 0

@@ -4,6 +4,7 @@ import warnings
 import math
 
 warnings.simplefilter('ignore', category=NumbaDeprecationWarning)
+
 Point = types.UniTuple(types.float32, 3)
 
 
