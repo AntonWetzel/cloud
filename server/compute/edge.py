@@ -55,7 +55,7 @@ def edge_with_normal(cloud, sur, normal, edge, n, k):
 		other = sur[offset + i]
 		if other == id:
 			break
-		off += abs(normalize(dot(sub(p, get_point(cloud, other))), nor))
+		off += abs(dot(normalize(sub(p, get_point(cloud, other))), nor))
 	off /= i
 	edge[id * 4 + 0] = off
 	edge[id * 4 + 1] = 0
