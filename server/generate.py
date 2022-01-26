@@ -42,14 +42,16 @@ def create(id: int, size: int):
 	elif id == 1:
 		cloud = cube(size)
 	elif id == 2:
-		cloud = map(size)
+		cloud = torus(size)
 	elif id == 3:
+		cloud = map(size)
+	elif id == 4:
 		link = "https://raw.githubusercontent.com/PointCloudLibrary/pcl/master/test/bunny.pcd"
 		(cloud, size) = extern(link, 3)
-	elif id == 4:
+	elif id == 5:
 		link = "https://raw.githubusercontent.com/joachimtapp/bachelorProject/master/bunny.pcd"
 		(cloud, size) = extern(link, 5)
-	elif id == 5:
+	elif id == 6:
 		link = "https://raw.githubusercontent.com/PointCloudLibrary/pcl/master/test/rops_cloud.pcd"
 		(cloud, size) = extern(link, 3)
 	else:
@@ -68,6 +70,19 @@ def sphere(size: int) -> np.ndarray:
 		points[i, 0] = math.sin(lat) * math.sin(long)
 		points[i, 1] = math.cos(long)
 		points[i, 2] = math.cos(lat) * math.sin(long)
+		points[i, 3] = 0
+	return points
+
+
+def torus(size: int) -> np.ndarray:
+	points = np.empty((size, 4), dtype=np.float32)
+	for i in range(size):
+		u = random() * 2 * math.pi
+		v = random() * 2 * math.pi
+		t = 1 + 0.4 * math.cos(v)
+		points[i, 0] = t * math.cos(i)
+		points[i, 1] = 0.4 * math.sin(v)
+		points[i, 2] = t * math.sin(i)
 		points[i, 3] = 0
 	return points
 

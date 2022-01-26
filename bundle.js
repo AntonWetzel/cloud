@@ -827,17 +827,20 @@
 	            case 'cube':
 	                id = formIdOffset + 1;
 	                break;
-	            case 'map':
+	            case 'torus':
 	                id = formIdOffset + 2;
 	                break;
-	            case 'bunny':
+	            case 'map':
 	                id = formIdOffset + 3;
 	                break;
-	            case 'bunnyBig':
+	            case 'bunny':
 	                id = formIdOffset + 4;
 	                break;
-	            case 'statue':
+	            case 'bunnyBig':
 	                id = formIdOffset + 5;
+	                break;
+	            case 'statue':
+	                id = formIdOffset + 6;
 	                break;
 	        }
 	        new Int32Array(data)[0] = id;

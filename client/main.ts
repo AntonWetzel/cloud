@@ -126,10 +126,11 @@ socket.onopen = async () => {
 		switch (name) {
 		case 'sphere': id = formIdOffset + 0; break
 		case 'cube': id = formIdOffset + 1; break
-		case 'map': id = formIdOffset + 2; break
-		case 'bunny': id = formIdOffset + 3; break
-		case 'bunnyBig': id = formIdOffset + 4; break 
-		case 'statue': id = formIdOffset + 5; break
+		case 'torus': id = formIdOffset + 2; break
+		case 'map': id = formIdOffset + 3; break
+		case 'bunny': id = formIdOffset + 4; break
+		case 'bunnyBig': id = formIdOffset + 5; break 
+		case 'statue': id = formIdOffset + 6; break
 		}
 		new Int32Array(data)[0] = id
 		new Int32Array(data)[1] = size
