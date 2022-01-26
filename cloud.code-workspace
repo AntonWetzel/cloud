@@ -47,6 +47,14 @@
 				"type": "node-terminal",
 				"cwd": "${workspaceFolder:all}"
 			},
+			{
+				"name": "test",
+				"type": "python",
+				"request": "launch",
+				"program": "${workspaceFolder:all}\\server\\test.py",
+				"console": "integratedTerminal",
+				"cwd": "${workspaceFolder:all}"
+			},
 		],
 		"compounds": [
 			{

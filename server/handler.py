@@ -1,7 +1,6 @@
 import struct
 from aiohttp.web_ws import WebSocketResponse
 from numba import cuda
-from numba.cuda.api import stream
 from numba.cuda.cudadrv.devicearray import DeviceNDArray
 from numba.cuda.cudadrv.driver import Stream
 import numpy as np
