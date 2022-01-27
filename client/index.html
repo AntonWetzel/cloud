@@ -23,9 +23,10 @@
 	<div id="control">
 		<div class="item">
 			<p>Control</p>
-			<button onclick="ShowText(`Move camera: WASD
+			<button onclick="ShowText(`Move camera: Keys WASD
 Tilt camera: Left mouse button
-Scale cloud: Mouse wheel`
+Scale cloud: Mouse wheel
+Save image: Key P`
 		)">Help</button>
 			<select id="mode">
 				<option value="points">Points</option>
@@ -45,66 +46,49 @@ Scale cloud: Mouse wheel`
 			</global-input>
 		</div>
 		<div class="item">
-			<p>Generate Input</p>
+			<p>Generate Cloud</p>
 			<global-input name="Size" value="10000" min="100" max="1000000" step="1" variable="size" int></global-input>
 			<button onclick="CreateForm('sphere')">Sphere</button>
 			<button onclick="CreateForm('cube')">Cube</button>
 			<button onclick="CreateForm('torus')">Torus</button>
 			<button onclick="CreateForm('map')">Map</button>
-		</div>
-		<div class="item">
 			<p>Load PCD</p>
 			<button onclick="CreateForm('bunny')">Bunny</button>
 			<button onclick="CreateForm('bunnyBig')">Large Bunny</button>
 			<button onclick="CreateForm('statue')">Statue</button>
 		</div>
 		<div class="item">
-			<p>Manipulation</p>
-			<global-input name="Noise" value="0.1" min="0.1" max="1.0" step="0.1" variable="noise"></global-input>
-			<button onclick="StartCompute('noise')">Add Noise</button>
-		</div>
-		<div class="item">
+			<p>Surround</p>
 			<p>Nearest neighbors</p>
 			<global-input name="K" value="16" min="1" max="64" step="1" variable="k" int></global-input>
 			<button onclick="StartCompute('kNearestIter')">Iterated</button>
 			<button onclick="StartCompute('kNearestList')">List</button>
 			<button onclick="StartCompute('kNearestIterSorted')">Sort and Iterated</button>
 			<button onclick="StartCompute('kNearestListSorted')">Sort and List</button>
-		</div>
-		<div class="item">
 			<p>Triangulate</p>
 			<button onclick="StartCompute('triangulateAll')">With all</button>
 			<button onclick="StartCompute('triangulateNear')">With nearest neighbors</button>
 		</div>
-
 		<div class="item">
-			<p>Graph Frequenz Analysis</p>
-			<global-input name="Frequencies" value="64" min="1" max="256" step="1" variable="frequencies" int>
-			</global-input>
-			<button onclick="StartCompute('frequenz')">Low-Pass</button>
-		</div>
-		<div class="item">
-			<p>Smooth</p>
+			<p>Noise</p>
+			<global-input name="Noise" value="0.1" min="0.1" max="1.0" step="0.1" variable="noise"></global-input>
+			<button onclick="StartCompute('noise')">Add Noise</button>
 			<global-input name="Iterations" value="16" min="1" max="64" step="1" variable="iterations" int>
 			</global-input>
-			<button onclick="StartCompute('smooth')">Smooth</button>
-		</div>
-		<div class="item">
-			<p>Calculate normal</p>
-			<button onclick="StartCompute('normal')">With triangulation</button>
-		</div>
-		<div class="item">
-			<p>Curvature</p>
+			<button onclick="StartCompute('smooth')">Spatial domain</button>
+			<global-input name="Frequencies" value="64" min="1" max="256" step="1" variable="frequencies" int>
 			</global-input>
-			<button onclick="StartCompute('curvatureOffset')">Offset</button>
-			<button onclick="StartCompute('curvatureNormal')">With normal</button>
+			<button onclick="StartCompute('frequenz')">Frequency domain</button>
 		</div>
 		<div class="item">
+			<p>Edge</p>
+			<button onclick="StartCompute('normal')">Normal with triangulation</button>
+			<button onclick="StartCompute('curvatureNormal')">Curvature with triangulation</button>
+			<button onclick="StartCompute('peek')">Curvature maximum</button>
 			<p>Threshhold</p>
 			<global-input name="Threshhold" value="0.1" min="0.01" max="1.0" step="0.001" variable="threshhold">
 			</global-input>
 			<button onclick="StartCompute('threshhold')">Threshhold</button>
-			<button onclick="StartCompute('peek')">Peek</button>
 		</div>
 	</div>
 </body>

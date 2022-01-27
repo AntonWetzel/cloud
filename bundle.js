@@ -760,60 +760,65 @@
 	    let curvature = undefined;
 	    const keys = {};
 	    socket.onmessage = async (ev) => {
-	        let data = await ev.data.arrayBuffer();
-	        console.log('message: ', data.byteLength);
-	        const info = new Int32Array(data)[0];
-	        data = data.slice(4);
-	        switch (info) {
-	            case 1:
-	                cloud.destroy();
-	                colors.destroy();
-	                if (nearest != undefined) {
-	                    nearest.destroy();
-	                    nearest = undefined;
-	                }
-	                if (normals != undefined) {
-	                    normals.destroy();
-	                    normals = undefined;
-	                }
-	                if (curvature != undefined) {
-	                    curvature.destroy();
-	                    curvature = undefined;
-	                }
-	                length = new Int32Array(data)[0];
-	                data = data.slice(4);
-	                if (length * 16 != data.byteLength) {
-	                    alert('wrong length');
-	                    console.log(length, data.byteLength);
-	                }
-	                cloud = CreateBuffer(new Float32Array(data), renderFlag);
-	                colors = Create$1(length);
-	                mode.value = 'points';
-	                color.value = 'color';
-	                break;
-	            case 2:
-	                if (nearest != undefined) {
-	                    nearest.destroy();
-	                }
-	                k = new Int32Array(data)[0];
-	                data = data.slice(4);
-	                nearest = CreateBuffer(new Uint32Array(data), computeFlag);
-	                mode.value = 'connections';
-	                break;
-	            case 3:
-	                if (curvature != undefined) {
-	                    curvature.destroy();
-	                }
-	                curvature = CreateBuffer(new Float32Array(data), renderFlag);
-	                color.value = 'curve';
-	                break;
-	            case 4:
-	                if (normals != undefined) {
-	                    normals.destroy();
-	                }
-	                normals = CreateBuffer(new Float32Array(data), renderFlag);
-	                color.value = 'normal';
-	                break;
+	        if (typeof ev.data == 'string') {
+	            alert(ev.data);
+	        }
+	        else {
+	            let data = await ev.data.arrayBuffer();
+	            console.log('message: ', data.byteLength);
+	            const info = new Int32Array(data)[0];
+	            data = data.slice(4);
+	            switch (info) {
+	                case 1:
+	                    cloud.destroy();
+	                    colors.destroy();
+	                    if (nearest != undefined) {
+	                        nearest.destroy();
+	                        nearest = undefined;
+	                    }
+	                    if (normals != undefined) {
+	                        normals.destroy();
+	                        normals = undefined;
+	                    }
+	                    if (curvature != undefined) {
+	                        curvature.destroy();
+	                        curvature = undefined;
+	                    }
+	                    length = new Int32Array(data)[0];
+	                    data = data.slice(4);
+	                    if (length * 16 != data.byteLength) {
+	                        alert('wrong length');
+	                        console.log(length, data.byteLength);
+	                    }
+	                    cloud = CreateBuffer(new Float32Array(data), renderFlag);
+	                    colors = Create$1(length);
+	                    mode.value = 'points';
+	                    color.value = 'color';
+	                    break;
+	                case 2:
+	                    if (nearest != undefined) {
+	                        nearest.destroy();
+	                    }
+	                    k = new Int32Array(data)[0];
+	                    data = data.slice(4);
+	                    nearest = CreateBuffer(new Uint32Array(data), computeFlag);
+	                    mode.value = 'connections';
+	                    break;
+	                case 3:
+	                    if (curvature != undefined) {
+	                        curvature.destroy();
+	                    }
+	                    curvature = CreateBuffer(new Float32Array(data), renderFlag);
+	                    color.value = 'curve';
+	                    break;
+	                case 4:
+	                    if (normals != undefined) {
+	                        normals.destroy();
+	                    }
+	                    normals = CreateBuffer(new Float32Array(data), renderFlag);
+	                    color.value = 'normal';
+	                    break;
+	            }
 	        }
 	    };
 	    window.CreateForm = (name) => {
@@ -917,12 +922,12 @@
 	                new Int32Array(data)[0] = computeIdOffset + 9;
 	                socket.send(data);
 	                break;
-	            case 'curvatureOffset':
+	            case 'curvatureNormal':
 	                data = new ArrayBuffer(4);
 	                new Int32Array(data)[0] = computeIdOffset + 10;
 	                socket.send(data);
 	                break;
-	            case 'curvatureNormal':
+	            case 'peek':
 	                data = new ArrayBuffer(4);
 	                new Int32Array(data)[0] = computeIdOffset + 11;
 	                socket.send(data);
@@ -931,11 +936,6 @@
 	                data = new ArrayBuffer(8);
 	                new Int32Array(data)[0] = computeIdOffset + 12;
 	                new Float32Array(data)[1] = window.threshhold;
-	                socket.send(data);
-	                break;
-	            case 'peek':
-	                data = new ArrayBuffer(4);
-	                new Int32Array(data)[0] = computeIdOffset + 13;
 	                socket.send(data);
 	                break;
 	            default:

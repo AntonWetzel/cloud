@@ -68,16 +68,19 @@ def peek(curve, sur, new_curve, n, k):
 	id = cuda.grid(1)
 	if id >= n:
 		return
-	c = 0
+	mode = False
 	threshhold = curve[id * 4]
 	offset = id * k
+	new_curve[id * 4 + 1] = 0
+	new_curve[id * 4 + 2] = 0
+	new_curve[id * 4 + 3] = 0
 	for i in range(k):
 		other = sur[offset + i]
 		if other == id:
 			break
-		if curve[other * 4] >= threshhold:
-			c += 1
-	new_curve[id * 4 + 0] = threshhold if (c <= 2) else 0
-	new_curve[id * 4 + 1] = 0
-	new_curve[id * 4 + 2] = 0
-	new_curve[id * 4 + 3] = 0
+		new_mode = curve[other * 4] >= threshhold
+		if mode and new_mode:
+			new_curve[id * 4 + 0] = 0
+			return
+		mode = new_mode
+	new_curve[id * 4 + 0] = threshhold
