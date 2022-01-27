@@ -74,13 +74,16 @@ def peek(curve, sur, new_curve, n, k):
 	new_curve[id * 4 + 1] = 0
 	new_curve[id * 4 + 2] = 0
 	new_curve[id * 4 + 3] = 0
+	res = threshhold
 	for i in range(k):
 		other = sur[offset + i]
 		if other == id:
 			break
-		new_mode = curve[other * 4] >= threshhold
+		new_mode = curve[other * 4] > threshhold
 		if mode and new_mode:
-			new_curve[id * 4 + 0] = 0
-			return
+			res = 0
+			break
 		mode = new_mode
-	new_curve[id * 4 + 0] = threshhold
+	if mode and curve[sur[offset] * 4] > threshhold:
+		res = 0
+	new_curve[id * 4 + 0] = res
