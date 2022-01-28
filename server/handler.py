@@ -141,7 +141,7 @@ class Handler:
 				return
 			count = int.from_bytes(data[0:4], "little")
 			clouds = [self.d_cloud, cuda.device_array(self.size * 4, dtype=np.float32, stream=self.stream)]
-			for count in range(10):
+			for _ in range(count):
 				compute.smooth[blockspergrid, thread_per_block,
 					self.stream](clouds[0], self.d_surround, clouds[1], self.size, self.k)
 				clouds[0], clouds[1] = clouds[1], clouds[0]
