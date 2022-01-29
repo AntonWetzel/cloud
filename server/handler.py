@@ -164,7 +164,7 @@ class Handler:
 				await self.send_string("normal needed for curvature")
 				return
 			self.d_curvature = cuda.device_array(self.size * 4, dtype=np.float32, stream=self.stream)
-			compute.edge_with_normal[blockspergrid, thread_per_block, self.stream](
+			compute.curve[blockspergrid, thread_per_block, self.stream](
 				self.d_cloud, self.d_surround, self.d_normal, self.d_curvature, self.size, self.k
 			)
 			self.curvature = self.d_curvature.copy_to_host(stream=self.stream)
@@ -175,7 +175,7 @@ class Handler:
 				await self.send_string("curvature needed for curvature maximum")
 				return
 			new_d_curvature = cuda.device_array(self.size * 4, dtype=np.float32, stream=self.stream)
-			compute.peek[blockspergrid, thread_per_block,
+			compute.max[blockspergrid, thread_per_block,
 				self.stream](self.d_curvature, self.d_surround, new_d_curvature, self.size, self.k)
 			self.d_curvature = new_d_curvature
 			self.curvature = self.d_curvature.copy_to_host(stream=self.stream)

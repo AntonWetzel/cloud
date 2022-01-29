@@ -1,15 +1,16 @@
 import time
-from compute.compute import *
+import compute.compute as compute
 import generate
 from numba import cuda, errors
 import math
 import asyncio
 from numba.cuda.cudadrv.driver import Stream
 import warnings
+import numpy as np
 
 warnings.simplefilter('ignore', category=errors.NumbaPerformanceWarning)
 
-c = 10
+c = 16
 stream: Stream = cuda.stream()
 
 values = {}
@@ -30,21 +31,26 @@ def d_cloud(size):
 	return values[name]
 
 
-def cloud_sorted(size):
+def sort(c, size):
+	c = c.reshape(size, 4)
+	ind = np.lexsort((c[:, 2], c[:, 1], c[:, 0]))
+	return c[ind].reshape(size * 4)
+
+
+async def cloud_sorted(size):
 	name = f"cloud_sorted_{size}"
 	if name not in values:
 		c = cloud(size)
-		c = c.reshape(size, 4)
-		ind = np.lexsort((c[:, 2], c[:, 1], c[:, 0]))
-		c = c[ind].reshape(size * 4)
-		values[name] = c
+		t = await repeat(lambda: sort(c, size))
+		print(f"{'sort':>10} | {size//1000:>4} | {'-':>4} | {t:10.5f} | {'-':>10} | {t/size*1000:10.5f}")
+		values[name] = sort(c, size)
 	return values[name]
 
 
-def d_cloud_sorted(size):
+async def d_cloud_sorted(size):
 	name = f"d_cloud_sorted_{size}"
 	if name not in values:
-		c = cloud_sorted(size)
+		c = await cloud_sorted(size)
 		values[name] = cuda.to_device(c, stream)
 	return values[name]
 
@@ -75,13 +81,13 @@ def triangulation(size):
 	return values[name]
 
 
-def d_triangulation(size, generate):
+def d_triangulation(size, generate=False):
 	name = f"d_triangulation_{size}"
 	if name not in values:
 		if not generate:
 			print(f"could not find {name}")
 			quit()
-		values[name] = cuda.device_array(size * triangulate_max, dtype=np.uint32, stream=stream)
+		values[name] = cuda.device_array(size * compute.triangulate_max, dtype=np.uint32, stream=stream)
 	return values[name]
 
 
@@ -103,10 +109,10 @@ async def nearest_test(k, size):
 	d_s = d_nearest(size, k, True)
 
 	for name, f, d_c in [
-		("iter", nearest_iter, d_cloud(size)),
-		("list", nearest_list, d_cloud(size)),
-		("iter sort", nearest_iter_sorted, d_cloud_sorted(size)),
-		("list sort", nearest_list_sorted, d_cloud_sorted(size)),
+		("iter", compute.nearest_iter, d_cloud(size)),
+		("list", compute.nearest_list, d_cloud(size)),
+		("iter sort", compute.nearest_iter_sorted, await d_cloud_sorted(size)),
+		("list sort", compute.nearest_list_sorted, await d_cloud_sorted(size)),
 	]:
 		t = await repeat(lambda: f[ppg, tpb, stream](d_c, d_s, size, k))
 		print(f"{name:>10} | {size//1000:>4} | {k:>4} | {t:10.5f} | {t/k:10.5f} | {t/size*1000:10.5f}")
@@ -120,23 +126,46 @@ async def triangulate_test(k, size):
 	d_s = d_nearest(size, k)
 	d_t = d_triangulation(size, True)
 
-	t = await repeat(lambda: triangulate_all[ppg, tpb, stream](d_c, d_t, size))
+	t = await repeat(lambda: compute.triangulate_all[ppg, tpb, stream](d_c, d_t, size))
 	print(f"{'tria':>10} | {size//1000:>4} | {'-':>4} | {t:10.5f} | {'-':>10} | {t/size*1000:10.5f}")
 
-	t = await repeat(lambda: triangulate_with_sur[ppg, tpb, stream](d_c, d_s, d_s, size, k))
+	t = await repeat(lambda: compute.triangulate_with_sur[ppg, tpb, stream](d_c, d_s, d_s, size, k))
 	print(f"{'tria surr':>10} | {size//1000:>4} | {k:>4} | {t:10.5f} | {t/k:10.5f} | {t/size*1000:10.5f}")
+
+
+async def edge_test(size):
+	tpb = 256 #threads per block
+	ppg = math.ceil(size / tpb) #blocks per grid
+
+	d_t = d_triangulation(size)
+	d_c = d_cloud(size)
+
+	d_normal = cuda.device_array(size * 4, dtype=np.float32, stream=stream)
+	d_curve = cuda.device_array(size * 4, dtype=np.float32, stream=stream)
+	d_max = cuda.device_array(size * 4, dtype=np.float32, stream=stream)
+	d_edge = cuda.device_array(size * 4, dtype=np.float32, stream=stream)
+
+	k = compute.triangulate_max
+	t = await repeat(
+		lambda: [
+		compute.normal[ppg, tpb, stream](d_c, d_t, d_normal, size, k),
+		compute.curve[ppg, tpb, stream](d_c, d_t, d_normal, d_curve, size, k),
+		compute.max[ppg, tpb, stream](d_curve, d_t, d_max, size, k),
+		compute.threshhold[ppg, tpb, stream](d_curve, d_edge, 0.1, size),
+		]
+	)
+	print(f"{'edge':>10} | {size//1000:>4} | {'-':>4} | {t:10.5f} | {'_':>10} | {t/size*1000:10.5f}")
 
 
 async def main():
 	print(f"      name | size |    k |       time |        t/k |        t/s")
-	print(f"-----------|------|------|------------|------------|-----------")
+	print(f"----------:|-----:|-----:|-----------:|-----------:|----------:")
 
-	for k in [4, 16, 64, 256]:
-		await nearest_test(k, 10_000)
-		await triangulate_test(k, 10_000)
 	for size in [10_000, 20_000, 40_000, 80_000]:
-		await nearest_test(64, size)
-		await triangulate_test(64, size)
+		for k in [4, 16, 64, 256]:
+			await nearest_test(k, size)
+			await triangulate_test(k, size)
+		await edge_test(size)
 
 
 asyncio.run(main())
