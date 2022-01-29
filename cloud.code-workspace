@@ -51,9 +51,9 @@
 				"name": "test",
 				"type": "python",
 				"request": "launch",
-				"program": "${workspaceFolder:all}\\server\\test.py",
+				"program": "${workspaceFolder:server}\\test.py",
 				"console": "integratedTerminal",
-				"cwd": "${workspaceFolder:all}"
+				"cwd": "${workspaceFolder:server}"
 			},
 		],
 		"compounds": [

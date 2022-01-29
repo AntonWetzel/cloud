@@ -1,19 +1,39 @@
+from cgi import test
 import time
+from winreg import FlushKey
 import compute.compute as compute
 import generate
 from numba import cuda, errors
 import math
-import asyncio
 from numba.cuda.cudadrv.driver import Stream
 import warnings
 import numpy as np
+import sys
+import os
 
 warnings.simplefilter('ignore', category=errors.NumbaPerformanceWarning)
 
 c = 16
-stream: Stream = cuda.stream()
+skip_mode = False
 
 values = {}
+
+idx = 0
+while (os.path.exists("result" + str(idx) + ".md")):
+	idx += 1
+file = open("result" + str(idx) + ".md", "w")
+
+
+def print_and_write(str):
+	print(str)
+	file.write(str + "\n")
+
+
+def print_it(name, size, k, t):
+	if k == None:
+		print_and_write(f"| {name:>10} | {size:>8} | {'-':>4} | {t:>12} | {'-':>10} | {t//size:>10} |")
+	else:
+		print_and_write(f"| {name:>10} | {size:>8} | {k:>4} | {t:>12} | {t//k:>10} | {t//size:>10} |")
 
 
 def cloud(size):
@@ -27,7 +47,7 @@ def d_cloud(size):
 	name = f"d_cloud_{size}"
 	if name not in values:
 		c = cloud(size)
-		values[name] = cuda.to_device(c, stream)
+		values[name] = cuda.to_device(c)
 	return values[name]
 
 
@@ -37,21 +57,21 @@ def sort(c, size):
 	return c[ind].reshape(size * 4)
 
 
-async def cloud_sorted(size):
+def cloud_sorted(size):
 	name = f"cloud_sorted_{size}"
 	if name not in values:
 		c = cloud(size)
-		t = await repeat(lambda: sort(c, size))
-		print(f"{'sort':>10} | {size//1000:>4} | {'-':>4} | {t:10.5f} | {'-':>10} | {t/size*1000:10.5f}")
+		t = repeat(lambda: sort(c, size))
+		print_it("sort", size, None, t)
 		values[name] = sort(c, size)
 	return values[name]
 
 
-async def d_cloud_sorted(size):
+def d_cloud_sorted(size):
 	name = f"d_cloud_sorted_{size}"
 	if name not in values:
-		c = await cloud_sorted(size)
-		values[name] = cuda.to_device(c, stream)
+		c = cloud_sorted(size)
+		values[name] = cuda.to_device(c)
 	return values[name]
 
 
@@ -69,7 +89,7 @@ def d_nearest(size, k, generate=False):
 		if not generate:
 			print(f"could not find {name}")
 			quit()
-		values[name] = cuda.device_array(size * k, dtype=np.uint32, stream=stream)
+		values[name] = cuda.device_array(size * k, dtype=np.uint32)
 	return values[name]
 
 
@@ -87,21 +107,29 @@ def d_triangulation(size, generate=False):
 		if not generate:
 			print(f"could not find {name}")
 			quit()
-		values[name] = cuda.device_array(size * compute.triangulate_max, dtype=np.uint32, stream=stream)
+		values[name] = cuda.device_array(size * compute.triangulate_max, dtype=np.uint32)
 	return values[name]
 
 
-async def repeat(func):
-	await stream.async_done()
-	start = time.perf_counter()
-	for _ in range(c):
+def repeat(func):
+	if skip_mode:
 		func()
-	await stream.async_done()
-	end = time.perf_counter()
-	return (end - start) / c
+		return -1
+	cuda.synchronize()
+	start = time.perf_counter_ns()
+	sys.stdout.flush()
+	for i in range(c):
+		print("\r" + str(i) + "/" + str(c), end="")
+		sys.stdout.flush()
+		func()
+		cuda.synchronize()
+	end = time.perf_counter_ns()
+	print("\r", end="")
+	sys.stdout.flush()
+	return (end - start) // c
 
 
-async def nearest_test(k, size):
+def nearest_test(k, size):
 
 	tpb = 256 #threads per block
 	ppg = math.ceil(size / tpb) #blocks per grid
@@ -111,14 +139,14 @@ async def nearest_test(k, size):
 	for name, f, d_c in [
 		("iter", compute.nearest_iter, d_cloud(size)),
 		("list", compute.nearest_list, d_cloud(size)),
-		("iter sort", compute.nearest_iter_sorted, await d_cloud_sorted(size)),
-		("list sort", compute.nearest_list_sorted, await d_cloud_sorted(size)),
+		("iter sort", compute.nearest_iter_sorted, d_cloud_sorted(size)),
+		("list sort", compute.nearest_list_sorted, d_cloud_sorted(size)),
 	]:
-		t = await repeat(lambda: f[ppg, tpb, stream](d_c, d_s, size, k))
-		print(f"{name:>10} | {size//1000:>4} | {k:>4} | {t:10.5f} | {t/k:10.5f} | {t/size*1000:10.5f}")
+		t = repeat(lambda: f[ppg, tpb](d_c, d_s, size, k))
+		print_it(name, size, k, t)
 
 
-async def triangulate_test(k, size):
+def triangulate_test(k, size):
 	tpb = 256 #threads per block
 	ppg = math.ceil(size / tpb) #blocks per grid
 
@@ -126,46 +154,54 @@ async def triangulate_test(k, size):
 	d_s = d_nearest(size, k)
 	d_t = d_triangulation(size, True)
 
-	t = await repeat(lambda: compute.triangulate_all[ppg, tpb, stream](d_c, d_t, size))
-	print(f"{'tria':>10} | {size//1000:>4} | {'-':>4} | {t:10.5f} | {'-':>10} | {t/size*1000:10.5f}")
+	t = repeat(lambda: compute.triangulate_all[ppg, tpb](d_c, d_t, size))
+	print_it("tria", size, None, t)
 
-	t = await repeat(lambda: compute.triangulate_with_sur[ppg, tpb, stream](d_c, d_s, d_s, size, k))
-	print(f"{'tria surr':>10} | {size//1000:>4} | {k:>4} | {t:10.5f} | {t/k:10.5f} | {t/size*1000:10.5f}")
+	t = repeat(lambda: compute.triangulate_with_sur[ppg, tpb](d_c, d_s, d_t, size, k))
+	print_it("tria surr", size, k, t)
 
 
-async def edge_test(size):
+def edge_test(size):
 	tpb = 256 #threads per block
 	ppg = math.ceil(size / tpb) #blocks per grid
 
 	d_t = d_triangulation(size)
 	d_c = d_cloud(size)
 
-	d_normal = cuda.device_array(size * 4, dtype=np.float32, stream=stream)
-	d_curve = cuda.device_array(size * 4, dtype=np.float32, stream=stream)
-	d_max = cuda.device_array(size * 4, dtype=np.float32, stream=stream)
-	d_edge = cuda.device_array(size * 4, dtype=np.float32, stream=stream)
+	d_normal = cuda.device_array(size * 4, dtype=np.float32)
+	d_curve = cuda.device_array(size * 4, dtype=np.float32)
+	d_max = cuda.device_array(size * 4, dtype=np.float32)
+	d_edge = cuda.device_array(size * 4, dtype=np.float32)
 
 	k = compute.triangulate_max
-	t = await repeat(
-		lambda: [
-		compute.normal[ppg, tpb, stream](d_c, d_t, d_normal, size, k),
-		compute.curve[ppg, tpb, stream](d_c, d_t, d_normal, d_curve, size, k),
-		compute.max[ppg, tpb, stream](d_curve, d_t, d_max, size, k),
-		compute.threshhold[ppg, tpb, stream](d_curve, d_edge, 0.1, size),
-		]
-	)
-	print(f"{'edge':>10} | {size//1000:>4} | {'-':>4} | {t:10.5f} | {'_':>10} | {t/size*1000:10.5f}")
+
+	t = repeat(lambda: compute.normal[ppg, tpb](d_c, d_t, d_normal, size, k))
+	print_it("normal", size, None, t)
+
+	t = repeat(lambda: compute.curve[ppg, tpb](d_c, d_t, d_normal, d_curve, size, k))
+	print_it("curve", size, None, t)
+
+	t = repeat(lambda: compute.max[ppg, tpb](d_curve, d_t, d_max, size, k))
+	print_it("max", size, None, t)
+
+	t = repeat(lambda: compute.threshhold[ppg, tpb](d_curve, d_edge, 0.1, size))
+	print_it("thresh", size, None, t)
 
 
-async def main():
-	print(f"      name | size |    k |       time |        t/k |        t/s")
-	print(f"----------:|-----:|-----:|-----------:|-----------:|----------:")
+def main():
+	print_and_write(f"|       name |     size |    k |         time |        t/k |        t/s |")
+	print_and_write(f"|-----------:|---------:|-----:|-------------:|-----------:|-----------:|")
 
-	for size in [10_000, 20_000, 40_000, 80_000]:
-		for k in [4, 16, 64, 256]:
-			await nearest_test(k, size)
-			await triangulate_test(k, size)
-		await edge_test(size)
+	#for size in [8]:
+	for size in [8, 16, 32, 64]:
+		size *= 1024
+		#for k in [64]:
+		for k in [4, 16, 256, 64]:
+			nearest_test(k, size)
+			triangulate_test(k, size)
+		edge_test(size)
 
 
-asyncio.run(main())
+main()
+
+file.close()
