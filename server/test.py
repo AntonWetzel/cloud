@@ -1,32 +1,29 @@
-from cgi import test
 import time
-from winreg import FlushKey
 import compute.compute as compute
 import generate
 from numba import cuda, errors
 import math
-from numba.cuda.cudadrv.driver import Stream
 import warnings
 import numpy as np
-import sys
-import os
 
 warnings.simplefilter('ignore', category=errors.NumbaPerformanceWarning)
 
-c = 16
-skip_mode = False
+min_time = 5_000_000_000
 
 values = {}
+file = open("result", "w")
 
-idx = 0
-while (os.path.exists("result" + str(idx) + ".md")):
-	idx += 1
-file = open("result" + str(idx) + ".md", "w")
+sizes = [8, 16, 32, 64, 128, 256]
+#sizes = [8, 16]
+ks = [4, 16, 64, 128, 256]
+#ks = [64]
+for i in range(len(sizes)):
+	sizes[i] *= 1024
 
 
 def print_and_write(str):
-	print(str)
-	file.write(str + "\n")
+	print(str, end="")
+	file.write(str)
 
 
 def print_it(name, size, k, t):
@@ -51,6 +48,9 @@ def d_cloud(size):
 	return values[name]
 
 
+sort_times = []
+
+
 def sort(c, size):
 	c = c.reshape(size, 4)
 	ind = np.lexsort((c[:, 2], c[:, 1], c[:, 0]))
@@ -62,7 +62,7 @@ def cloud_sorted(size):
 	if name not in values:
 		c = cloud(size)
 		t = repeat(lambda: sort(c, size))
-		print_it("sort", size, None, t)
+		sort_times.append((size, t))
 		values[name] = sort(c, size)
 	return values[name]
 
@@ -78,8 +78,8 @@ def d_cloud_sorted(size):
 def nearest(size, k):
 	name = f"nearest_{size}_{k}"
 	if name not in values:
-		print(f"todo {name}")
-		quit()
+		d_n = d_nearest(size, k)
+		values[name] = d_n.copy_to_host()
 	return values[name]
 
 
@@ -112,94 +112,193 @@ def d_triangulation(size, generate=False):
 
 
 def repeat(func):
-	if skip_mode:
-		func()
-		return -1
+	c = 0
 	cuda.synchronize()
 	start = time.perf_counter_ns()
-	sys.stdout.flush()
-	for i in range(c):
-		print("\r" + str(i) + "/" + str(c), end="")
-		sys.stdout.flush()
+	while True:
 		func()
 		cuda.synchronize()
-	end = time.perf_counter_ns()
-	print("\r", end="")
-	sys.stdout.flush()
-	return (end - start) // c
+		c += 1
+		t = time.perf_counter_ns() - start
+		if t > min_time:
+			break
+	return t // c
 
 
-def nearest_test(k, size):
+def sur_test():
 
-	tpb = 256 #threads per block
-	ppg = math.ceil(size / tpb) #blocks per grid
-
-	d_s = d_nearest(size, k, True)
-
-	for name, f, d_c in [
-		("iter", compute.nearest_iter, d_cloud(size)),
-		("list", compute.nearest_list, d_cloud(size)),
-		("iter sort", compute.nearest_iter_sorted, d_cloud_sorted(size)),
-		("list sort", compute.nearest_list_sorted, d_cloud_sorted(size)),
+	for name, f in [
+		("iter", lambda: compute.nearest_iter[ppg, tpb](d_cl, d_sur, size, k)),
+		("list", lambda: compute.nearest_list[ppg, tpb](d_cl, d_sur, size, k)),
+		("iter sorted", lambda: compute.nearest_iter[ppg, tpb](d_sorted, d_sur, size, k)),
+		("list sorted", lambda: compute.nearest_list[ppg, tpb](d_sorted, d_sur, size, k)),
+		("tria", lambda: compute.triangulate_all[ppg, tpb](d_cl, d_tria, size)),
+		("tria sorted", lambda: compute.triangulate_with_sur[ppg, tpb](d_cl, d_sur, d_tria, size, k))
 	]:
-		t = repeat(lambda: f[ppg, tpb](d_c, d_s, size, k))
-		print_it(name, size, k, t)
+		print_and_write(name + "\n")
+		times = []
+		for size in sizes:
+			tpb = 256 #threads per block
+			ppg = math.ceil(size / tpb) #blocks per grid
+			d_cl = d_cloud(size)
+			d_sorted = d_cloud_sorted(size)
+			d_tria = d_triangulation(size, True)
+			print_and_write(f"{size:>12} & ")
+			for k_i, k in enumerate(ks):
+				d_sur = d_nearest(size, k, True)
+				t = repeat(f)
+				times.append(t)
+				end = "&" if k_i < len(ks) - 1 else "\\\\\n"
+				print_and_write(f"{t:>12} {end}")
+		print_and_write("---\n")
+		i = 0
+		for size in sizes:
+			print_and_write(f"{size:>12} & ")
+			for k_i, k in enumerate(ks):
+				t = times[i] // k
+				end = "&" if k_i < len(ks) - 1 else "\\\\\n"
+				print_and_write(f"{t:>12} {end}")
+				i += 1
+		print_and_write("---\n")
+		i = 0
+		for size in sizes:
+			print_and_write(f"{size:>12} & ")
+			for k_i, k in enumerate(ks):
+				t = times[i] // size
+				end = "&" if k_i < len(ks) - 1 else "\\\\\n"
+				print_and_write(f"{t:>12} {end}")
+				i += 1
+		print_and_write("---\n")
 
 
-def triangulate_test(k, size):
-	tpb = 256 #threads per block
-	ppg = math.ceil(size / tpb) #blocks per grid
+def noise_test():
+	k = 64
+	for name, f, counts in [
+		("spatial", lambda: compute.smooth[ppg, tpb](d_cl, d_sur, d_cl_new, size, k), [4, 16, 64]),
+		("frequency", lambda: compute.frequenzy(cl, sur, size, k, count, False), [8, 64, 256]),
+	]:
+		print_and_write(name + "\n")
+		times = []
+		for size in sizes:
+			tpb = 256 #threads per block
+			ppg = math.ceil(size / tpb) #blocks per grid
+			cl = cloud(size)
+			d_cl = d_cloud(size)
+			d_cl_new = cuda.device_array(size * 4, dtype=np.float32)
 
-	d_c = d_cloud(size)
-	d_s = d_nearest(size, k)
-	d_t = d_triangulation(size, True)
+			print_and_write(f"{size:>12} & ")
+			for count_i, count in enumerate(counts):
+				sur = nearest(size, k)
+				d_sur = d_nearest(size, k)
+				t = repeat(f)
+				times.append(t)
+				end = "&" if count_i < len(counts) - 1 else "\\\\\n"
+				print_and_write(f"{t:>12} {end}")
+		print_and_write("---\n")
+		i = 0
+		for size in sizes:
+			print_and_write(f"{size:>12} & ")
+			for count_i, count in enumerate(counts):
+				t = times[i] // size
+				end = "&" if count_i < len(counts) - 1 else "\\\\\n"
+				print_and_write(f"{t:>12} {end}")
+				i += 1
+		print_and_write("---\n")
+		i = 0
+		for size in sizes:
+			print_and_write(f"{size:>12} & ")
+			for count_i, count in enumerate(counts):
+				t = times[i] // count
+				end = "&" if count_i < len(counts) - 1 else "\\\\\n"
+				print_and_write(f"{t:>12} {end}")
+				i += 1
+		print_and_write("---\n")
 
-	t = repeat(lambda: compute.triangulate_all[ppg, tpb](d_c, d_t, size))
-	print_it("tria", size, None, t)
 
-	t = repeat(lambda: compute.triangulate_with_sur[ppg, tpb](d_c, d_s, d_t, size, k))
-	print_it("tria surr", size, k, t)
-
-
-def edge_test(size):
-	tpb = 256 #threads per block
-	ppg = math.ceil(size / tpb) #blocks per grid
-
-	d_t = d_triangulation(size)
-	d_c = d_cloud(size)
-
-	d_normal = cuda.device_array(size * 4, dtype=np.float32)
-	d_curve = cuda.device_array(size * 4, dtype=np.float32)
-	d_max = cuda.device_array(size * 4, dtype=np.float32)
-	d_edge = cuda.device_array(size * 4, dtype=np.float32)
-
+def edge_test():
 	k = compute.triangulate_max
 
-	t = repeat(lambda: compute.normal[ppg, tpb](d_c, d_t, d_normal, size, k))
-	print_it("normal", size, None, t)
+	times = []
+	print_and_write("edge\n")
+	for size in sizes:
+		tpb = 256 #threads per block
+		ppg = math.ceil(size / tpb) #blocks per grid
 
-	t = repeat(lambda: compute.curve[ppg, tpb](d_c, d_t, d_normal, d_curve, size, k))
-	print_it("curve", size, None, t)
+		d_t = d_triangulation(size)
+		d_c = d_cloud(size)
 
-	t = repeat(lambda: compute.max[ppg, tpb](d_curve, d_t, d_max, size, k))
-	print_it("max", size, None, t)
+		d_normal = cuda.device_array(size * 4, dtype=np.float32)
+		d_curve = cuda.device_array(size * 4, dtype=np.float32)
+		d_max = cuda.device_array(size * 4, dtype=np.float32)
+		d_edge = cuda.device_array(size * 4, dtype=np.float32)
 
-	t = repeat(lambda: compute.threshhold[ppg, tpb](d_curve, d_edge, 0.1, size))
-	print_it("thresh", size, None, t)
+		print_and_write(f"{size:>12} & ")
+
+		t = repeat(lambda: compute.normal[ppg, tpb](d_c, d_t, d_normal, size, k))
+		print_and_write(f"{t:>12} & ")
+		times.append(t)
+
+		t = repeat(lambda: compute.curve[ppg, tpb](d_c, d_t, d_normal, d_curve, size, k))
+		print_and_write(f"{t:>12} & ")
+		times.append(t)
+
+		t = repeat(lambda: compute.max[ppg, tpb](d_curve, d_t, d_max, size, k))
+		print_and_write(f"{t:>12} & ")
+		times.append(t)
+
+		t = repeat(lambda: compute.threshhold[ppg, tpb](d_curve, d_edge, 0.1, size))
+		print_and_write(f"{t:>12} \\\\\n")
+		times.append(t)
+	i = 0
+	print_and_write("---\n")
+	for size in sizes:
+		print_and_write(
+			f"{size:>12} & {times[i+0]//size:>12} & {times[i+1]//size:>12} & {times[i+2]//size:>12} & {times[i+3]//size:>12} \\\\\n"
+		)
+		i += 4
+	print_and_write("---\n")
 
 
 def main():
-	print_and_write(f"|       name |     size |    k |         time |        t/k |        t/s |")
-	print_and_write(f"|-----------:|---------:|-----:|-------------:|-----------:|-----------:|")
+	sur_test()
+	edge_test()
 
-	#for size in [8]:
-	for size in [8, 16, 32, 64]:
-		size *= 1024
-		#for k in [64]:
-		for k in [4, 16, 256, 64]:
-			nearest_test(k, size)
-			triangulate_test(k, size)
-		edge_test(size)
+	noise_test()
+
+	print_and_write("sort\n")
+	for size, t in sort_times:
+		print_and_write(f"{size:>10} & {t:>12} \\\\\n")
+	print_and_write("---")
+
+	print_and_write(
+		"""
+
+
+\\begin{table}
+	\\caption{Laufzeiten für K-Nächsten-Nachbarn mit Liste ohne Sortierung}
+	\\label{laufzeit:list}
+	\\centering
+	\\footnotesize
+	\\begin{tabular}{|r||rrrrr|}
+		\\hline
+		Punkte N     & \\multicolumn{5}{c|}{K}                                                            \\\\
+		\\hline \\hline
+		Zeit in ns   & 4                      & 16          & 64           & 128          & 256          \\\\
+		\\hline
+		
+		---
+		
+		\\hline \\hline
+		Zeit/K in ns & 4                      & 16          & 64           & 128          & 256          \\\\
+		\\hline
+
+		---
+
+		\\hline
+	\\end{tabular}
+\\end{table}
+"""
+	)
 
 
 main()

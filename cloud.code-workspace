@@ -16,10 +16,6 @@
 			"path": "./render",
 			"name": "render"
 		},
-		{
-			"path": "./compute",
-			"name": "compute"
-		},
 	],
 	"settings": {
 		"[typescript]": {

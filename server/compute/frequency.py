@@ -32,7 +32,7 @@ def create_matrix(sur, rows, cols, vals, k, n):
 			vals[off + 3] = 1
 
 
-def frequenzy(cloud: np.ndarray, sur: np.ndarray, n: int, k: int, c: int) -> np.ndarray:
+def frequenzy(cloud: np.ndarray, sur: np.ndarray, n: int, k: int, c: int, output=True) -> np.ndarray:
 	t = time.time()
 	rows = np.empty(n * k * 4, dtype=np.float32)
 	cols = np.empty(n * k * 4, dtype=np.float32)
@@ -41,16 +41,12 @@ def frequenzy(cloud: np.ndarray, sur: np.ndarray, n: int, k: int, c: int) -> np.
 	create_matrix(sur, rows, cols, vals, k, n)
 
 	lapl = sparse.coo_matrix((vals, (rows, cols)), shape=(n, n))
-	print("\tgenerated laplace matrix", time.time() - t)
+	if output:
+		print("\tgenerated laplace matrix", time.time() - t)
 
 	_, vectors = eigen.eigsh(lapl, c, sigma=0, which='LM')
-	print("\tgenerated eigenvectors", time.time() - t)
+	if output:
+		print("\tgenerated eigenvectors", time.time() - t)
 	m = vectors @ (vectors.transpose() @ cloud.reshape(n, 4))
-
-	#test = vectors.transpose() @ cloud.reshape(n, 4)
-	#for i in range(c):
-	#	m[i] = test[i]
-	#for i in range(c, n):
-	#	m[i] = [0, 0, 0, 0]
 
 	return m.reshape(n * 4)
