@@ -130,8 +130,8 @@ def sur_test():
 	for name, f in [
 		("iter", lambda: compute.nearest_iter[ppg, tpb](d_cl, d_sur, size, k)),
 		("list", lambda: compute.nearest_list[ppg, tpb](d_cl, d_sur, size, k)),
-		("iter sorted", lambda: compute.nearest_iter[ppg, tpb](d_sorted, d_sur, size, k)),
-		("list sorted", lambda: compute.nearest_list[ppg, tpb](d_sorted, d_sur, size, k)),
+		("iter sorted", lambda: compute.nearest_iter_sorted[ppg, tpb](d_sorted, d_sur, size, k)),
+		("list sorted", lambda: compute.nearest_list_sorted[ppg, tpb](d_sorted, d_sur, size, k)),
 		("tria", lambda: compute.triangulate_all[ppg, tpb](d_cl, d_tria, size)),
 		("tria sorted", lambda: compute.triangulate_with_sur[ppg, tpb](d_cl, d_sur, d_tria, size, k))
 	]:
@@ -174,7 +174,11 @@ def sur_test():
 def noise_test():
 	k = 64
 	for name, f, counts in [
-		("spatial", lambda: compute.smooth[ppg, tpb](d_cl, d_sur, d_cl_new, size, k), [4, 16, 64]),
+		(
+		"spatial",
+		lambda: [compute.smooth[ppg, tpb](d_cl, d_sur, d_cl_new, size, k) for _ in range(count)],
+		[4, 16, 64],
+		),
 		("frequency", lambda: compute.frequenzy(cl, sur, size, k, count, False), [8, 64, 256]),
 	]:
 		print_and_write(name + "\n")
@@ -269,36 +273,6 @@ def main():
 	for size, t in sort_times:
 		print_and_write(f"{size:>10} & {t:>12} \\\\\n")
 	print_and_write("---")
-
-	print_and_write(
-		"""
-
-
-\\begin{table}
-	\\caption{Laufzeiten für K-Nächsten-Nachbarn mit Liste ohne Sortierung}
-	\\label{laufzeit:list}
-	\\centering
-	\\footnotesize
-	\\begin{tabular}{|r||rrrrr|}
-		\\hline
-		Punkte N     & \\multicolumn{5}{c|}{K}                                                            \\\\
-		\\hline \\hline
-		Zeit in ns   & 4                      & 16          & 64           & 128          & 256          \\\\
-		\\hline
-		
-		---
-		
-		\\hline \\hline
-		Zeit/K in ns & 4                      & 16          & 64           & 128          & 256          \\\\
-		\\hline
-
-		---
-
-		\\hline
-	\\end{tabular}
-\\end{table}
-"""
-	)
 
 
 main()

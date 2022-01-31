@@ -47,7 +47,7 @@
 				"name": "test",
 				"type": "python",
 				"request": "launch",
-				"program": "${workspaceFolder:server}\\test.py",
+				"program": "${workspaceFolder:server}\\measure.py",
 				"console": "integratedTerminal",
 				"cwd": "${workspaceFolder:server}"
 			},
