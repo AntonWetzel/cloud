@@ -1,9 +1,10 @@
 from numba import cuda, types
-from numba.core.errors import NumbaDeprecationWarning
+from numba.core.errors import NumbaDeprecationWarning, NumbaPerformanceWarning
 import warnings
 import math
 
 warnings.simplefilter('ignore', category=NumbaDeprecationWarning)
+warnings.simplefilter('ignore', category=NumbaPerformanceWarning)
 
 Point = types.UniTuple(types.float32, 3)
 
