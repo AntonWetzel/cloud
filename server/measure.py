@@ -9,16 +9,15 @@ import numpy as np
 warnings.simplefilter('ignore', category=errors.NumbaPerformanceWarning)
 
 min_time = 5_000_000_000
+tpb = 256 #threads per block
 
 values = {}
 file = open("result", "w")
 
-sizes = [8, 16, 32, 64, 128, 256]
+sizes = [i * 1024 for i in [8, 16, 32, 64, 128, 256]]
 #sizes = [8, 16]
 ks = [4, 16, 64, 128, 256]
 #ks = [64]
-for i in range(len(sizes)):
-	sizes[i] *= 1024
 
 
 def print_and_write(str):
@@ -138,7 +137,6 @@ def sur_test():
 		print_and_write(name + "\n")
 		times = []
 		for size in sizes:
-			tpb = 256 #threads per block
 			ppg = math.ceil(size / tpb) #blocks per grid
 			d_cl = d_cloud(size)
 			d_sorted = d_cloud_sorted(size)
@@ -184,7 +182,6 @@ def noise_test():
 		print_and_write(name + "\n")
 		times = []
 		for size in sizes:
-			tpb = 256 #threads per block
 			ppg = math.ceil(size / tpb) #blocks per grid
 			cl = cloud(size)
 			d_cl = d_cloud(size)
@@ -225,7 +222,6 @@ def edge_test():
 	times = []
 	print_and_write("edge\n")
 	for size in sizes:
-		tpb = 256 #threads per block
 		ppg = math.ceil(size / tpb) #blocks per grid
 
 		d_t = d_triangulation(size)
