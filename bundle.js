@@ -16,14 +16,17 @@
 	}
 	async function Setup$1(width, height) {
 	    if (window.navigator.gpu == undefined) {
+	        console.log('no navigator gpu');
 	        return undefined;
 	    }
 	    adapter = await window.navigator.gpu.requestAdapter();
 	    if (adapter == null) {
+	        console.log('no adapter');
 	        return undefined;
 	    }
 	    device = await adapter.requestDevice();
 	    if (device == null) {
+	        console.log('no device');
 	        return undefined;
 	    }
 	    canvas = document.createElement('canvas');
@@ -56,6 +59,7 @@
 	            {
 	                loadValue: clearColor,
 	                storeOp: 'store',
+	                loadOp: 'clear',
 	                view: context.getCurrentTexture().createView(),
 	            },
 	        ],

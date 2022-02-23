@@ -22,14 +22,17 @@ export function aspect(): number {
 
 export async function Setup(width: number, height: number): Promise<HTMLCanvasElement | undefined> {
 	if (window.navigator.gpu == undefined) {
+		console.log('no navigator gpu')
 		return undefined
 	}
 	adapter = await window.navigator.gpu.requestAdapter()
 	if (adapter == null) {
+		console.log('no adapter')
 		return undefined
 	}
 	device = await adapter.requestDevice()
 	if (device == null) {
+		console.log('no device')
 		return undefined
 	}
 	canvas = document.createElement('canvas')
@@ -68,6 +71,7 @@ export function StartRender(camera: Camera): void {
 			{
 				loadValue: clearColor,
 				storeOp:   'store',
+				loadOp:    'clear',
 				view:      context.getCurrentTexture().createView(),
 			},
 		],
