@@ -1,5 +1,6 @@
 from numba import cuda, types
 import numpy as np
+from scipy.fft import idst
 from .shared import *
 
 
@@ -11,17 +12,19 @@ def nearest_iter(cloud, sur, n, k):
 	offset = (id + 1) * k - 1
 	p = get_point(cloud, id)
 	last = 0.0
+	last_idx = n
 	for c in range(k):
 		current: int
 		dist = np.Infinity
 		for i in range(n):
 			o = get_point(cloud, i)
 			d = dist_pow_2(p, o)
-			if d < dist and last < d:
+			if d < dist and (last < d or (last == d and last_idx < i)):
 				current = i
 				dist = d
 		sur[offset - c] = current
 		last = dist
+		last_idx = current
 
 
 @cuda.jit(types.void(types.float32[:], types.uint32[:], types.uint32, types.uint32))
@@ -74,6 +77,7 @@ def nearest_iter_sorted(cloud, sur, n, k):
 	p = get_point(cloud, id)
 	last = 0
 	for c in range(k):
+		last_idx = n
 		best: int
 		dist = np.Infinity
 		for i in range(id - 1, -1, -1):
@@ -82,7 +86,7 @@ def nearest_iter_sorted(cloud, sur, n, k):
 			if (x_d * x_d) > dist:
 				break
 			d = dist_pow_2(p, o)
-			if last < d and d < dist:
+			if d < dist and (last < d or (last == d and last_idx < i)):
 				best = i
 				dist = d
 		for i in range(id + 1, n):
@@ -91,11 +95,12 @@ def nearest_iter_sorted(cloud, sur, n, k):
 			if (x_d * x_d) > dist:
 				break
 			d = dist_pow_2(p, o)
-			if last < d and d < dist:
+			if d < dist and (last < d or (last == d and last_idx < i)):
 				best = i
 				dist = d
 		sur[offset - c] = best
 		last = dist
+		last_idx = best
 
 
 @cuda.jit(types.void(types.float32[:], types.uint32[:], types.uint32, types.uint32))
