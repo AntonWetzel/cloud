@@ -19,9 +19,14 @@ def nearest_iter(cloud, sur, n, k):
 		for i in range(n):
 			o = get_point(cloud, i)
 			d = dist_pow_2(p, o)
-			if d < dist and (last < d or (last == d and last_idx < i)):
-				current = i
-				dist = d
+			if d < dist:
+				if last < d:
+					current = i
+					dist = d
+				elif last == d and last_idx < i:
+					current = i
+					dist = d
+					break
 		sur[offset - c] = current
 		last = dist
 		last_idx = current
@@ -76,8 +81,8 @@ def nearest_iter_sorted(cloud, sur, n, k):
 	offset = (id + 1) * k - 1
 	p = get_point(cloud, id)
 	last = 0
+	last_idx = n
 	for c in range(k):
-		last_idx = n
 		best: int
 		dist = np.Infinity
 		for i in range(id - 1, -1, -1):
@@ -86,18 +91,28 @@ def nearest_iter_sorted(cloud, sur, n, k):
 			if (x_d * x_d) > dist:
 				break
 			d = dist_pow_2(p, o)
-			if d < dist and (last < d or (last == d and last_idx < i)):
-				best = i
-				dist = d
+			if d <= dist:
+				if last < d:
+					best = i
+					dist = d
+				elif last == d and last_idx < i:
+					best = i
+					dist = d
+					break
 		for i in range(id + 1, n):
 			o = get_point(cloud, i)
 			x_d = o[0] - p[0]
 			if (x_d * x_d) > dist:
 				break
 			d = dist_pow_2(p, o)
-			if d < dist and (last < d or (last == d and last_idx < i)):
-				best = i
-				dist = d
+			if d < dist:
+				if last < d:
+					best = i
+					dist = d
+				elif last == d and last_idx < i:
+					best = i
+					dist = d
+					break
 		sur[offset - c] = best
 		last = dist
 		last_idx = best
