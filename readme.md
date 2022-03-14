@@ -1,7 +1,17 @@
 # Cloud
 
 ## Overview
-Work in progress
+- calculate surrounding
+	- k-nearest-neighbor
+	- triangulation
+- filter noise
+	- gaussian filter in spatial domain
+	- ideal box filter in frequency domain
+- calculate edges
+	- normal
+	- curvature
+	- edges
+	- threshold
 
 ## Setup
 - install [anaconda](https://www.anaconda.com/products/individual)
