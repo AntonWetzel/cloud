@@ -193,6 +193,13 @@ class Handler:
 			self.curvature = self.d_curvature.copy_to_host(stream=self.stream)
 			await self.stream.async_done()
 			await self.send_curvature()
+		elif id == 13:
+			if self.has_curve == False:
+				await self.send_string("curvature needed for reduce")
+				return
+			self.size, self.cloud = compute.reduce(self.cloud, self.curvature, self.size)
+			self.d_cloud = cuda.to_device(self.cloud, stream=self.stream)
+			await self.send_cloud()
 		else:
 			await self.send_string("compute error: id '" + str(id) + "' wrong")
 

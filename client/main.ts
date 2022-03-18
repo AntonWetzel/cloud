@@ -216,7 +216,11 @@ socket.onopen = async () => {
 			new Float32Array(data)[1] = window.threshhold
 			socket.send(data)
 			break
-
+		case 'reduce':
+			data = new ArrayBuffer(4)
+			new Int32Array(data)[0] = computeIdOffset + 13
+			socket.send(data)
+			break
 		default:
 			alert('wrong name: ' + name)
 		}
