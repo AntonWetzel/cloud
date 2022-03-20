@@ -120,11 +120,9 @@ def nearest_iter_sorted(cloud, sur, n, k):
 @cuda.jit(types.void(types.float32[:], types.uint32[:], types.uint32, types.uint32))
 def nearest_list_sorted(cloud, sur, n, k):
 	id = cuda.grid(1)
-	if id >= n:
-		return
+	if id >= n: return
 	offset = id * k
 	p = get_point(cloud, id)
-
 	if id < n / 2:
 		dir = 1
 		low = id - 1
@@ -139,14 +137,12 @@ def nearest_list_sorted(cloud, sur, n, k):
 		d = dist_pow_2(p, o)
 		idx = 0
 		for _ in range(c):
-			if dist_pow_2(p, get_point(cloud, sur[offset + idx])) < d:
-				break
+			if dist_pow_2(p, get_point(cloud, sur[offset + idx])) < d: break
 			idx += 1
 		for x in range(c, idx, -1):
 			sur[offset + x] = sur[offset + x - 1]
 		sur[offset + idx] = i
 	dist = dist_pow_2(p, get_point(cloud, sur[offset]))
-
 	for i in range(low, -1, -1):
 		o = get_point(cloud, i)
 		x_d = o[0] - p[0]
@@ -157,8 +153,7 @@ def nearest_list_sorted(cloud, sur, n, k):
 			idx = 0
 			while idx + 1 < k:
 				next = sur[offset + idx + 1]
-				if dist_pow_2(p, get_point(cloud, next)) < d:
-					break
+				if dist_pow_2(p, get_point(cloud, next)) < d: break
 				sur[offset + idx] = next
 				idx += 1
 			sur[offset + idx] = i
@@ -166,15 +161,13 @@ def nearest_list_sorted(cloud, sur, n, k):
 	for i in range(high, n):
 		o = get_point(cloud, i)
 		x_d = o[0] - p[0]
-		if (x_d * x_d) > dist:
-			break
+		if (x_d * x_d) > dist: break
 		d = dist_pow_2(p, o)
 		if d < dist:
 			idx = 0
 			while idx + 1 < k:
 				next = sur[offset + idx + 1]
-				if dist_pow_2(p, get_point(cloud, next)) < d:
-					break
+				if dist_pow_2(p, get_point(cloud, next)) < d: break
 				sur[offset + idx] = next
 				idx += 1
 			sur[offset + idx] = i
