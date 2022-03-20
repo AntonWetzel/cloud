@@ -68,11 +68,9 @@ class Handler:
 			self.k = int.from_bytes(data[0:4], "little")
 			self.d_surround = cuda.device_array(self.size * self.k, dtype=np.uint32, stream=self.stream)
 			if id == 0:
-				compute.nearest_iter[blockspergrid, thread_per_block,
-					self.stream](self.d_cloud, self.d_surround, self.size, self.k)
+				compute.nearest_iter[blockspergrid, thread_per_block, self.stream](self.d_cloud, self.d_surround, self.size, self.k)
 			elif id == 1:
-				compute.nearest_list[blockspergrid, thread_per_block,
-					self.stream](self.d_cloud, self.d_surround, self.size, self.k)
+				compute.nearest_list[blockspergrid, thread_per_block, self.stream](self.d_cloud, self.d_surround, self.size, self.k)
 			self.surround = self.d_surround.copy_to_host(stream=self.stream)
 			await self.stream.async_done()
 			await self.send_surrounding()
@@ -90,11 +88,9 @@ class Handler:
 			self.k = k
 			self.d_surround = cuda.device_array(self.size * self.k, dtype=np.uint32, stream=self.stream)
 			if id == 2:
-				compute.nearest_iter_sorted[blockspergrid, thread_per_block,
-					self.stream](self.d_cloud, self.d_surround, self.size, self.k)
+				compute.nearest_iter_sorted[blockspergrid, thread_per_block, self.stream](self.d_cloud, self.d_surround, self.size, self.k)
 			elif id == 3:
-				compute.nearest_list_sorted[blockspergrid, thread_per_block,
-					self.stream](self.d_cloud, self.d_surround, self.size, self.k)
+				compute.nearest_list_sorted[blockspergrid, thread_per_block, self.stream](self.d_cloud, self.d_surround, self.size, self.k)
 			self.surround = self.d_surround.copy_to_host(stream=self.stream)
 			await self.stream.async_done()
 			await self.send_surrounding()
@@ -104,8 +100,7 @@ class Handler:
 				return
 			self.k = compute.triangulate_max
 			self.d_surround = cuda.device_array(self.size * self.k, dtype=np.uint32, stream=self.stream)
-			compute.triangulate_all[blockspergrid, thread_per_block,
-				self.stream](self.d_cloud, self.d_surround, self.size)
+			compute.triangulate_all[blockspergrid, thread_per_block, self.stream](self.d_cloud, self.d_surround, self.size)
 			self.surround = self.d_surround.copy_to_host(stream=self.stream)
 			await self.stream.async_done()
 			await self.send_surrounding()
@@ -142,8 +137,7 @@ class Handler:
 			count = int.from_bytes(data[0:4], "little")
 			clouds = [self.d_cloud, cuda.device_array(self.size * 4, dtype=np.float32, stream=self.stream)]
 			for _ in range(count):
-				compute.smooth[blockspergrid, thread_per_block,
-					self.stream](clouds[0], self.d_surround, clouds[1], self.size, self.k)
+				compute.smooth[blockspergrid, thread_per_block, self.stream](clouds[0], self.d_surround, clouds[1], self.size, self.k)
 				clouds[0], clouds[1] = clouds[1], clouds[0]
 			self.d_cloud = clouds[0]
 			self.cloud = clouds[0].copy_to_host(stream=self.stream)
@@ -154,8 +148,7 @@ class Handler:
 				await self.send_string("surround needed for normal")
 				return
 			self.d_normal = cuda.device_array(self.size * 4, dtype=np.float32, stream=self.stream)
-			compute.normal[blockspergrid, thread_per_block,
-				self.stream](self.d_cloud, self.d_surround, self.d_normal, self.size, self.k)
+			compute.normal[blockspergrid, thread_per_block, self.stream](self.d_cloud, self.d_surround, self.d_normal, self.size, self.k)
 			self.normal = self.d_normal.copy_to_host(stream=self.stream)
 			await self.stream.async_done()
 			await self.send_normals()
@@ -164,9 +157,8 @@ class Handler:
 				await self.send_string("normal needed for curvature")
 				return
 			self.d_curvature = cuda.device_array(self.size * 4, dtype=np.float32, stream=self.stream)
-			compute.curve[blockspergrid, thread_per_block, self.stream](
-				self.d_cloud, self.d_surround, self.d_normal, self.d_curvature, self.size, self.k
-			)
+			compute.curve[blockspergrid, thread_per_block,
+				self.stream](self.d_cloud, self.d_surround, self.d_normal, self.d_curvature, self.size, self.k)
 			self.curvature = self.d_curvature.copy_to_host(stream=self.stream)
 			await self.stream.async_done()
 			await self.send_curvature()
@@ -175,20 +167,18 @@ class Handler:
 				await self.send_string("curvature needed for curvature maximum")
 				return
 			new_d_curvature = cuda.device_array(self.size * 4, dtype=np.float32, stream=self.stream)
-			compute.max[blockspergrid, thread_per_block,
-				self.stream](self.d_curvature, self.d_surround, new_d_curvature, self.size, self.k)
+			compute.max[blockspergrid, thread_per_block, self.stream](self.d_curvature, self.d_surround, new_d_curvature, self.size, self.k)
 			self.d_curvature = new_d_curvature
 			self.curvature = self.d_curvature.copy_to_host(stream=self.stream)
 			await self.stream.async_done()
 			await self.send_curvature()
 		elif id == 12:
 			if self.has_curve == False:
-				await self.send_string("curvature needed for threshhold")
+				await self.send_string("curvature needed for threshold")
 				return
-			[threshhold] = struct.unpack('<f', data[0:4])
+			[threshold] = struct.unpack('<f', data[0:4])
 			new_d_curvature = cuda.device_array(self.size * 4, dtype=np.float32, stream=self.stream)
-			compute.threshhold[blockspergrid, thread_per_block,
-				self.stream](self.d_curvature, new_d_curvature, threshhold, self.size)
+			compute.threshold[blockspergrid, thread_per_block, self.stream](self.d_curvature, new_d_curvature, threshold, self.size)
 			self.d_curvature = new_d_curvature
 			self.curvature = self.d_curvature.copy_to_host(stream=self.stream)
 			await self.stream.async_done()

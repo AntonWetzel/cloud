@@ -18,7 +18,7 @@ import sortURI               from 'compute/sort.wgsl'
 import noiseURI              from 'compute/noise.wgsl'
 import rippleURI             from 'compute/ripple.wgsl'
 import peekURI               from 'compute/peek.wgsl'
-import threshholdURI         from 'compute/threshhold.wgsl'
+import thresholdURI         from 'compute/threshold.wgsl'
 
 let pipelines = {
 	cleanDang:          undefined as GPUComputePipeline,
@@ -39,7 +39,7 @@ let pipelines = {
 	noise:              undefined as GPUComputePipeline,
 	ripple:             undefined as GPUComputePipeline,
 	peek:               undefined as GPUComputePipeline,
-	threshhold:         undefined as GPUComputePipeline,
+	threshold:         undefined as GPUComputePipeline,
 }
 
 export function Setup() {
@@ -71,7 +71,7 @@ export function Setup() {
 		noise:              helper(noiseURI),
 		ripple:             helper(rippleURI),
 		peek:               helper(peekURI),
-		threshhold:         helper(threshholdURI),
+		threshold:         helper(thresholdURI),
 	}
 }
 

@@ -1,6 +1,5 @@
 from numba import cuda, types
 import numpy as np
-from scipy.fft import idst
 from .shared import *
 
 

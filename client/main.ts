@@ -16,7 +16,7 @@ declare global {
 		noise: number
 		frequencies: number
 		iterations: number
-		threshhold: number
+		threshold: number
 	}
 }
 
@@ -210,10 +210,10 @@ socket.onopen = async () => {
 			new Int32Array(data)[0] = computeIdOffset + 11
 			socket.send(data)
 			break
-		case 'threshhold':
+		case 'threshold':
 			data = new ArrayBuffer(8)
 			new Int32Array(data)[0] = computeIdOffset + 12
-			new Float32Array(data)[1] = window.threshhold
+			new Float32Array(data)[1] = window.threshold
 			socket.send(data)
 			break
 		case 'reduce':

@@ -26,11 +26,7 @@ def normal(cloud, sur, normal, n, k):
 	normal[id * 4 + 3] = 0
 
 
-@cuda.jit(
-	types.void(
-	types.float32[:], types.uint32[:], types.float32[:], types.float32[:], types.uint32, types.uint32
-	)
-)
+@cuda.jit(types.void(types.float32[:], types.uint32[:], types.float32[:], types.float32[:], types.uint32, types.uint32))
 def curve(cloud, sur, normal, edge, n, k):
 	id = cuda.grid(1)
 	if id >= n:
@@ -57,32 +53,32 @@ def max(curve, sur, new_curve, n, k):
 	if id >= n:
 		return
 	mode = False
-	threshhold = curve[id * 4]
+	threshold = curve[id * 4]
 	offset = id * k
 	new_curve[id * 4 + 1] = 0
 	new_curve[id * 4 + 2] = 0
 	new_curve[id * 4 + 3] = 0
-	res = threshhold
+	res = threshold
 	for i in range(k):
 		other = sur[offset + i]
 		if other == id:
 			break
-		new_mode = curve[other * 4] > threshhold
+		new_mode = curve[other * 4] > threshold
 		if mode and new_mode:
 			res = 0
 			break
 		mode = new_mode
-	if mode and curve[sur[offset] * 4] > threshhold:
+	if mode and curve[sur[offset] * 4] > threshold:
 		res = 0
 	new_curve[id * 4 + 0] = res
 
 
 @cuda.jit(types.void(types.float32[:], types.float32[:], types.float32, types.uint32))
-def threshhold(curve, new_curve, threshhold, n):
+def threshold(curve, new_curve, threshold, n):
 	id = cuda.grid(1)
 	if id >= n:
 		return
-	new_curve[id * 4 + 0] = 1 if (curve[id * 4] >= threshhold) else 0
+	new_curve[id * 4 + 0] = 1 if (curve[id * 4] >= threshold) else 0
 	new_curve[id * 4 + 1] = 0
 	new_curve[id * 4 + 2] = 0
 	new_curve[id * 4 + 3] = 0

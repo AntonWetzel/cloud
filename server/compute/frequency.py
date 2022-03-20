@@ -7,11 +7,7 @@ import numpy as np
 from .shared import *
 
 
-@jit(
-	types.void(
-	types.uint32[:], types.float32[:], types.float32[:], types.float32[:], types.uint32, types.uint32
-	)
-)
+@jit(types.void(types.uint32[:], types.float32[:], types.float32[:], types.float32[:], types.uint32, types.uint32))
 def create_matrix(sur, rows, cols, vals, k, n):
 	for i in range(n):
 		for j in range(k):

@@ -246,15 +246,13 @@ def edge_test():
 		print_and_write(f"{t:>12} & ")
 		times.append(t)
 
-		t = repeat(lambda: compute.threshhold[ppg, tpb](d_curve, d_edge, 0.1, size))
+		t = repeat(lambda: compute.threshold[ppg, tpb](d_curve, d_edge, 0.1, size))
 		print_and_write(f"{t:>12} \\\\\n")
 		times.append(t)
 	i = 0
 	print_and_write("---\n")
 	for size in sizes:
-		print_and_write(
-			f"{size:>12} & {times[i+0]//size:>12} & {times[i+1]//size:>12} & {times[i+2]//size:>12} & {times[i+3]//size:>12} \\\\\n"
-		)
+		print_and_write(f"{size:>12} & {times[i+0]//size:>12} & {times[i+1]//size:>12} & {times[i+2]//size:>12} & {times[i+3]//size:>12} \\\\\n")
 		i += 4
 	print_and_write("---\n")
 
