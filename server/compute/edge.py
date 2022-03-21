@@ -4,10 +4,10 @@ from .shared import *
 
 
 @cuda.jit(types.void(types.float32[:], types.uint32[:], types.float32[:], types.uint32, types.uint32))
-def normal(cloud, sur, normal, n, k):
+def edge_normal(cloud, sur, normal, n, k):
+	"calculate normal with triangulation"
 	id = cuda.grid(1)
-	if id >= n:
-		return
+	if id >= n: return
 	offset = id * k
 	p = get_point(cloud, id)
 	last = get_point(cloud, sur[offset])
@@ -27,10 +27,10 @@ def normal(cloud, sur, normal, n, k):
 
 
 @cuda.jit(types.void(types.float32[:], types.uint32[:], types.float32[:], types.float32[:], types.uint32, types.uint32))
-def curve(cloud, sur, normal, edge, n, k):
+def edge_curve(cloud, sur, normal, edge, n, k):
+	"calculate curvature with normal and triangulation"
 	id = cuda.grid(1)
-	if id >= n:
-		return
+	if id >= n: return
 	offset = id * k
 	p = get_point(cloud, id)
 	nor = get_point(normal, id)
@@ -48,10 +48,10 @@ def curve(cloud, sur, normal, edge, n, k):
 
 
 @cuda.jit(types.void(types.float32[:], types.int32[:], types.float32[:], types.uint32, types.uint32))
-def max(curve, sur, new_curve, n, k):
+def edge_max(curve, sur, new_curve, n, k):
+	"find lines with maximal curvature"
 	id = cuda.grid(1)
-	if id >= n:
-		return
+	if id >= n: return
 	mode = False
 	threshold = curve[id * 4]
 	offset = id * k
@@ -74,10 +74,10 @@ def max(curve, sur, new_curve, n, k):
 
 
 @cuda.jit(types.void(types.float32[:], types.float32[:], types.float32, types.uint32))
-def threshold(curve, new_curve, threshold, n):
+def edge_threshold(curve, new_curve, threshold, n):
+	"binary classification with curvature"
 	id = cuda.grid(1)
-	if id >= n:
-		return
+	if id >= n: return
 	new_curve[id * 4 + 0] = 1 if (curve[id * 4] >= threshold) else 0
 	new_curve[id * 4 + 1] = 0
 	new_curve[id * 4 + 2] = 0
@@ -85,7 +85,8 @@ def threshold(curve, new_curve, threshold, n):
 
 
 @jit(types.Tuple([types.int32, types.float32[:]])(types.float32[:], types.float32[:], types.int32))
-def reduce(cloud, edge, n):
+def edge_reduce(cloud, edge, n):
+	"remove points with low curvature, use edge_threshold first"
 	c = 0
 	for i in range(n):
 		if edge[i * 4] >= 1:

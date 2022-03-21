@@ -4,10 +4,10 @@ from .shared import *
 
 
 @cuda.jit(types.void(types.float32[:], types.uint32[:], types.float32[:], types.uint32, types.uint32))
-def smooth(cloud, sur, new_cloud, n, k):
+def filter_spatial_domain(cloud, sur, new_cloud, n, k):
+	"execute one iteration with a box-filter, switch cloud and new_cloud for multiple iterations"
 	id = cuda.grid(1)
-	if id >= n:
-		return
+	if id >= n: return
 	offset = id * k
 	x = 0
 	y = 0

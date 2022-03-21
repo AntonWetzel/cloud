@@ -7,14 +7,15 @@ triangulate_max = 16
 
 
 @cuda.jit(types.void(types.float32[:], types.uint32[:], types.uint32))
-def triangulate_all(cloud, sur, n):
+def triangulate_with_all(cloud, sur, n):
+	"calculate trinagulation around the point, consider all points in the cloud"
 	id = cuda.grid(1)
-	if id >= n:
-		return
+	if id >= n: return
 	p = get_point(cloud, id)
 	offset = id * triangulate_max
 	dist = np.Infinity
 	near: int
+	#find nearest point to start
 	for i in range(0, n):
 		if i == id:
 			continue
@@ -32,42 +33,45 @@ def triangulate_all(cloud, sur, n):
 		next = n
 		best = 0.0
 		for i in range(0, n):
-			if i == id or i == current:
-				continue
+			if i == id or i == current: continue
+			n_point = get_point(cloud, i)
 
 			#check if this point is further in the rotation
-			n_point = get_point(cloud, i)
-			if (dot(sub(p, n_point), direction) > 0.0):
-				continue
+			if (dot(sub(p, n_point), direction) > 0.0): continue
+
+			#calculate angle with known points
 			#https://en.wikipedia.org/wiki/Law_of_sines
 			ab = normalize(sub(p, n_point))
 			ac = normalize(sub(current_point, n_point))
 			alpha = math.acos(dot(ab, ac))
-			if alpha > best: #get "nearest" point with biggest alpha
+			if alpha > best: #save best point with biggest angle
 				next = i
 				best = alpha
 
-		if next == near: #full circle
-			break
+		#return when all points are found (full circle)
+		if next == near: break
+
+		#cancel if no point is valid
+		if next == n: break
 
 		n_point = get_point(cloud, next)
-		if next == n: #not a valid next avaible (recover?)
-			break
 		direction = cross(cross(sub(current_point, p), sub(n_point, p)), sub(n_point, p))
 		current_point = n_point
 		sur[offset + idx] = next
 		current = next
 		idx += 1
+
+	#fill remaining space with own (invalid) id
 	while idx < triangulate_max:
 		sur[offset + idx] = id
 		idx += 1
 
 
 @cuda.jit(types.void(types.float32[:], types.uint32[:], types.uint32[:], types.uint32, types.uint32))
-def triangulate_with_sur(cloud, sur, new_sur, n, k):
+def triangulate_with_nearest(cloud, sur, new_sur, n, k):
+	"calculate trinagulation around the point, consider only k-nearest"
 	id = cuda.grid(1)
-	if id >= n:
-		return
+	if id >= n: return
 	p = get_point(cloud, id)
 	offset = id * k
 	write_offset = id * triangulate_max
@@ -83,32 +87,35 @@ def triangulate_with_sur(cloud, sur, new_sur, n, k):
 		best = 0.0
 		for t in range(0, k):
 			i = sur[offset + t]
-			if i == current:
-				continue
+			if i == current: continue
+			n_point = get_point(cloud, i)
 
 			#check if this point is further in the rotation
-			n_point = get_point(cloud, i)
-			if (dot(sub(p, n_point), direction) > 0.0):
-				continue
+			if (dot(sub(p, n_point), direction) > 0.0): continue
+
+			#calculate angle with known points
 			#https://en.wikipedia.org/wiki/Law_of_sines
 			ab = normalize(sub(p, n_point))
 			ac = normalize(sub(current_point, n_point))
 			alpha = math.acos(dot(ab, ac))
-			if alpha > best: #get "nearest" point with biggest alpha
+			if alpha > best: #save best point with biggest angle
 				next = i
 				best = alpha
 
-		if next == near: #full circle
-			break
+		#return when all points are found (full circle)
+		if next == near: break
+
+		#cancel if no point is valid
+		if next == n: break
 
 		n_point = get_point(cloud, next)
-		if next == n: #not a valid next avaible (recover?)
-			break
 		direction = cross(cross(sub(current_point, p), sub(n_point, p)), sub(n_point, p))
 		current_point = n_point
 		new_sur[write_offset + idx] = next
 		current = next
 		idx += 1
+
+	#fill remaining space with own (invalid) id
 	while idx < triangulate_max:
 		new_sur[write_offset + idx] = id
 		idx += 1
