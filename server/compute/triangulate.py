@@ -8,17 +8,14 @@ triangulate_max = 16
 
 @cuda.jit(types.void(types.float32[:], types.uint32[:], types.uint32))
 def triangulate_with_all(cloud, sur, n):
-	"calculate trinagulation around the point, consider all points in the cloud"
+	"calculate triangulation around the point, consider all points in the cloud"
 	id = cuda.grid(1)
 	if id >= n: return
 	p = get_point(cloud, id)
 	offset = id * triangulate_max
 	dist = np.Infinity
-	near: int
-	#find nearest point to start
-	for i in range(0, n):
-		if i == id:
-			continue
+	for i in range(0, n): #find nearest point to start
+		if i == id: continue
 		d = dist_pow_2(p, get_point(cloud, i))
 		if d < dist:
 			dist = d
@@ -39,8 +36,7 @@ def triangulate_with_all(cloud, sur, n):
 			#check if this point is further in the rotation
 			if (dot(sub(p, n_point), direction) > 0.0): continue
 
-			#calculate angle with known points
-			#https://en.wikipedia.org/wiki/Law_of_sines
+			#calculate angle with known points (https://en.wikipedia.org/wiki/Law_of_sines)
 			ab = normalize(sub(p, n_point))
 			ac = normalize(sub(current_point, n_point))
 			alpha = math.acos(dot(ab, ac))
@@ -48,11 +44,8 @@ def triangulate_with_all(cloud, sur, n):
 				next = i
 				best = alpha
 
-		#return when all points are found (full circle)
-		if next == near: break
-
-		#cancel if no point is valid
-		if next == n: break
+		if next == near: break #return when all points are found (full circle)
+		if next == n: break #cancel if no point is valid
 
 		n_point = get_point(cloud, next)
 		direction = cross(cross(sub(current_point, p), sub(n_point, p)), sub(n_point, p))
@@ -61,15 +54,14 @@ def triangulate_with_all(cloud, sur, n):
 		current = next
 		idx += 1
 
-	#fill remaining space with own (invalid) id
 	while idx < triangulate_max:
-		sur[offset + idx] = id
+		sur[offset + idx] = id #fill remaining space with own (invalid) id
 		idx += 1
 
 
 @cuda.jit(types.void(types.float32[:], types.uint32[:], types.uint32[:], types.uint32, types.uint32))
 def triangulate_with_nearest(cloud, sur, new_sur, n, k):
-	"calculate trinagulation around the point, consider only k-nearest"
+	"calculate triangulation around the point, consider only k-nearest"
 	id = cuda.grid(1)
 	if id >= n: return
 	p = get_point(cloud, id)
@@ -93,8 +85,7 @@ def triangulate_with_nearest(cloud, sur, new_sur, n, k):
 			#check if this point is further in the rotation
 			if (dot(sub(p, n_point), direction) > 0.0): continue
 
-			#calculate angle with known points
-			#https://en.wikipedia.org/wiki/Law_of_sines
+			#calculate angle with known points (https://en.wikipedia.org/wiki/Law_of_sines)
 			ab = normalize(sub(p, n_point))
 			ac = normalize(sub(current_point, n_point))
 			alpha = math.acos(dot(ab, ac))
