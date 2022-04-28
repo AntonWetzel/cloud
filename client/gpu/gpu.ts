@@ -47,9 +47,10 @@ export async function Setup(width: number, height: number): Promise<HTMLCanvasEl
 
 export function Resize(width: number, height: number): void {
 	context.configure({
-		device: device,
-		format: format,
-		size:   { width: width, height: height },
+		device:               device,
+		format:               format,
+		size:                 { width: width, height: height },
+		compositingAlphaMode: 'opaque',
 	})
 	canvas.width = width
 	canvas.height = height
@@ -69,17 +70,21 @@ export function StartRender(camera: Camera): void {
 	renderPass = encoder.beginRenderPass({
 		colorAttachments: [
 			{
-				loadValue: clearColor,
-				storeOp:   'store',
-				loadOp:    'clear',
-				view:      context.getCurrentTexture().createView(),
+				clearValue: clearColor,
+				storeOp:    'store',
+				loadOp:     'clear',
+				loadValue:  'load',
+				view:       context.getCurrentTexture().createView(),
 			},
 		],
 		depthStencilAttachment: {
-			depthLoadValue:   1.0,
+			depthLoadOp:      'clear',
+			depthClearValue:  1.0,
 			depthStoreOp:     'store',
-			stencilLoadValue: 0,
+			stencilLoadOp:    'load',
 			stencilStoreOp:   'store',
+			depthLoadValue:   'load',
+			stencilLoadValue: 'load',
 			view:             depth.createView(),
 		},
 	})
@@ -87,7 +92,7 @@ export function StartRender(camera: Camera): void {
 }
 
 export function FinishRender(): void {
-	renderPass.endPass()
+	renderPass.end()
 	device.queue.submit([encoder.finish()])
 }
 

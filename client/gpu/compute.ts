@@ -1,4 +1,4 @@
-import { ConvertURI, CreateBuffer, device, NewModule, ReadBuffer } from './gpu.js'
+import { ConvertURI, CreateBuffer, device, NewModule } from './gpu.js'
 
 import cleanDangURI          from 'compute/cleanDang.wgsl'
 import cleanLongURI          from 'compute/cleanLong.wgsl'
@@ -39,7 +39,7 @@ let pipelines = {
 	noise:              undefined as GPUComputePipeline,
 	ripple:             undefined as GPUComputePipeline,
 	peek:               undefined as GPUComputePipeline,
-	threshold:         undefined as GPUComputePipeline,
+	threshold:          undefined as GPUComputePipeline,
 }
 
 export function Setup() {
@@ -71,7 +71,7 @@ export function Setup() {
 		noise:              helper(noiseURI),
 		ripple:             helper(rippleURI),
 		peek:               helper(peekURI),
-		threshold:         helper(thresholdURI),
+		threshold:          helper(thresholdURI),
 	}
 }
 
@@ -113,7 +113,7 @@ export function Compute(
 	compute.setPipeline(pipeline)
 	compute.setBindGroup(0, group)
 	compute.dispatch(Math.ceil(length / 256))
-	compute.endPass()
+	compute.end()
 
 	const commands = encoder.finish()
 	device.queue.submit([commands])

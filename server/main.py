@@ -2,6 +2,7 @@ import aiohttp
 from aiohttp import web
 import asyncio
 import time
+import socket
 
 import handler
 
@@ -67,8 +68,15 @@ async def start_server(host: str, port: int):
 
 
 if __name__ == "__main__":
-	host = "127.0.0.1"
-	port = 5500
+	if False:
+		# local
+		host = "127.0.0.1"
+		port = 5500
+	else:
+		# lan
+		hostname = socket.gethostname()
+		host = socket.gethostbyname(hostname)
+		port = 80
 	loop = asyncio.new_event_loop()
 	loop.run_until_complete(start_server(host, port))
 	print("running at: http://" + host + ":" + str(port))
