@@ -40,7 +40,7 @@ Save image: Key P`
 			</select>
 			<div>
 				<label for="grid">Grid</label>
-				<input type="checkbox" id="grid" checked=true>
+				<input type="checkbox" id="grid" checked>
 			</div>
 			<global-input name="Radius" value="0.015" min="0.005" max="0.1" step="0.005" variable="radius">
 			</global-input>
@@ -48,10 +48,15 @@ Save image: Key P`
 		<div class="item">
 			<p>Generate Cloud</p>
 			<global-input name="Size" value="10000" min="100" max="1000000" step="1" variable="size" int></global-input>
+			<div>
+				<label for="IndexColor">Color based on index</label>
+				<input type="checkbox" id="IndexColor">
+			</div>
 			<button onclick="CreateForm('sphere')">Sphere</button>
 			<button onclick="CreateForm('cube')">Cube</button>
 			<button onclick="CreateForm('torus')">Torus</button>
 			<button onclick="CreateForm('map')">Map</button>
+			<button onclick="CreateForm('sphere scaled')">Sphere Scaled</button>
 			<p>Load PCD</p>
 			<button onclick="CreateForm('bunny')">Bunny</button>
 			<button onclick="CreateForm('bunnyBig')">Large Bunny</button>
@@ -79,6 +84,7 @@ Save image: Key P`
 			<global-input name="Frequencies" value="64" min="1" max="256" step="1" variable="frequencies" int>
 			</global-input>
 			<button onclick="StartCompute('frequenz')">Frequency domain</button>
+			<button onclick="StartCompute('frequenzDebug')">Frequency domain (Debug)</button>
 		</div>
 		<div class="item">
 			<p>Edge</p>

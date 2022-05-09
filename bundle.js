@@ -631,10 +631,28 @@
 
 	function Create$1(points) {
 	    const colors = new Float32Array(points * 4);
-	    for (let i = 0; i < points; i++) {
-	        colors[i * 4 + 0] = 0.2;
-	        colors[i * 4 + 1] = 0.3;
-	        colors[i * 4 + 2] = 0.4;
+	    const box = document.getElementById('IndexColor');
+	    if (box.checked) {
+	        for (let i = 0; i < points; i++) {
+	            const v = i / points;
+	            if (v < 1 / 2) {
+	                colors[i * 4 + 0] = 1 - v * 2;
+	                colors[i * 4 + 1] = v * 2;
+	                colors[i * 4 + 2] = 0 - 0;
+	            }
+	            else {
+	                colors[i * 4 + 0] = 0;
+	                colors[i * 4 + 1] = 1 - (v - 1 / 2) * 2;
+	                colors[i * 4 + 2] = (v - 1 / 2) * 2;
+	            }
+	        }
+	    }
+	    else {
+	        for (let i = 0; i < points; i++) {
+	            colors[i * 4 + 0] = 0.2;
+	            colors[i * 4 + 1] = 0.3;
+	            colors[i * 4 + 2] = 0.4;
+	        }
 	    }
 	    return CreateBuffer(colors, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE);
 	}
@@ -770,11 +788,21 @@
 	    const keys = {};
 	    socket.onmessage = async (ev) => {
 	        if (typeof ev.data == 'string') {
-	            alert(ev.data);
+	            let message = ev.data.substring(1);
+	            switch (ev.data[0]) {
+	                case "E":
+	                    alert(message);
+	                    break;
+	                case "M":
+	                    console.log(message);
+	                    break;
+	                default:
+	                    console.log(ev.data[0]);
+	                    break;
+	            }
 	        }
 	        else {
 	            let data = await ev.data.arrayBuffer();
-	            console.log('message: ', data.byteLength);
 	            const info = new Int32Array(data)[0];
 	            data = data.slice(4);
 	            switch (info) {
@@ -855,6 +883,9 @@
 	                break;
 	            case 'statue':
 	                id = formIdOffset + 6;
+	                break;
+	            case 'sphere scaled':
+	                id = formIdOffset + 7;
 	                break;
 	        }
 	        new Int32Array(data)[0] = id;
@@ -950,6 +981,12 @@
 	            case 'reduce':
 	                data = new ArrayBuffer(4);
 	                new Int32Array(data)[0] = computeIdOffset + 13;
+	                socket.send(data);
+	                break;
+	            case 'frequenzDebug':
+	                data = new ArrayBuffer(8);
+	                new Int32Array(data)[0] = computeIdOffset + 14;
+	                new Int32Array(data)[1] = window.frequencies;
 	                socket.send(data);
 	                break;
 	            default:

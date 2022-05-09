@@ -28,7 +28,7 @@ def create_laplace_matrix(sur, rows, cols, vals, k, n):
 			vals[off + 3] = 1
 
 
-def filter_frequency_domain(cloud: np.ndarray, sur: np.ndarray, n: int, k: int, c: int) -> np.ndarray:
+def filter_frequency_domain(cloud: np.ndarray, sur: np.ndarray, n: int, k: int, c: int, debug: bool = False) -> np.ndarray:
 	"filter high frequencies with a ideal low pass filter"
 	rows = np.empty(n * k * 4, dtype=np.float32)
 	cols = np.empty(n * k * 4, dtype=np.float32)
@@ -38,6 +38,9 @@ def filter_frequency_domain(cloud: np.ndarray, sur: np.ndarray, n: int, k: int, 
 
 	lapl = sparse.coo_matrix((vals, (rows, cols)), shape=(n, n)) #claculate laplace matrix
 	_, vectors = eigen.eigsh(lapl, c, sigma=0, which='LM') #calculate eigenvalues
-	m = vectors @ (vectors.transpose() @ cloud.reshape(n, 4)) #filter in frequency domain
 
+	if debug:
+		m = vectors.transpose() @ cloud.reshape(n, 4) #debug: frequencies as result
+		return m.reshape(c * 4)
+	m = vectors @ (vectors.transpose() @ cloud.reshape(n, 4)) #filter in frequency domain
 	return m.reshape(n * 4)

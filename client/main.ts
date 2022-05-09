@@ -62,10 +62,20 @@ socket.onopen = async () => {
 
 	socket.onmessage =async (ev: MessageEvent<Blob | string>) =>{
 		if (typeof ev.data == 'string') {
-			alert(ev.data)
+			let message = ev.data.substring(1)
+			switch (ev.data[0]) {
+				case "E":
+					alert(message)
+					break
+				case "M":
+					console.log(message)
+					break
+				default:
+					console.log(ev.data[0])
+					break
+			}
 		} else {
 			let data = await ev.data.arrayBuffer()
-			console.log('message: ', data.byteLength)
 			const info = new Int32Array(data)[0]
 			data = data.slice(4)
 			switch (info) {
@@ -135,6 +145,7 @@ socket.onopen = async () => {
 		case 'bunny': id = formIdOffset + 4; break
 		case 'bunnyBig': id = formIdOffset + 5; break 
 		case 'statue': id = formIdOffset + 6; break
+		case 'sphere scaled': id = formIdOffset + 7; break
 		}
 		new Int32Array(data)[0] = id
 		new Int32Array(data)[1] = size
@@ -219,6 +230,12 @@ socket.onopen = async () => {
 		case 'reduce':
 			data = new ArrayBuffer(4)
 			new Int32Array(data)[0] = computeIdOffset + 13
+			socket.send(data)
+			break
+		case 'frequenzDebug':
+			data = new ArrayBuffer(8)
+			new Int32Array(data)[0] = computeIdOffset + 14
+			new Int32Array(data)[1] = window.frequencies
 			socket.send(data)
 			break
 		default:

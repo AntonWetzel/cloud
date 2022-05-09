@@ -5,7 +5,6 @@ import numpy as np
 from opensimplex import OpenSimplex
 import requests
 from numba import jit, types
-import time
 
 
 @jit(types.void(types.float32[:], types.int32), nopython=True)
@@ -54,6 +53,8 @@ def create(id: int, size: int):
 	elif id == 6:
 		link = "https://raw.githubusercontent.com/PointCloudLibrary/pcl/master/test/rops_cloud.pcd"
 		(cloud, size) = extern(link, 3)
+	elif id == 7:
+		cloud = sphere_scaled(size)
 	else:
 		print("generate error: id '" + id + "' wrong")
 	cloud = cloud.reshape(size * 4)
@@ -70,6 +71,20 @@ def sphere(size: int) -> np.ndarray:
 		points[i, 0] = math.sin(lat) * math.sin(long)
 		points[i, 1] = math.cos(long)
 		points[i, 2] = math.cos(lat) * math.sin(long)
+		points[i, 3] = 0
+	return points
+
+
+def sphere_scaled(size: int) -> np.ndarray:
+	points = np.empty((size, 4), dtype=np.float32)
+	for i in range(size):
+		long = math.acos(random() * 2 - 1) # less points near the poles
+		lat = random() * 2 * math.pi
+
+		scale = random()
+		points[i, 0] = math.sin(lat) * math.sin(long) * scale
+		points[i, 1] = math.cos(long) * scale
+		points[i, 2] = math.cos(lat) * math.sin(long) * scale
 		points[i, 3] = 0
 	return points
 

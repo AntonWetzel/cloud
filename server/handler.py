@@ -63,7 +63,7 @@ class Handler:
 
 		if id == 0 or id == 1:
 			if self.size == 0:
-				await self.send_string("cloud needed for surround")
+				await self.send_string("Ecloud needed for surround")
 				return
 			self.k = int.from_bytes(data[0:4], "little")
 			self.d_surround = cuda.device_array(self.size * self.k, dtype=np.uint32, stream=self.stream)
@@ -76,7 +76,7 @@ class Handler:
 			await self.send_surrounding()
 		elif id == 2 or id == 3:
 			if self.size == 0:
-				await self.send_string("cloud needed for surround")
+				await self.send_string("Ecloud needed for surround")
 				return
 			k = int.from_bytes(data[0:4], "little")
 			cloud = self.cloud.reshape(self.size, 4)
@@ -96,7 +96,7 @@ class Handler:
 			await self.send_surrounding()
 		elif id == 4:
 			if self.size == 0:
-				await self.send_string("cloud needed for surround")
+				await self.send_string("Ecloud needed for surround")
 				return
 			self.k = compute.triangulate_max
 			self.d_surround = cuda.device_array(self.size * self.k, dtype=np.uint32, stream=self.stream)
@@ -106,7 +106,7 @@ class Handler:
 			await self.send_surrounding()
 		elif id == 5:
 			if self.k == 0:
-				await self.send_string("surround needed for triangulation with surrounding")
+				await self.send_string("Esurround needed for triangulation with surrounding")
 				return
 			new_k = compute.triangulate_max
 			new_d_surround = cuda.device_array(self.size * new_k, dtype=np.uint32, stream=self.stream)
@@ -125,14 +125,14 @@ class Handler:
 		elif id == 7:
 			count = int.from_bytes(data[0:4], "little")
 			if self.k == 0:
-				await self.send_string("surround needed for frequency domain filtering")
+				await self.send_string("Esurround needed for frequency domain filtering")
 				return
 			self.cloud = compute.filter_frequency_domain(self.cloud, self.surround, self.size, self.k, count)
 			self.d_cloud = cuda.to_device(self.cloud, stream=self.stream)
 			await self.send_cloud()
 		elif id == 8:
 			if self.k == 0:
-				await self.send_string("surround needed for spatial domain filtering")
+				await self.send_string("Esurround needed for spatial domain filtering")
 				return
 			count = int.from_bytes(data[0:4], "little")
 			clouds = [self.d_cloud, cuda.device_array(self.size * 4, dtype=np.float32, stream=self.stream)]
@@ -145,7 +145,7 @@ class Handler:
 			await self.send_cloud()
 		elif id == 9:
 			if self.k == 0:
-				await self.send_string("surround needed for normal")
+				await self.send_string("Esurround needed for normal")
 				return
 			self.d_normal = cuda.device_array(self.size * 4, dtype=np.float32, stream=self.stream)
 			compute.edge_normal[blockspergrid, thread_per_block, self.stream](self.d_cloud, self.d_surround, self.d_normal, self.size, self.k)
@@ -154,7 +154,7 @@ class Handler:
 			await self.send_normals()
 		elif id == 10:
 			if self.has_normal == False:
-				await self.send_string("normal needed for curvature")
+				await self.send_string("Enormal needed for curvature")
 				return
 			self.d_curvature = cuda.device_array(self.size * 4, dtype=np.float32, stream=self.stream)
 			compute.edge_curve[blockspergrid, thread_per_block,
@@ -164,7 +164,7 @@ class Handler:
 			await self.send_curvature()
 		elif id == 11:
 			if self.has_curve == False:
-				await self.send_string("curvature needed for curvature maximum")
+				await self.send_string("Ecurvature needed for curvature maximum")
 				return
 			new_d_curvature = cuda.device_array(self.size * 4, dtype=np.float32, stream=self.stream)
 			compute.edge_max[blockspergrid, thread_per_block, self.stream](self.d_curvature, self.d_surround, new_d_curvature, self.size, self.k)
@@ -174,7 +174,7 @@ class Handler:
 			await self.send_curvature()
 		elif id == 12:
 			if self.has_curve == False:
-				await self.send_string("curvature needed for threshold")
+				await self.send_string("Ecurvature needed for threshold")
 				return
 			[threshold] = struct.unpack('<f', data[0:4])
 			new_d_curvature = cuda.device_array(self.size * 4, dtype=np.float32, stream=self.stream)
@@ -185,13 +185,22 @@ class Handler:
 			await self.send_curvature()
 		elif id == 13:
 			if self.has_curve == False:
-				await self.send_string("curvature needed for reduce")
+				await self.send_string("Ecurvature needed for reduce")
 				return
 			self.size, self.cloud = compute.edge_reduce(self.cloud, self.curvature, self.size)
 			self.d_cloud = cuda.to_device(self.cloud, stream=self.stream)
 			await self.send_cloud()
+		elif id == 14:
+			count = int.from_bytes(data[0:4], "little")
+			if self.k == 0:
+				await self.send_string("Esurround needed for frequency domain filtering")
+				return
+			self.cloud = compute.filter_frequency_domain(self.cloud, self.surround, self.size, self.k, count, True)
+			self.size = count
+			self.d_cloud = cuda.to_device(self.cloud, stream=self.stream)
+			await self.send_cloud()
 		else:
-			await self.send_string("compute error: id '" + str(id) + "' wrong")
+			await self.send_string("Ecompute error: id '" + str(id) + "' wrong")
 
 	async def create(self, id: int, size: int):
 		self.size, self.cloud = generate.create(id, size)

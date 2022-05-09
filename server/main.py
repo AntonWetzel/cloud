@@ -33,12 +33,14 @@ async def websocket_handler(request):
 				size = int.from_bytes(data[4:8], "little")
 				await handle.create(info, size)
 				print("executed generate " + str(info) + " in " + str(time.time() - t) + " seconds")
+				await handle.send_string("Mexecuted generate " + str(info) + " in " + str(time.time() - t) + " seconds")
 			elif computeIdOffset <= info and info <= 50:
 				t = time.time()
 				info -= computeIdOffset
 				print("started compute " + str(info))
 				await handle.compute(info, data[4:])
 				print("executed compute " + str(info) + " in " + str(time.time() - t) + " seconds")
+				await handle.send_string("Mexecuted compute " + str(info) + " in " + str(time.time() - t) + " seconds")
 			else:
 				print("wrong info code: ", info)
 	return ws
@@ -68,7 +70,7 @@ async def start_server(host: str, port: int):
 
 
 if __name__ == "__main__":
-	if False:
+	if True:
 		# local
 		host = "127.0.0.1"
 		port = 5500
